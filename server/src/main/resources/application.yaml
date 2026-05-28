@@ -1,3 +1,38 @@
 spring:
   application:
-    name: server
+    name: Sneaker Api
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  flyway:
+    enabled: true
+    clean-disabled: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            scope: email,profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+            client-name: Google
+
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+server:
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:/api/clothes}
+  forward-headers-strategy: framework
+
