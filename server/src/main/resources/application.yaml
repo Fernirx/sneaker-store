@@ -32,7 +32,8 @@ spring:
       force: true
 
 server:
+  port: ${SERVER_PORT:8080}
   servlet:
-    context-path: ${SERVER_CONTEXT_PATH:/api/clothes}
+    context-path: ${SERVER_CONTEXT_PATH:/api/sneakers}
   forward-headers-strategy: framework
 
