@@ -5,11 +5,10 @@ on:
     branches: [main]
     paths:
       - 'server/**'
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
-      - 'LICENSE'
-      - 'docs/**'
+      - '!server/**.md'
+      - '!server/.gitignore'
+      - '!server/LICENSE'
+      - '!server/docs/**'
   workflow_dispatch:
 
 jobs:
