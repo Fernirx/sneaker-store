@@ -1,4 +1,4 @@
-package com.fernirx.sneakerapi.common;
+package com.fernirx.sneakerapi.common.annotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

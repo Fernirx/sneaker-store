@@ -1,9 +1,8 @@
-package com.fernirx.sneakerapi.common;
+package com.fernirx.sneakerapi.common.annotation;
 
+import com.fernirx.sneakerapi.common.constant.PatternConstants;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-
-import java.lang.annotation.Annotation;
 
 public class PhoneValidator implements ConstraintValidator<ValidPhone, String> {
     private boolean allowNull;
@@ -16,6 +15,6 @@ public class PhoneValidator implements ConstraintValidator<ValidPhone, String> {
     @Override
     public boolean isValid(String value, ConstraintValidatorContext constraintValidatorContext) {
         if (value == null) return allowNull;
-        return !value.isBlank() && value.matches("");
+        return !value.isBlank() && value.matches(PatternConstants.PHONE);
     }
 }
