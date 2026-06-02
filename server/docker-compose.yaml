@@ -1,0 +1,76 @@
+name: sneaker-api
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sneaker-api
+    container_name: sneaker-api
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${SERVER_HOST_PORT}:${SERVER_PORT}"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      TZ: Asia/Ho_Chi_Minh
+      JAVA_TOOL_OPTIONS: "-Duser.timezone=Asia/Ho_Chi_Minh"
+      DB_HOST: mysql
+      REDIS_HOST: redis
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - sneaker-net
+
+  mysql:
+    image: mysql:8.4
+    container_name: sneaker-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "${DB_HOST_PORT}:${DB_PORT}"
+    volumes:
+      - sneaker_mysql_data:/var/lib/mysql
+    networks:
+      - sneaker-net
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: sneaker-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "${REDIS_HOST_PORT}:${REDIS_PORT}"
+    volumes:
+      - sneaker_redis_data:/data
+    networks:
+      - sneaker-net
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  sneaker_mysql_data:
+    name: sneaker_mysql_data
+  sneaker_redis_data:
+    name: sneaker_redis_data
+
+networks:
+  sneaker-net:

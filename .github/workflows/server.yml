@@ -1,0 +1,96 @@
+name: CI/CD Server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - '!server/**.md'
+      - '!server/.gitignore'
+      - '!server/LICENSE'
+      - '!server/docs/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Push to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{secrets.DOCKERHUB_USERNAME}}
+          password: ${{secrets.DOCKERHUB_TOKEN}}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build & Push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{secrets.DOCKERHUB_USERNAME}}/sneaker-api:latest
+            ${{secrets.DOCKERHUB_USERNAME}}/sneaker-api:${{github.sha}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Copy file to VPS
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{secrets.VPS_HOST}}
+          username: ${{secrets.VPS_USER}}
+          key: ${{secrets.VPS_SSH_KEY}}
+          source: "docker-compose.prod.yml"
+          target: ${{secrets.DEPLOY_PATH}}
+
+      - name: SSH & Deploy
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{secrets.VPS_HOST}}
+          username: ${{secrets.VPS_USER}}
+          key: ${{secrets.VPS_SSH_KEY}}
+          script: |
+            cd ${{secrets.DEPLOY_PATH}}
+
+            cat > .env <<EOF
+            SERVER_HOST_PORT=${{secrets.SERVER_HOST_PORT}}
+            DB_HOST_PORT=${{secrets.DB_HOST_PORT}}
+            REDIS_HOST_PORT=${{secrets.REDIS_HOST_PORT}}
+
+            DB_PORT=3306
+            DB_NAME=${{secrets.DB_NAME}}
+            DB_USERNAME=${{secrets.DB_USERNAME}}
+            DB_PASSWORD=${{secrets.DB_PASSWORD}}
+            DB_ROOT_PASSWORD=${{secrets.DB_ROOT_PASSWORD}}
+
+            REDIS_PORT=6379
+            REDIS_PASSWORD=${{secrets.REDIS_PASSWORD}}
+
+            MAIL_HOST=${{secrets.MAIL_HOST}}
+            MAIL_PORT=${{secrets.MAIL_PORT}}
+            MAIL_USERNAME=${{secrets.MAIL_USERNAME}}
+            MAIL_PASSWORD=${{secrets.MAIL_PASSWORD}}
+
+            GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}
+            GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}
+
+            SERVER_PORT=${{secrets.SERVER_PORT}}
+            SERVER_CONTEXT_PATH=${{secrets.SERVER_CONTEXT_PATH}}
+
+            EOF
+
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans

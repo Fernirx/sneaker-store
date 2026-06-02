@@ -6,8 +6,8 @@ spring:
       &useSSL=false
       &serverTimezone=Asia/Ho_Chi_Minh
       &allowPublicKeyRetrieval=true
-    username: manager_user
-    password: password
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
 
   jpa:
     show-sql: true
@@ -26,8 +26,8 @@ spring:
       password: ${REDIS_PASSWORD:}
 
   mail:
-    host: smtp.gmail.com
-    port: 587
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:dev-email@gmail.com}
     password: ${MAIL_PASSWORD:dev-app-password}
 
@@ -38,6 +38,3 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID:changeme}
             client-secret: ${GOOGLE_CLIENT_SECRET:changeme}
-
-server:
-  port: 8080
