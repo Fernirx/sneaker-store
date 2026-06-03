@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Documented
 @Constraint(validatedBy = {PhoneValidator.class})
 public @interface ValidPhone {
-    String message() default "{phone.invalid}";
+    String message() default "{validation.phone.invalid}";
 
     Class<?>[] groups() default {};
 

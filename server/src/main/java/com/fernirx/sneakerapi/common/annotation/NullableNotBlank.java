@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Documented
 @Constraint(validatedBy = NullableNotBlankValidator.class)
 public @interface NullableNotBlank {
-    String message() default "{nullable.not.blank}";
+    String message() default "{validation.field.not_blank}";
 
     Class<?>[] groups() default {};
 
