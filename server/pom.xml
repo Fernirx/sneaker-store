@@ -20,6 +20,7 @@
         <java.version>21</java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <springdoc.version>3.0.2</springdoc.version>
+        <slugify.version>4.0.0</slugify.version>
     </properties>
 
     <dependencies>
@@ -101,6 +102,12 @@
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${mapstruct.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.slugify</groupId>
+            <artifactId>slugify</artifactId>
+            <version>${slugify.version}</version>
         </dependency>
 
         <dependency>
