@@ -91,6 +91,8 @@ jobs:
             SERVER_PORT=${{secrets.SERVER_PORT}}
             SERVER_CONTEXT_PATH=${{secrets.SERVER_CONTEXT_PATH}}
 
+            CORS_ALLOWED_ORIGINS=${{secrets.CORS_ALLOWED_ORIGINS}}
+
             EOF
 
             docker compose -f docker-compose.prod.yml pull
