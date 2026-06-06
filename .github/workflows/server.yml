@@ -93,6 +93,8 @@ jobs:
 
             CORS_ALLOWED_ORIGINS=${{secrets.CORS_ALLOWED_ORIGINS}}
 
+            JWT_SECRET=${{secrets.JWT_SECRET}}
+
             EOF
 
             docker compose -f docker-compose.prod.yml pull
