@@ -22,6 +22,7 @@
         <springdoc.version>3.0.2</springdoc.version>
         <icu4j.version>78.3</icu4j.version>
         <slugify.version>4.0.0</slugify.version>
+        <io.jsonwebtoken.version>0.13.0</io.jsonwebtoken.version>
     </properties>
 
     <dependencies>
@@ -115,6 +116,12 @@
             <groupId>com.github.slugify</groupId>
             <artifactId>slugify</artifactId>
             <version>${slugify.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>${io.jsonwebtoken.version}</version>
         </dependency>
 
         <dependency>
