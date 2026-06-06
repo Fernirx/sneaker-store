@@ -1,6 +1,9 @@
 ﻿package com.fernirx.sneakerapi.security;
 
+import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
 import com.fernirx.sneakerapi.security.config.JwtProperties;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -9,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +50,34 @@ public class JwtProvider {
         return buildToken(JWT_RESET_PASSWORD_TOKEN, payload);
     }
 
+    public void validateAccessToken(String token) {
+        validateToken(token, JWT_ACCESS_TOKEN);
+    }
+
+    public void validateRefreshToken(String token) {
+        validateToken(token, JWT_REFRESH_TOKEN);
+    }
+
+    public void validateResetPasswordToken(String token) {
+        validateToken(token, JWT_RESET_PASSWORD_TOKEN);
+    }
+
+    public String extractSubject(String token) {
+        return parseToken(token).getSubject();
+    }
+
+    public String extractEmail(String token) {
+        Object email = parseToken(token).get(JWT_CLAIMS_EMAIL);
+        return email != null ? email.toString() : null;
+    }
+
+    public LocalDateTime extractExpiration(String token) {
+        return parseToken(token).getExpiration()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
+
     private String buildToken(String type, UserTokenPayload payload) {
         Date nowDate = new Date();
         Date expirationDate;
@@ -79,5 +112,26 @@ public class JwtProvider {
                 .issuer(jwtProperties.getIssuer())
                 .signWith(secretKey)
                 .compact();
+    }
+
+    private void validateToken(String token, String type) {
+        Claims claims = parseToken(token);
+        Object typeObj = claims.get(JWT_CLAIMS_TYPE);
+        if (typeObj == null || !type.equals(typeObj.toString())) {
+            throw SecurityCustomException.invalid("label.token");
+        }
+    }
+
+    private Claims parseToken(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(secretKey)
+                    .requireIssuer(jwtProperties.getIssuer())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (JwtException | IllegalArgumentException e) {
+            throw SecurityCustomException.invalid("label.token");
+        }
     }
 }
