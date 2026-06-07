@@ -37,3 +37,19 @@ server:
     context-path: ${SERVER_CONTEXT_PATH:/api}
   forward-headers-strategy: framework
 
+application:
+  cors:
+    allowed-methods: [ GET, POST, PUT, DELETE, PATCH, OPTIONS ]
+    allowed-headers: [ "*" ]
+    allow-credentials: true
+    max-age: 1h
+
+  security:
+    jwt:
+      issuer: sneaker-api
+      access:
+        expiration: ${JWT_ACCESS_EXPIRATION:PT10M}
+      refresh:
+        expiration: ${JWT_REFRESH_EXPIRATION:P7D}
+      reset-password:
+        expiration: ${JWT_RESET_PASSWORD_EXPIRATION:PT15M}

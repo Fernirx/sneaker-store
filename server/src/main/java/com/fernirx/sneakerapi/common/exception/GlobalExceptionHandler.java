@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,17 +33,26 @@ public class GlobalExceptionHandler {
     // Lỗi nghiệp vụ — ném ra từ service layer bằng BusinessException
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex) {
-        log.warn("Business exception [{}]: {}", ex.getErrorCode(), ex.getMessage());
         String finalMessage = resolveMessage(ex.getErrorCode(), ex.getArgs());
+        log.warn("Business exception [{}]: {}", ex.getErrorCode(), finalMessage);
         return new ResponseEntity<>(ErrorResponse.of(ex.getErrorCode(), finalMessage), ex.getErrorCode().getHttpStatus());
     }
 
     // Lỗi bảo mật — ném ra từ security filter hoặc service bằng SecurityCustomException
     @ExceptionHandler(SecurityCustomException.class)
     public ResponseEntity<ErrorResponse> handleSecurityCustomException(SecurityCustomException ex) {
-        log.warn("Security exception [{}]: {}", ex.getErrorCode(), ex.getMessage());
         String finalMessage = resolveMessage(ex.getErrorCode(), ex.getArgs());
+        log.warn("Security exception [{}]: {}", ex.getErrorCode(), finalMessage);
         return new ResponseEntity<>(ErrorResponse.of(ex.getErrorCode(), finalMessage), ex.getErrorCode().getHttpStatus());
+    }
+
+    // Lỗi sai đường dẫn hoặc tài nguyên không tồn tại
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
+        log.warn("Route not found: {} {}", ex.getHttpMethod(), ex.getResourcePath());
+        ErrorCode errorCode = ErrorCode.NOT_FOUND;
+        String finalMessage = MessageUtil.getMessage("error.server.route_not_found");
+        return new ResponseEntity<>(ErrorResponse.of(errorCode, finalMessage), errorCode.getHttpStatus());
     }
 
     // Lỗi sai kiểu dữ liệu trên path/query param
@@ -91,7 +101,7 @@ public class GlobalExceptionHandler {
     // Lỗi cấu trúc JSON sai — request body không parse được hoặc sai định dạng ngày tháng
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        log.warn("Malformed JSON request: {}", ex.getMessage());
+        log.warn("Malformed JSON request: {}", ex.getMostSpecificCause().getMessage());
         ErrorCode errorCode = ErrorCode.INVALID_DATA;
         String finalMessage = MessageUtil.getMessage("error.server.malformed_json");
         return new ResponseEntity<>(ErrorResponse.of(errorCode, finalMessage), errorCode.getHttpStatus());
