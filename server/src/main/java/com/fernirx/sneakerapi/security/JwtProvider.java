@@ -17,6 +17,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -78,6 +79,10 @@ public class JwtProvider {
                 .toLocalDateTime();
     }
 
+    public String extractJti(String token) {
+        return parseToken(token).getId();
+    }
+
     private String buildToken(String type, UserTokenPayload payload) {
         Date nowDate = new Date();
         Date expirationDate;
@@ -105,6 +110,7 @@ public class JwtProvider {
                 throw new IllegalStateException("Invalid token type: " + type);
         }
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(payload.id().toString())
                 .claims(claims)
                 .issuedAt(nowDate)
