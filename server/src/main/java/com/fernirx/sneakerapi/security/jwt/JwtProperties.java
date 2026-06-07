@@ -1,4 +1,4 @@
-package com.fernirx.sneakerapi.security.config;
+package com.fernirx.sneakerapi.security.jwt;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

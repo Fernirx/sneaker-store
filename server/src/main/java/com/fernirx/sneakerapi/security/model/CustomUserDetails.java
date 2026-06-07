@@ -1,4 +1,4 @@
-package com.fernirx.sneakerapi.security;
+package com.fernirx.sneakerapi.security.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

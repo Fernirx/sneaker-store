@@ -1,5 +1,6 @@
-package com.fernirx.sneakerapi.security;
+package com.fernirx.sneakerapi.security.utils;
 
+import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.core.GrantedAuthority;
 

@@ -1,7 +1,7 @@
-﻿package com.fernirx.sneakerapi.security;
+package com.fernirx.sneakerapi.security.jwt;
 
 import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
-import com.fernirx.sneakerapi.security.config.JwtProperties;
+import com.fernirx.sneakerapi.security.model.UserTokenPayload;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

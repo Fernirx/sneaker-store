@@ -1,8 +1,8 @@
-package com.fernirx.sneakerapi.security.config;
+package com.fernirx.sneakerapi.security;
 
-import com.fernirx.sneakerapi.security.CustomAccessDeniedHandler;
-import com.fernirx.sneakerapi.security.JwtAuthenticationEntryPoint;
-import com.fernirx.sneakerapi.security.JwtAuthenticationFilter;
+import com.fernirx.sneakerapi.security.handler.CustomAccessDeniedHandler;
+import com.fernirx.sneakerapi.security.handler.JwtAuthenticationEntryPoint;
+import com.fernirx.sneakerapi.security.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

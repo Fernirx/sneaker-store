@@ -1,4 +1,4 @@
-package com.fernirx.sneakerapi.security;
+package com.fernirx.sneakerapi.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fernirx.sneakerapi.common.constant.SecurityConstants;
@@ -8,30 +8,29 @@ import com.fernirx.sneakerapi.common.utils.MessageUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class CustomAccessDeniedHandler implements AccessDeniedHandler {
+public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private final ObjectMapper objectMapper;
+
     @Override
-    public void handle(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull AccessDeniedException accessDeniedException) throws IOException, ServletException {
+    public void commence(@NonNull HttpServletRequest request,
+                         HttpServletResponse response,
+                         @NonNull AuthenticationException authException) throws IOException, ServletException {
         response.setContentType(SecurityConstants.CONTENT_TYPE_JSON);
-        ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
         ErrorResponse errorResponse = ErrorResponse.of(
-                errorCode,
-                MessageUtil.getMessage(errorCode.getMessageKey())
+                ErrorCode.UNAUTHORIZED,
+                MessageUtil.getMessage("error.auth.unauthenticated")
         );
-        response.setStatus(errorCode.getHttpStatus().value());
+        response.setStatus(ErrorCode.UNAUTHORIZED.getHttpStatus().value());
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
         response.getWriter().flush();
     }

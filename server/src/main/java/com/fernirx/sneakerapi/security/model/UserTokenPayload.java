@@ -1,4 +1,6 @@
-package com.fernirx.sneakerapi.security;
+package com.fernirx.sneakerapi.security.model;
+
+import com.fernirx.sneakerapi.security.utils.SecurityUtils;
 
 import java.util.Objects;
 import java.util.Set;

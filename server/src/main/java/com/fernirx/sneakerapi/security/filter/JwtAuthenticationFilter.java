@@ -1,8 +1,10 @@
-package com.fernirx.sneakerapi.security;
+package com.fernirx.sneakerapi.security.filter;
 
 import com.fernirx.sneakerapi.common.constant.SecurityConstants;
 import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
 import com.fernirx.sneakerapi.common.utils.RedisKeyUtils;
+import com.fernirx.sneakerapi.security.model.CustomUserDetails;
+import com.fernirx.sneakerapi.security.jwt.JwtProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
