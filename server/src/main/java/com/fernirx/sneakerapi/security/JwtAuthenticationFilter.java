@@ -47,6 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = extractJwtToken(request);
         if (token != null) {
             try {
+                jwtProvider.validateAccessToken(token);
                 String jti = jwtProvider.extractJti(token);
                 String blacklistKey = RedisKeyUtils.revokedAccessKey(jti);
                 if (Boolean.TRUE.equals(redisTemplate.hasKey(blacklistKey))) {
