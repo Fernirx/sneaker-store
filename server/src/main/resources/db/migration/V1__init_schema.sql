@@ -175,6 +175,40 @@ CREATE TABLE IF NOT EXISTS `collections` (
   COMMENT = 'Bộ sưu tập sneaker';
 
 
+CREATE TABLE IF NOT EXISTS `category_translations` (
+  `id`          BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `category_id` BIGINT UNSIGNED  NOT NULL,
+  `locale`      VARCHAR(10)      NOT NULL,
+  `name`        VARCHAR(100)     NOT NULL,
+  `description` TEXT             NULL DEFAULT NULL,
+  `created_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `category_locale_UNIQUE` (`category_id`, `locale`),
+  CONSTRAINT `fk_cat_translations_category`
+    FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
+  COMMENT = 'Bản dịch danh mục theo ngôn ngữ';
+
+
+CREATE TABLE IF NOT EXISTS `collection_translations` (
+  `id`            BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `collection_id` BIGINT UNSIGNED  NOT NULL,
+  `locale`        VARCHAR(10)      NOT NULL,
+  `name`          VARCHAR(100)     NOT NULL,
+  `description`   TEXT             NULL DEFAULT NULL,
+  `created_at`    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `collection_locale_UNIQUE` (`collection_id`, `locale`),
+  CONSTRAINT `fk_col_translations_collection`
+    FOREIGN KEY (`collection_id`) REFERENCES `collections`(`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
+  COMMENT = 'Bản dịch bộ sưu tập theo ngôn ngữ';
+
+
 -- =====================================================
 -- MODULE: product
 -- =====================================================
