@@ -2,6 +2,7 @@ package com.fernirx.sneakerapi.security.oauth2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fernirx.sneakerapi.common.enums.ErrorCode;
+import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
 import com.fernirx.sneakerapi.common.response.ErrorResponse;
 import com.fernirx.sneakerapi.common.utils.MessageUtil;
 import com.fernirx.sneakerapi.security.jwt.JwtProvider;
@@ -51,7 +52,17 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 provider,
                 oAuth2User.getAttribute("sub")
         );
-        UserTokenPayload userTokenPayload = oAuth2UserProcessor.process(userInfo);
+        UserTokenPayload userTokenPayload;
+        try {
+            userTokenPayload = oAuth2UserProcessor.process(userInfo);
+        } catch (SecurityCustomException ex) {
+            response.setStatus(ex.getErrorCode().getHttpStatus().value());
+            objectMapper.writeValue(
+                    response.getWriter(),
+                    ErrorResponse.of(ex.getErrorCode(), MessageUtil.getMessage(ex.getErrorCode().getMessageKey(), ex.getArgs()))
+            );
+            return;
+        }
         if (userTokenPayload == null) {
             response.setStatus(ErrorCode.UNAUTHORIZED.getHttpStatus().value());
             objectMapper.writeValue(
