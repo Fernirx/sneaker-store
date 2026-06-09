@@ -5,6 +5,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.text.MessageFormat;
+
 @Component
 public class MessageUtil {
     private static MessageSource messageSource;
@@ -24,8 +26,9 @@ public class MessageUtil {
 
     public static String getMessage(String key, Object... args) {
         try {
-            return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
-        }  catch (Exception e) {
+            String template = messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
+            return MessageFormat.format(template, args);
+        } catch (Exception e) {
             return key;
         }
     }
