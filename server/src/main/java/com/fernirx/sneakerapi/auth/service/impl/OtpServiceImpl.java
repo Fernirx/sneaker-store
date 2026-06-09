@@ -47,7 +47,8 @@ public class OtpServiceImpl implements OtpService {
                 Duration.ofSeconds(otpProperties.getResendCooldown())
         );
 
-        mailService.sendVerifyEmailOtp(email, name, rawOtp, otpProperties.getTtl());
+        String displayName = (name != null && !name.isBlank()) ? name : email.split("@")[0];
+        mailService.sendVerifyEmailOtp(email, displayName, rawOtp, otpProperties.getTtl());
     }
 
     @Override

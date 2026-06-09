@@ -13,4 +13,12 @@ public interface AuthService {
     TokenResponse verifyOtp(VerifyOtpRequest request);
 
     void logout(LogoutRequest request);
+
+    void forgotPassword(ForgotPasswordRequest request);
+
+    TokenResponse forgotPasswordVerifyOtp(VerifyOtpRequest request);
+
+    void resetPassword(ResetPasswordRequest request);
+
+    void resendOtp(ResendOtpRequest request);
 }

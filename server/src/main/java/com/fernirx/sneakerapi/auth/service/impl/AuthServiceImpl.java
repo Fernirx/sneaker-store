@@ -3,6 +3,8 @@ package com.fernirx.sneakerapi.auth.service.impl;
 import com.fernirx.sneakerapi.auth.dto.request.*;
 import com.fernirx.sneakerapi.auth.mapper.AuthMapper;
 import com.fernirx.sneakerapi.auth.service.AuthService;
+import com.fernirx.sneakerapi.auth.service.OtpService;
+import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
 import com.fernirx.sneakerapi.security.jwt.JwtProvider;
 import com.fernirx.sneakerapi.security.model.CustomUserDetails;
@@ -12,7 +14,6 @@ import com.fernirx.sneakerapi.security.service.TokenBlacklistService;
 import com.fernirx.sneakerapi.user.dto.command.RegisterCommand;
 import com.fernirx.sneakerapi.user.entity.User;
 import com.fernirx.sneakerapi.user.enums.OtpPurpose;
-import com.fernirx.sneakerapi.auth.service.OtpService;
 import com.fernirx.sneakerapi.user.service.UserRegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.*;
@@ -103,5 +104,48 @@ public class AuthServiceImpl implements AuthService {
         jwtProvider.validateRefreshToken(request.refreshToken());
         tokenBlacklistService.blacklistRefreshToken(request.refreshToken());
         tokenBlacklistService.blacklistAccessToken(request.accessToken());
+    }
+
+    @Override
+    public void forgotPassword(ForgotPasswordRequest request) {
+        CustomUserDetails userDetails = loadUserOrThrow(request.email());
+        if (!userDetails.isEnabled()) {
+            throw SecurityCustomException.emailNotVerified();
+        }
+        otpService.sendOtp(request.email(), request.email().split("@")[0], OtpPurpose.FORGOT_PASSWORD);
+    }
+
+    @Override
+    public TokenResponse forgotPasswordVerifyOtp(VerifyOtpRequest request) {
+        otpService.verifyOtp(request.email(), request.otp(), OtpPurpose.FORGOT_PASSWORD);
+        CustomUserDetails userDetails = loadUserOrThrow(request.email());
+        UserTokenPayload payload = UserTokenPayload.from(userDetails);
+        return TokenResponse.builder()
+                .resetPasswordToken(jwtProvider.generateResetPasswordToken(payload))
+                .build();
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        jwtProvider.validateResetPasswordToken(request.resetToken());
+        String email = jwtProvider.extractEmail(request.resetToken());
+        userRegistrationService.updatePassword(email, request.password());
+    }
+
+    @Override
+    public void resendOtp(ResendOtpRequest request) {
+        CustomUserDetails userDetails = loadUserOrThrow(request.email());
+        if (request.purpose() == OtpPurpose.FORGOT_PASSWORD && !userDetails.isEnabled()) {
+            throw SecurityCustomException.emailNotVerified();
+        }
+        otpService.sendOtp(request.email(), request.email().split("@")[0], request.purpose());
+    }
+
+    private CustomUserDetails loadUserOrThrow(String email) {
+        try {
+            return (CustomUserDetails) userDetailsService.loadUserByUsername(email);
+        } catch (UsernameNotFoundException e) {
+            throw BusinessException.notFound("label.email");
+        }
     }
 }
