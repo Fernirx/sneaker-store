@@ -14,8 +14,10 @@ public enum ErrorCode {
 
     /* ================== SECURITY ================== */
     UNAUTHORIZED("UNAUTHORIZED", "error.auth.unauthorized", HttpStatus.UNAUTHORIZED),
+    INVALID_CREDENTIALS("INVALID_CREDENTIALS", "error.auth.invalid_credentials", HttpStatus.UNAUTHORIZED),
     ACCESS_DENIED("ACCESS_DENIED", "error.auth.access_denied", HttpStatus.FORBIDDEN),
-    ACCOUNT_DELETED("ACCOUNT_DELETED", "error.auth.account_deleted", HttpStatus.FORBIDDEN),
+    ACCOUNT_UNAVAILABLE("ACCOUNT_UNAVAILABLE", "error.auth.account_unavailable", HttpStatus.FORBIDDEN),
+    EMAIL_NOT_VERIFIED("EMAIL_NOT_VERIFIED", "error.auth.email_not_verified", HttpStatus.FORBIDDEN),
 
     /* ================== BUSINESS CORE ================== */
     INVALID_DATA("INVALID_DATA", "error.bus.invalid", HttpStatus.BAD_REQUEST),

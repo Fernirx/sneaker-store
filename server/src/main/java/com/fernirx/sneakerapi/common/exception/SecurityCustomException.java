@@ -26,7 +26,15 @@ public class SecurityCustomException extends RuntimeException {
         return new SecurityCustomException(ErrorCode.ACCESS_DENIED);
     }
 
-    public static SecurityCustomException accountDeleted() {
-        return new SecurityCustomException(ErrorCode.ACCOUNT_DELETED);
+    public static SecurityCustomException invalidCredentials() {
+        return new SecurityCustomException(ErrorCode.INVALID_CREDENTIALS);
+    }
+
+    public static SecurityCustomException accountUnavailable() {
+        return new SecurityCustomException(ErrorCode.ACCOUNT_UNAVAILABLE);
+    }
+
+    public static SecurityCustomException emailNotVerified() {
+        return new SecurityCustomException(ErrorCode.EMAIL_NOT_VERIFIED);
     }
 }
