@@ -1,7 +1,9 @@
 package com.fernirx.sneakerapi.user.service.impl;
 
 import com.fernirx.sneakerapi.common.enums.Role;
+import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
+import com.fernirx.sneakerapi.user.dto.command.RegisterCommand;
 import com.fernirx.sneakerapi.user.dto.command.OAuth2UserCommand;
 import com.fernirx.sneakerapi.user.entity.User;
 import com.fernirx.sneakerapi.user.entity.UserOauth;
@@ -15,10 +17,12 @@ import com.fernirx.sneakerapi.user.repository.UserRoleRepository;
 import com.fernirx.sneakerapi.user.service.UserRegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
     private final UserOauthRepository userOauthRepository;
     private final UserRoleRepository userRoleRepository;
     private final UserRegistrationMapper userRegistrationMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -40,6 +45,39 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
                     return linkProviderIfAbsent(user, command);
                 })
                 .orElseGet(() -> createOAuth2User(command));
+    }
+
+    @Override
+    public User createUserWithPassword(RegisterCommand command) {
+        Optional<User> existingUserOpt = userRepository.findByEmailIncludingDeleted(command.email());
+        if (existingUserOpt.isPresent()) {
+            User existingUser = existingUserOpt.get();
+            if (existingUser.getDeletedAt() != null) {
+                throw SecurityCustomException.accountUnavailable();
+            }
+            throw BusinessException.alreadyExists("label.email");
+        }
+        User user = userRegistrationMapper.toUser(command);
+        user.setPassword(passwordEncoder.encode(command.password()));
+        userRepository.save(user);
+
+        UserProfile profile = userRegistrationMapper.toUserProfile(command);
+        userProfileRepository.save(profile);
+
+        UserRole role = new UserRole();
+        role.setUser(user);
+        role.setRole(Role.ROLE_USER);
+        userRoleRepository.save(role);
+        return user;
+    }
+
+    @Override
+    @Transactional
+    public void verifyEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> BusinessException.notFound("label.user"));
+        user.setVerifiedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     private User linkProviderIfAbsent(User user, OAuth2UserCommand command) {
