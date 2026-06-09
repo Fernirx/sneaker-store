@@ -14,7 +14,7 @@ import com.fernirx.sneakerapi.security.service.TokenBlacklistService;
 import com.fernirx.sneakerapi.user.dto.command.RegisterCommand;
 import com.fernirx.sneakerapi.user.entity.User;
 import com.fernirx.sneakerapi.user.enums.OtpPurpose;
-import com.fernirx.sneakerapi.user.service.UserRegistrationService;
+import com.fernirx.sneakerapi.user.service.UserAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
@@ -31,7 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final TokenBlacklistService tokenBlacklistService;
     private final UserDetailsService userDetailsService;
-    private final UserRegistrationService userRegistrationService;
+    private final UserAccountService userAccountService;
     private final AuthMapper authMapper;
     private final OtpService otpService;
 
@@ -83,14 +83,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void register(RegisterRequest request) {
         RegisterCommand command = authMapper.toCommand(request);
-        User user = userRegistrationService.createUserWithPassword(command);
+        User user = userAccountService.createUserWithPassword(command);
         otpService.sendOtp(user.getEmail(), request.firstName(), OtpPurpose.REGISTER);
     }
 
     @Override
     public TokenResponse verifyOtp(VerifyOtpRequest request) {
         otpService.verifyOtp(request.email(), request.otp(), OtpPurpose.REGISTER);
-        userRegistrationService.verifyEmail(request.email());
+        userAccountService.verifyEmail(request.email());
         CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(request.email());
         UserTokenPayload payload = UserTokenPayload.from(userDetails);
         return TokenResponse.builder()
@@ -129,7 +129,7 @@ public class AuthServiceImpl implements AuthService {
     public void resetPassword(ResetPasswordRequest request) {
         jwtProvider.validateResetPasswordToken(request.resetToken());
         String email = jwtProvider.extractEmail(request.resetToken());
-        userRegistrationService.updatePassword(email, request.password());
+        userAccountService.updatePassword(email, request.password());
     }
 
     @Override

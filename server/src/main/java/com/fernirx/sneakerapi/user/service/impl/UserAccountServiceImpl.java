@@ -14,7 +14,7 @@ import com.fernirx.sneakerapi.user.repository.UserOauthRepository;
 import com.fernirx.sneakerapi.user.repository.UserProfileRepository;
 import com.fernirx.sneakerapi.user.repository.UserRepository;
 import com.fernirx.sneakerapi.user.repository.UserRoleRepository;
-import com.fernirx.sneakerapi.user.service.UserRegistrationService;
+import com.fernirx.sneakerapi.user.service.UserAccountService;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,7 +26,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class UserRegistrationServiceImpl implements UserRegistrationService {
+public class UserAccountServiceImpl implements UserAccountService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserOauthRepository userOauthRepository;

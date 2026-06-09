@@ -4,7 +4,7 @@ import com.fernirx.sneakerapi.user.dto.command.RegisterCommand;
 import com.fernirx.sneakerapi.user.dto.command.OAuth2UserCommand;
 import com.fernirx.sneakerapi.user.entity.User;
 
-public interface UserRegistrationService {
+public interface UserAccountService {
     User findOrCreateOAuth2User(OAuth2UserCommand command);
     User createUserWithPassword(RegisterCommand command);
     void verifyEmail(String email);

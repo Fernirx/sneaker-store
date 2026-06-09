@@ -7,20 +7,20 @@ import com.fernirx.sneakerapi.security.oauth2.OAuth2UserInfo;
 import com.fernirx.sneakerapi.security.oauth2.OAuth2UserProcessor;
 import com.fernirx.sneakerapi.security.model.UserTokenPayload;
 import com.fernirx.sneakerapi.user.entity.User;
-import com.fernirx.sneakerapi.user.service.UserRegistrationService;
+import com.fernirx.sneakerapi.user.service.UserAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class OAuth2UserProcessorImpl implements OAuth2UserProcessor {
-    private final UserRegistrationService userRegistrationService;
+    private final UserAccountService userAccountService;
     private final UserSecurityMapper userSecurityMapper;
     private final AuthMapper authMapper;
 
     @Override
     public UserTokenPayload process(OAuth2UserInfo userInfo) {
-        User user = userRegistrationService.findOrCreateOAuth2User(authMapper.toCommand(userInfo));
+        User user = userAccountService.findOrCreateOAuth2User(authMapper.toCommand(userInfo));
         CustomUserDetails userDetails = userSecurityMapper.toCustomUserDetails(user);
         return UserTokenPayload.from(userDetails);
     }
