@@ -1,6 +1,7 @@
 package com.fernirx.sneakerapi.auth.controller;
 
 import com.fernirx.sneakerapi.auth.dto.request.LoginRequest;
+import com.fernirx.sneakerapi.auth.dto.request.RefreshTokenRequest;
 import com.fernirx.sneakerapi.auth.service.AuthService;
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
 import com.fernirx.sneakerapi.common.utils.MessageUtil;
@@ -32,6 +33,20 @@ public class AuthController {
         TokenResponse tokenResponse = authService.login(request);
         return ResponseEntity.ok(SuccessResponse.of(
                 MessageUtil.getMessage("success.auth.login"),
+                tokenResponse
+        ));
+    }
+
+    @PostMapping("/refresh-token")
+    @Operation(
+            summary = "Làm mới token",
+            description = "Cấp mới access token và refresh token từ refresh token hợp lệ"
+    )
+    public ResponseEntity<SuccessResponse<TokenResponse>> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        TokenResponse tokenResponse = authService.refreshToken(refreshTokenRequest);
+        return ResponseEntity.ok(SuccessResponse.of(
+                MessageUtil.getMessage("success.auth.refresh"),
                 tokenResponse
         ));
     }
