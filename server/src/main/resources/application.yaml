@@ -44,6 +44,11 @@ application:
     allow-credentials: true
     max-age: 1h
 
+  otp:
+    ttl: ${OTP_TTL:5}
+    max-attempts: ${OTP_MAX_ATTEMPTS:5}
+    resend-cooldown: ${OTP_RESEND_COOLDOWN:60}
+
   security:
     jwt:
       issuer: sneaker-api
