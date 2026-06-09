@@ -1,4 +1,4 @@
-package com.fernirx.sneakerapi.user.mapper;
+package com.fernirx.sneakerapi.security.mapper;
 
 import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import com.fernirx.sneakerapi.user.entity.User;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
         unmappedTargetPolicy = ReportingPolicy.ERROR,
         componentModel = MappingConstants.ComponentModel.SPRING
 )
-public interface UserMapper {
+public interface UserSecurityMapper {
     @Mapping(target = "authorities", source = "userRoles", qualifiedByName = "mapAuthorities")
     CustomUserDetails toCustomUserDetails(User user);
 
