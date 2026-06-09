@@ -22,5 +22,9 @@ public interface ProfileMapper {
     ProfileResponse toProfileResponse(User user);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     void updateUserProfile(UpdateProfileRequest request, @MappingTarget UserProfile userProfile);
 }
