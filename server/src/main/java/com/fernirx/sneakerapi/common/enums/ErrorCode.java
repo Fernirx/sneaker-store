@@ -15,6 +15,7 @@ public enum ErrorCode {
     /* ================== SECURITY ================== */
     UNAUTHORIZED("UNAUTHORIZED", "error.auth.unauthorized", HttpStatus.UNAUTHORIZED),
     ACCESS_DENIED("ACCESS_DENIED", "error.auth.access_denied", HttpStatus.FORBIDDEN),
+    ACCOUNT_DELETED("ACCOUNT_DELETED", "error.auth.account_deleted", HttpStatus.FORBIDDEN),
 
     /* ================== BUSINESS CORE ================== */
     INVALID_DATA("INVALID_DATA", "error.bus.invalid", HttpStatus.BAD_REQUEST),
