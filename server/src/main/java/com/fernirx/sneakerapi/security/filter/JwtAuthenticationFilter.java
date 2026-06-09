@@ -2,16 +2,15 @@ package com.fernirx.sneakerapi.security.filter;
 
 import com.fernirx.sneakerapi.common.constant.SecurityConstants;
 import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
-import com.fernirx.sneakerapi.common.utils.RedisKeyUtils;
 import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import com.fernirx.sneakerapi.security.jwt.JwtProvider;
+import com.fernirx.sneakerapi.security.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -27,17 +26,17 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
     private final UserDetailsService userDetailsService;
-    private final StringRedisTemplate redisTemplate;
+    private final TokenBlacklistService tokenBlacklistService;
     private final HandlerExceptionResolver resolver;
 
     public JwtAuthenticationFilter(
             JwtProvider jwtProvider,
             UserDetailsService userDetailsService,
-            StringRedisTemplate redisTemplate,
+            TokenBlacklistService tokenBlacklistService,
             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
         this.jwtProvider = jwtProvider;
         this.userDetailsService = userDetailsService;
-        this.redisTemplate = redisTemplate;
+        this.tokenBlacklistService = tokenBlacklistService;
         this.resolver = resolver;
     }
 
@@ -50,9 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null) {
             try {
                 jwtProvider.validateAccessToken(token);
-                String jti = jwtProvider.extractJti(token);
-                String blacklistKey = RedisKeyUtils.revokedAccessKey(jti);
-                if (Boolean.TRUE.equals(redisTemplate.hasKey(blacklistKey))) {
+                if (tokenBlacklistService.isAccessTokenBlacklisted(token)) {
                     throw SecurityCustomException.invalid("label.token");
                 }
                 setAuthenticationContext(token, request);
