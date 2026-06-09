@@ -7,4 +7,5 @@ public final class PatternConstants {
 
     public static final String PHONE = "^\\+[1-9]\\d{8,14}$";
     public static final String PASSWORD = "^(?=.*[A-Za-z])(?=.*\\d).{8,}$";
+    public static final String OTP = "^\\d{6}$";
 }

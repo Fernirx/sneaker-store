@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 public record LoginRequest(
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
-        @Email(message = "{validation.email.invalid}")
+        @Email(message = "{validation.format.invalid}")
         String email,
 
         @NotBlank(message = "{validation.field.not_blank}")
