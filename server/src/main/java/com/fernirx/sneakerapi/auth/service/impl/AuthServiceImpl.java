@@ -1,6 +1,7 @@
 package com.fernirx.sneakerapi.auth.service.impl;
 
 import com.fernirx.sneakerapi.auth.dto.request.*;
+import com.fernirx.sneakerapi.auth.mapper.AuthMapper;
 import com.fernirx.sneakerapi.auth.service.AuthService;
 import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
 import com.fernirx.sneakerapi.security.jwt.JwtProvider;
@@ -8,12 +9,16 @@ import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import com.fernirx.sneakerapi.security.model.UserTokenPayload;
 import com.fernirx.sneakerapi.security.response.TokenResponse;
 import com.fernirx.sneakerapi.security.service.TokenBlacklistService;
+import com.fernirx.sneakerapi.user.dto.command.RegisterCommand;
+import com.fernirx.sneakerapi.user.entity.User;
+import com.fernirx.sneakerapi.user.enums.OtpPurpose;
+import com.fernirx.sneakerapi.auth.service.OtpService;
+import com.fernirx.sneakerapi.user.service.UserRegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,8 +29,10 @@ public class AuthServiceImpl implements AuthService {
     private final JwtProvider jwtProvider;
     private final AuthenticationManager authenticationManager;
     private final TokenBlacklistService tokenBlacklistService;
-    private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
+    private final UserRegistrationService userRegistrationService;
+    private final AuthMapper authMapper;
+    private final OtpService otpService;
 
     @Override
     public TokenResponse login(LoginRequest request) {
@@ -74,16 +81,27 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void register(RegisterRequest request) {
-
+        RegisterCommand command = authMapper.toCommand(request);
+        User user = userRegistrationService.createUserWithPassword(command);
+        otpService.sendOtp(user.getEmail(), request.firstName(), OtpPurpose.REGISTER);
     }
 
     @Override
     public TokenResponse verifyOtp(VerifyOtpRequest request) {
-        return null;
+        otpService.verifyOtp(request.email(), request.otp(), OtpPurpose.REGISTER);
+        userRegistrationService.verifyEmail(request.email());
+        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(request.email());
+        UserTokenPayload payload = UserTokenPayload.from(userDetails);
+        return TokenResponse.builder()
+                .accessToken(jwtProvider.generateAccessToken(payload))
+                .refreshToken(jwtProvider.generateRefreshToken(payload))
+                .build();
     }
 
     @Override
     public void logout(LogoutRequest request) {
-
+        jwtProvider.validateRefreshToken(request.refreshToken());
+        tokenBlacklistService.blacklistRefreshToken(request.refreshToken());
+        tokenBlacklistService.blacklistAccessToken(request.accessToken());
     }
 }

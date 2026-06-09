@@ -17,4 +17,8 @@ public record SuccessResponse<T>(
     public static <T> SuccessResponse<T> of(String message, T data) {
         return new SuccessResponse<>(message, data, Instant.now());
     }
+
+    public static <T> SuccessResponse<T> of(String message) {
+        return new SuccessResponse<>(message, null, Instant.now());
+    }
 }
