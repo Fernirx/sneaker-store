@@ -35,7 +35,7 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
         return userRepository.findByEmailIncludingDeleted(command.email())
                 .map(user -> {
                     if (user.getDeletedAt() != null) {
-                        throw SecurityCustomException.accountDeleted();
+                        throw SecurityCustomException.accountUnavailable();
                     }
                     return linkProviderIfAbsent(user, command);
                 })
