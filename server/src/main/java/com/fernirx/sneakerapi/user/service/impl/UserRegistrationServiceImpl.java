@@ -80,6 +80,15 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
         userRepository.save(user);
     }
 
+    @Override
+    @Transactional
+    public void updatePassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> BusinessException.notFound("label.user"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     private User linkProviderIfAbsent(User user, OAuth2UserCommand command) {
         if (!userOauthRepository.existsByProviderAndProviderId(command.provider(), command.providerId())) {
             UserOauth oauth = userRegistrationMapper.toUserOauth(command);
