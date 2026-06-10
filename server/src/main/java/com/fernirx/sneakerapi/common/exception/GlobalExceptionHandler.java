@@ -60,11 +60,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
         log.warn("Type mismatch on field '{}': {}", ex.getName(), ex.getMessage());
         ErrorCode errorCode = ErrorCode.INVALID_DATA;
-        String labelKey = "label." + ex.getName();
-        String translatedField = MessageUtil.getMessage(labelKey);
-        String displayField = translatedField.equals(labelKey) ? ex.getName() : translatedField;
-        String finalMessage = MessageUtil.getMessage(errorCode.getMessageKey(), displayField);
-        return new ResponseEntity<>(ErrorResponse.of(errorCode, finalMessage), errorCode.getHttpStatus());
+        return new ResponseEntity<>(
+                ErrorResponse.of(errorCode, resolveFieldMessage(errorCode.getMessageKey(), ex.getName())),
+                errorCode.getHttpStatus()
+        );
     }
 
     // Lỗi validation trên @RequestBody — bắt lỗi từ @Valid trên DTO
@@ -75,7 +74,9 @@ public class GlobalExceptionHandler {
         List<ErrorDetail> errorDetails = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(fieldError -> new ErrorDetail(fieldError.getField(), fieldError.getDefaultMessage()))
+                .map(fieldError -> new ErrorDetail(
+                        fieldError.getField(),
+                        resolveFieldMessage(fieldError.getDefaultMessage(), fieldError.getField())))
                 .toList();
         String finalMessage = MessageUtil.getMessage("error.bus.validation_summary");
         return new ResponseEntity<>(ErrorResponse.of(errorCode, finalMessage, errorDetails), errorCode.getHttpStatus());
@@ -91,7 +92,7 @@ public class GlobalExceptionHandler {
                 .map(violation -> {
                     String propertyPath = violation.getPropertyPath().toString();
                     String fieldName = propertyPath.substring(propertyPath.lastIndexOf('.') + 1);
-                    return new ErrorDetail(fieldName, violation.getMessage());
+                    return new ErrorDetail(fieldName, resolveFieldMessage(violation.getMessage(), fieldName));
                 })
                 .toList();
         String finalMessage = MessageUtil.getMessage("error.bus.validation_summary");
@@ -105,6 +106,13 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ErrorCode.INVALID_DATA;
         String finalMessage = MessageUtil.getMessage("error.server.malformed_json");
         return new ResponseEntity<>(ErrorResponse.of(errorCode, finalMessage), errorCode.getHttpStatus());
+    }
+
+    private String resolveFieldMessage(String messageKey, String fieldName) {
+        String labelKey = "label." + fieldName;
+        String translatedField = MessageUtil.getMessage(labelKey);
+        String displayField = translatedField.equals(labelKey) ? fieldName : translatedField;
+        return MessageUtil.getMessage(messageKey, displayField);
     }
 
     // Dịch args của exception: nếu arg là String thì thử tra cứu i18n, không thì giữ nguyên

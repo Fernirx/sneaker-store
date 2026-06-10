@@ -2,10 +2,9 @@ package com.fernirx.sneakerapi.common.exception;
 
 import com.fernirx.sneakerapi.common.enums.ErrorCode;
 import lombok.Getter;
-import org.springframework.security.core.AuthenticationException;
 
 @Getter
-public class SecurityCustomException extends AuthenticationException {
+public class SecurityCustomException extends RuntimeException {
     private final ErrorCode errorCode;
     private final Object[] args;
 
@@ -25,5 +24,17 @@ public class SecurityCustomException extends AuthenticationException {
 
     public static SecurityCustomException forbidden() {
         return new SecurityCustomException(ErrorCode.ACCESS_DENIED);
+    }
+
+    public static SecurityCustomException invalidCredentials() {
+        return new SecurityCustomException(ErrorCode.INVALID_CREDENTIALS);
+    }
+
+    public static SecurityCustomException accountUnavailable() {
+        return new SecurityCustomException(ErrorCode.ACCOUNT_UNAVAILABLE);
+    }
+
+    public static SecurityCustomException emailNotVerified() {
+        return new SecurityCustomException(ErrorCode.EMAIL_NOT_VERIFIED);
     }
 }

@@ -24,6 +24,13 @@ spring:
             scope: email,profile
             redirect-uri: "{baseUrl}/login/oauth2/code/google"
             client-name: Google
+          facebook:
+            scope: email,public_profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/facebook"
+            client-name: Facebook
+        provider:
+          facebook:
+            user-info-uri: https://graph.facebook.com/me?fields=id,first_name,last_name,email
 
   servlet:
     encoding:
@@ -43,6 +50,11 @@ application:
     allowed-headers: [ "*" ]
     allow-credentials: true
     max-age: 1h
+
+  otp:
+    ttl: ${OTP_TTL:5}
+    max-attempts: ${OTP_MAX_ATTEMPTS:5}
+    resend-cooldown: ${OTP_RESEND_COOLDOWN:60}
 
   security:
     jwt:

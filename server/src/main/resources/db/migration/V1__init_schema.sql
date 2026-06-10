@@ -21,10 +21,12 @@ CREATE TABLE IF NOT EXISTS `users` (
 
 
 CREATE TABLE IF NOT EXISTS `user_roles` (
+  `id`         BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `user_id`    BIGINT UNSIGNED  NOT NULL,
   `role`       ENUM('ROLE_USER', 'ROLE_SALE', 'ROLE_WAREHOUSE', 'ROLE_MARKETING', 'ROLE_TECHNICIAN', 'ROLE_ADMIN') NOT NULL,
   `created_at` DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`user_id`, `role`),
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `user_role_UNIQUE` (`user_id`, `role`),
   INDEX `idx_user_roles_role` (`role`),
   CONSTRAINT `fk_user_roles_user`
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
@@ -296,10 +298,12 @@ CREATE TABLE IF NOT EXISTS `product_images` (
 
 
 CREATE TABLE IF NOT EXISTS `product_categories` (
+  `id`          BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `product_id`  BIGINT UNSIGNED  NOT NULL,
   `category_id` BIGINT UNSIGNED  NOT NULL,
   `created_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`product_id`, `category_id`),
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `product_category_UNIQUE` (`product_id`, `category_id`),
   INDEX `idx_product_categories_category` (`category_id`),
   CONSTRAINT `fk_product_categories_product`
     FOREIGN KEY (`product_id`) REFERENCES `products`(`id`)
@@ -312,10 +316,12 @@ CREATE TABLE IF NOT EXISTS `product_categories` (
 
 
 CREATE TABLE IF NOT EXISTS `product_collections` (
+  `id`            BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `product_id`    BIGINT UNSIGNED  NOT NULL,
   `collection_id` BIGINT UNSIGNED  NOT NULL,
   `created_at`    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`product_id`, `collection_id`),
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `product_collection_UNIQUE` (`product_id`, `collection_id`),
   INDEX `idx_product_collections_collection` (`collection_id`),
   CONSTRAINT `fk_product_collections_product`
     FOREIGN KEY (`product_id`) REFERENCES `products`(`id`)
