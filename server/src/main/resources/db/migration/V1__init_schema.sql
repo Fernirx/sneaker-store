@@ -504,15 +504,15 @@ CREATE TABLE IF NOT EXISTS `stock_adjustment_items` (
 
 CREATE TABLE IF NOT EXISTS `carts` (
   `id`          BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `user_id`     BIGINT UNSIGNED  NULL DEFAULT NULL,
+  `customer_id` BIGINT UNSIGNED  NULL DEFAULT NULL,
   `guest_token` VARCHAR(64)      NULL DEFAULT NULL,
   `created_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `user_cart_user_UNIQUE` (`user_id`),
-  UNIQUE INDEX `user_cart_guest_UNIQUE` (`guest_token`),
-  CONSTRAINT `fk_carts_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+  UNIQUE INDEX `cart_customer_UNIQUE` (`customer_id`),
+  UNIQUE INDEX `cart_guest_UNIQUE` (`guest_token`),
+  CONSTRAINT `fk_carts_customer`
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
   COMMENT = 'Giỏ hàng';
@@ -540,7 +540,7 @@ CREATE TABLE IF NOT EXISTS `cart_items` (
 
 CREATE TABLE IF NOT EXISTS `orders` (
   `id`               BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `user_id`          BIGINT UNSIGNED  NULL DEFAULT NULL,
+  `customer_id`      BIGINT UNSIGNED  NULL DEFAULT NULL,
   `guest_token`      VARCHAR(64)      NULL DEFAULT NULL,
   `code`             VARCHAR(50)      NOT NULL,
   `status`           ENUM('PENDING','CONFIRMED','PROCESSING','SHIPPING','DELIVERED','CANCELLED','REFUNDED') NOT NULL DEFAULT 'PENDING',
@@ -565,13 +565,13 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `updated_at`       DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `code_UNIQUE` (`code`),
-  INDEX `idx_orders_user_status` (`user_id`, `status`),
+  INDEX `idx_orders_customer_status` (`customer_id`, `status`),
   INDEX `idx_orders_guest` (`guest_token`),
   INDEX `idx_orders_payment_status` (`payment_status`),
   INDEX `idx_orders_created` (`created_at`),
   INDEX `idx_orders_assigned` (`assigned_to`),
-  CONSTRAINT `fk_orders_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+  CONSTRAINT `fk_orders_customer`
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`)
     ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_orders_assigned`
     FOREIGN KEY (`assigned_to`) REFERENCES `users`(`id`)
