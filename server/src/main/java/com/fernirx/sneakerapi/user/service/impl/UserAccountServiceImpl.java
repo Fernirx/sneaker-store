@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserAccountServiceImpl implements UserAccountService {
     private final UserRepository userRepository;
@@ -62,6 +63,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         userRepository.save(user);
 
         UserProfile profile = userRegistrationMapper.toUserProfile(command);
+        profile.setUser(user);
         userProfileRepository.save(profile);
 
         UserRole role = new UserRole();
