@@ -6,6 +6,7 @@ import com.fernirx.sneakerapi.auth.service.AuthService;
 import com.fernirx.sneakerapi.auth.service.OtpService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
+import com.fernirx.sneakerapi.customer.service.CustomerService;
 import com.fernirx.sneakerapi.security.jwt.JwtProvider;
 import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import com.fernirx.sneakerapi.security.model.UserTokenPayload;
@@ -32,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final TokenBlacklistService tokenBlacklistService;
     private final UserDetailsService userDetailsService;
     private final UserAccountService userAccountService;
+    private final CustomerService customerService;
     private final AuthMapper authMapper;
     private final OtpService otpService;
 
@@ -84,6 +86,7 @@ public class AuthServiceImpl implements AuthService {
     public void register(RegisterRequest request) {
         RegisterCommand command = authMapper.toCommand(request);
         User user = userAccountService.createUserWithPassword(command);
+        customerService.initCustomer(user);
         otpService.sendOtp(user.getEmail(), request.firstName(), OtpPurpose.REGISTER);
     }
 
