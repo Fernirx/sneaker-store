@@ -18,12 +18,24 @@ public class MailServiceImpl implements MailService {
     @Override
     @Async
     public void sendVerifyEmailOtp(String to, String username, String otpCode, int expiryMinutes) {
-        String subject = MessageUtil.getMessage("mail.verify.email.subject");
+        Context context = buildOtpContext(username, otpCode, expiryMinutes);
+        String html = templateEngine.process("mail/verify-email", context);
+        mailProvider.send(to, MessageUtil.getMessage("mail.verify.email.subject"), html);
+    }
+
+    @Override
+    @Async
+    public void sendForgotPasswordOtp(String to, String username, String otpCode, int expiryMinutes) {
+        Context context = buildOtpContext(username, otpCode, expiryMinutes);
+        String html = templateEngine.process("mail/forgot-password", context);
+        mailProvider.send(to, MessageUtil.getMessage("mail.forgot.password.subject"), html);
+    }
+
+    private Context buildOtpContext(String username, String otpCode, int expiryMinutes) {
         Context context = new Context();
         context.setVariable("username", username);
         context.setVariable("otpCode", otpCode);
         context.setVariable("expiryMinutes", expiryMinutes);
-        String html = templateEngine.process("mail/verify-email", context);
-        mailProvider.send(to, subject, html);
+        return context;
     }
 }

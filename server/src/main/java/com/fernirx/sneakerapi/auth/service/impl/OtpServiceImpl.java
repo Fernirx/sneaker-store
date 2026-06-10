@@ -48,7 +48,10 @@ public class OtpServiceImpl implements OtpService {
         );
 
         String displayName = (name != null && !name.isBlank()) ? name : email.split("@")[0];
-        mailService.sendVerifyEmailOtp(email, displayName, rawOtp, otpProperties.getTtl());
+        switch (purpose) {
+            case REGISTER -> mailService.sendVerifyEmailOtp(email, displayName, rawOtp, otpProperties.getTtl());
+            case FORGOT_PASSWORD -> mailService.sendForgotPasswordOtp(email, displayName, rawOtp, otpProperties.getTtl());
+        }
     }
 
     @Override
