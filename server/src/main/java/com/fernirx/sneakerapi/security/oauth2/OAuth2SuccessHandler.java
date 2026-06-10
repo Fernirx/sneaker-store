@@ -45,13 +45,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             return;
         }
         String provider = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
-        OAuth2UserInfo userInfo = new OAuth2UserInfo(
-                oAuth2User.getAttribute("email"),
-                oAuth2User.getAttribute("given_name"),
-                oAuth2User.getAttribute("family_name"),
-                provider,
-                oAuth2User.getAttribute("sub")
-        );
+        OAuth2UserInfo userInfo = OAuth2UserInfo.from(oAuth2User, provider);
         UserTokenPayload userTokenPayload;
         try {
             userTokenPayload = oAuth2UserProcessor.process(userInfo);
