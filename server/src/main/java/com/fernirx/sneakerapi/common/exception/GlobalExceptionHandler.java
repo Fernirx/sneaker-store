@@ -5,9 +5,11 @@ import com.fernirx.sneakerapi.common.response.ErrorDetail;
 import com.fernirx.sneakerapi.common.response.ErrorResponse;
 import com.fernirx.sneakerapi.common.utils.MessageUtil;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,12 +40,34 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ErrorResponse.of(ex.getErrorCode(), finalMessage), ex.getErrorCode().getHttpStatus());
     }
 
+    // Lỗi phân quyền — @PreAuthorize từ chối, AuthorizationDeniedException extends AccessDeniedException
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
+        return new ResponseEntity<>(
+                ErrorResponse.of(errorCode, MessageUtil.getMessage(errorCode.getMessageKey())),
+                errorCode.getHttpStatus()
+        );
+    }
+
     // Lỗi bảo mật — ném ra từ security filter hoặc service bằng SecurityCustomException
     @ExceptionHandler(SecurityCustomException.class)
     public ResponseEntity<ErrorResponse> handleSecurityCustomException(SecurityCustomException ex) {
         String finalMessage = resolveMessage(ex.getErrorCode(), ex.getArgs());
         log.warn("Security exception [{}]: {}", ex.getErrorCode(), finalMessage);
         return new ResponseEntity<>(ErrorResponse.of(ex.getErrorCode(), finalMessage), ex.getErrorCode().getHttpStatus());
+    }
+
+    // Lỗi sort sai tên field — Pageable truyền field không tồn tại trên entity
+    @ExceptionHandler(InvalidDataAccessApiUsageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidDataAccessApiUsageException(InvalidDataAccessApiUsageException ex) {
+        log.warn("Invalid data access: {}", ex.getMostSpecificCause().getMessage());
+        ErrorCode errorCode = ErrorCode.INVALID_DATA;
+        return new ResponseEntity<>(
+                ErrorResponse.of(errorCode, MessageUtil.getMessage("error.bus.invalid", MessageUtil.getMessage("Sort"))),
+                errorCode.getHttpStatus()
+        );
     }
 
     // Lỗi sai đường dẫn hoặc tài nguyên không tồn tại
