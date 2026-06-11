@@ -22,7 +22,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Set;
 
 @Service
@@ -54,15 +53,15 @@ public class UserServiceImpl implements UserService {
             throw BusinessException.alreadyExists("label.email");
         }
 
-        User user = new User();
-        user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        user.setActive(true);
-        user.setVerifiedAt(LocalDateTime.now());
+        User user = User.createByAdmin(
+                request.email(),
+                passwordEncoder.encode(request.password())
+        );
         userRepository.save(user);
 
         UserProfile profile = new UserProfile();
         profile.setUser(user);
+        profile.setFirstName(request.firstName());
         userProfileRepository.save(profile);
 
         Set<Role> roles = (request.roles() != null && !request.roles().isEmpty())

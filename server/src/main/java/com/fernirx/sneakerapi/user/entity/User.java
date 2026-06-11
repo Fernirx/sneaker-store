@@ -4,8 +4,7 @@ import com.fernirx.sneakerapi.common.entity.BaseAuditEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -51,4 +50,13 @@ public class User extends BaseAuditEntity {
 
     @OneToMany(mappedBy = "user")
     private Set<UserRole> userRoles = new LinkedHashSet<>();
+
+    public static User createByAdmin(String email, String password) {
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(password);
+        user.setActive(true);
+        user.setVerifiedAt(LocalDateTime.now());
+        return user;
+    }
 }

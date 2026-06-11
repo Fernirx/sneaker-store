@@ -17,5 +17,9 @@ public record CreateUserRequest(
         @Size(max = 255, message = "{validation.size.max}")
         String password,
 
+        @NotBlank(message = "{validation.field.not_blank}")
+        @Size(max = 100, message = "{validation.size.max}")
+        String firstName,
+
         Set<Role> roles
 ) {}
