@@ -1,0 +1,56 @@
+'use client';
+
+import { usePathname, Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
+
+const ICONS = {
+  dashboard: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+  profile: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  users: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  customers: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="14" x2="12" y2="21"/></svg>,
+};
+
+function NavItem({ href, label, icon, active }: { href: string; label: string; icon: React.ReactNode; active: boolean }) {
+  return (
+    <Link href={href}
+      className={`flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-colors ${
+        active ? 'bg-accent text-white font-semibold' : 'text-ink-2 hover:bg-paper hover:text-ink'
+      }`}>
+      {icon}{label}
+    </Link>
+  );
+}
+
+export default function Sidebar() {
+  const pathname = usePathname();
+  const t = useTranslations('admin.nav');
+
+  function isActive(href: string) {
+    return pathname === href || pathname.startsWith(href + '/');
+  }
+
+  return (
+    <aside className="w-56 shrink-0 border-r border-line bg-white min-h-screen flex flex-col">
+      <div className="h-14 flex items-center gap-2 px-5 border-b border-line">
+        <span className="w-2.5 h-2.5 bg-accent rounded-xs rotate-45 shrink-0" />
+        <span className="font-display font-black text-lg uppercase tracking-tight">STRIDE</span>
+        <span className="ml-auto font-mono text-[9px] tracking-widest uppercase text-muted">Admin</span>
+      </div>
+
+      <nav className="flex-1 p-3 space-y-0.5">
+        <NavItem href="/admin/dashboard" label={t('overview')} icon={ICONS.dashboard} active={isActive('/admin/dashboard')} />
+        <NavItem href="/admin/profile"   label={t('profile')}  icon={ICONS.profile}   active={isActive('/admin/profile')} />
+
+        <div className="pt-4">
+          <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+            {t('management')}
+          </p>
+          <div className="space-y-0.5">
+            <NavItem href="/admin/users"     label={t('users')}     icon={ICONS.users}     active={isActive('/admin/users')} />
+            <NavItem href="/admin/customers" label={t('customers')} icon={ICONS.customers} active={isActive('/admin/customers')} />
+          </div>
+        </div>
+      </nav>
+    </aside>
+  );
+}
