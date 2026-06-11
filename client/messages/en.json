@@ -70,7 +70,10 @@
     "newPwd": "New password",
     "confirmPwd": "Confirm new password",
     "changePwdBtn": "Change password",
-    "changing": "Changing..."
+    "changing": "Changing...",
+    "uploadAvatar": "Change avatar",
+    "uploading": "Uploading...",
+    "uploadError": "Failed to upload image"
   },
   "admin": {
     "nav": {

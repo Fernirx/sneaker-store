@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { avatarUrl } from '@/lib/cloudinaryUrl';
 import type { Customer } from './ProfileClient';
 
 const TIER_CONFIG = {
@@ -25,13 +26,14 @@ const TIER_BASE: Record<string, number> = {
 };
 
 export default function MembershipCard({
-  customer, firstName, lastName, email, createdAt,
+  customer, firstName, lastName, email, createdAt, avatarPublicId,
 }: {
   customer: Customer;
   firstName: string;
   lastName?: string;
   email: string;
   createdAt: string;
+  avatarPublicId?: string;
 }) {
   const t = useTranslations('profile');
   const cfg = TIER_CONFIG[customer.membershipTier];
@@ -51,13 +53,22 @@ export default function MembershipCard({
         style={{ backgroundImage: 'repeating-linear-gradient(135deg,#fff 0 2px,transparent 2px 16px)' }} />
 
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-end gap-4">
-        {/* Left: tier + name */}
-        <div className="flex-1 space-y-1.5">
-          <span className="inline-block font-mono text-[10px] font-semibold tracking-[0.14em] uppercase bg-white/20 px-2.5 py-1 rounded-sm">
-            {cfg.label} Member
-          </span>
-          <p className="font-display font-black text-xl leading-tight">{fullName || email}</p>
-          <p className="text-white/70 text-xs">{email} · {t('memberSince')} {joinYear}</p>
+        {/* Left: avatar + tier + name */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="shrink-0 w-14 h-14 rounded-full overflow-hidden ring-2 ring-white/30 bg-white/10 flex items-center justify-center">
+            {avatarPublicId ? (
+              <img src={avatarUrl(avatarPublicId, 112)} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="font-display font-black text-xl text-white">{firstName.charAt(0).toUpperCase()}</span>
+            )}
+          </div>
+          <div className="space-y-1.5 min-w-0">
+            <span className="inline-block font-mono text-[10px] font-semibold tracking-[0.14em] uppercase bg-white/20 px-2.5 py-1 rounded-sm">
+              {cfg.label} Member
+            </span>
+            <p className="font-display font-black text-xl leading-tight truncate">{fullName || email}</p>
+            <p className="text-white/70 text-xs truncate">{email} · {t('memberSince')} {joinYear}</p>
+          </div>
         </div>
 
         {/* Right: stats */}

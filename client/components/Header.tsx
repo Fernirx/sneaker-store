@@ -54,6 +54,7 @@ export default async function Header() {
         <HeaderActions
           isLoggedIn={!!session}
           firstName={profile?.firstName}
+          avatarPublicId={profile?.avatarPublicId}
         />
       </div>
     </header>

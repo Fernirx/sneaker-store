@@ -70,7 +70,10 @@
     "newPwd": "Mật khẩu mới",
     "confirmPwd": "Xác nhận mật khẩu mới",
     "changePwdBtn": "Đổi mật khẩu",
-    "changing": "Đang đổi..."
+    "changing": "Đang đổi...",
+    "uploadAvatar": "Đổi ảnh đại diện",
+    "uploading": "Đang tải lên...",
+    "uploadError": "Không thể tải ảnh lên"
   },
   "admin": {
     "nav": {

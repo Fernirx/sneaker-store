@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import MembershipCard from './MembershipCard';
+import AvatarUpload from './AvatarUpload';
 import ProfileForm from './ProfileForm';
 import AddressSection from './AddressSection';
 import ChangePasswordForm from './ChangePasswordForm';
@@ -43,6 +44,7 @@ export default function ProfileClient({
 
   function handleProfileUpdated(updated: Profile) {
     setProfile(updated);
+    window.dispatchEvent(new CustomEvent('profile-updated', { detail: updated }));
     router.refresh();
   }
 
@@ -63,6 +65,7 @@ export default function ProfileClient({
           lastName={profile.lastName}
           email={profile.email}
           createdAt={profile.createdAt}
+          avatarPublicId={profile.avatarPublicId}
         />
       )}
 
@@ -83,7 +86,15 @@ export default function ProfileClient({
 
       <div>
         {tab === 'info' && profile && (
-          <ProfileForm profile={profile} onUpdated={handleProfileUpdated} />
+          <div className="space-y-6">
+            <AvatarUpload
+              avatarPublicId={profile.avatarPublicId}
+              name={profile.firstName}
+              onUpdated={handleProfileUpdated}
+            />
+            <hr className="border-line" />
+            <ProfileForm profile={profile} onUpdated={handleProfileUpdated} />
+          </div>
         )}
         {tab === 'address' && <AddressSection />}
         {tab === 'security' && <ChangePasswordForm hasPassword={profile?.hasPassword ?? false} />}

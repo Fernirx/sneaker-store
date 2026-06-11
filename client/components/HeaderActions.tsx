@@ -1,24 +1,40 @@
 'use client';
 
-import { useRouter } from '@/i18n/routing';
+import { useEffect, useState, useTransition } from 'react';
 import { Link } from '@/i18n/routing';
 import clientAxios from '@/lib/axios/clientAxios';
-import { useTransition } from 'react';
+import { avatarUrl } from '@/lib/cloudinaryUrl';
 
 interface Props {
   isLoggedIn: boolean;
   firstName?: string;
+  avatarPublicId?: string;
 }
 
-export default function HeaderActions({ isLoggedIn, firstName }: Props) {
-  const router = useRouter();
+export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }: Props) {
   const [pending, start] = useTransition();
+  const [localFirstName, setLocalFirstName] = useState(firstName);
+  const [localAvatarPublicId, setLocalAvatarPublicId] = useState(avatarPublicId);
+
+  useEffect(() => {
+    setLocalFirstName(firstName);
+    setLocalAvatarPublicId(avatarPublicId);
+  }, [firstName, avatarPublicId]);
+
+  useEffect(() => {
+    function handler(e: Event) {
+      const detail = (e as CustomEvent).detail ?? {};
+      if ('firstName' in detail) setLocalFirstName(detail.firstName as string);
+      if ('avatarPublicId' in detail) setLocalAvatarPublicId(detail.avatarPublicId as string | undefined);
+    }
+    window.addEventListener('profile-updated', handler);
+    return () => window.removeEventListener('profile-updated', handler);
+  }, []);
 
   function handleLogout() {
     start(async () => {
       await clientAxios.post('/api/auth/logout').catch(() => {});
-      router.replace('/');
-      router.refresh();
+      window.location.href = '/';
     });
   }
 
@@ -46,10 +62,18 @@ export default function HeaderActions({ isLoggedIn, firstName }: Props) {
 
           <Link href="/profile"
             className="flex items-center gap-1.5 px-3 py-2 rounded text-sm font-semibold text-ink hover:bg-paper transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-            </svg>
-            <span className="hidden sm:inline text-xs">{firstName ?? 'Tài khoản'}</span>
+            {localAvatarPublicId ? (
+              <img
+                src={avatarUrl(localAvatarPublicId, 48)}
+                alt="avatar"
+                className="w-6 h-6 rounded-full object-cover ring-1 ring-line"
+              />
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+            )}
+            <span className="hidden sm:inline text-xs">{localFirstName ?? 'Tài khoản'}</span>
           </Link>
 
           <button onClick={handleLogout} disabled={pending}
