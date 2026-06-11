@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import axios from 'axios';
 import clientAxios from '@/lib/axios/clientAxios';
+import { parseApiError } from '@/lib/parseApiError';
 import type { Profile } from './ProfileClient';
 
 function FieldError({ msg }: { msg?: string }) {
@@ -51,15 +51,9 @@ export default function ProfileForm({
         onUpdated(data.data as Profile);
         setSuccess(t('saveSuccess'));
       } catch (err) {
-        if (axios.isAxiosError(err)) {
-          const d = err.response?.data as { fields?: { field: string; message: string }[]; message?: string } | undefined;
-          const fields: Record<string, string> = {};
-          d?.fields?.forEach(f => { fields[f.field] = f.message; });
-          if (Object.keys(fields).length > 0) setFieldErrors(fields);
-          else setGeneralError(d?.message ?? 'Đã có lỗi xảy ra');
-        } else {
-          setGeneralError('Lỗi kết nối');
-        }
+        const { general, fields } = parseApiError(err, 'Lỗi kết nối');
+        setFieldErrors(fields);
+        setGeneralError(general);
       }
     });
   }

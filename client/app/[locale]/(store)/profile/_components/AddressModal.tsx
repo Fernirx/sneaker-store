@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { parseApiError } from '@/lib/parseApiError';
 
 export interface AddressForm {
   name: string;
@@ -45,7 +46,7 @@ export default function AddressModal({
 }) {
   const t = useTranslations('profile');
   const [form, setForm] = useState<AddressForm>({ ...EMPTY, ...initial });
-  const [errors, setErrors] = useState<Partial<AddressForm>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
   const [generalError, setGeneralError] = useState('');
 
@@ -55,11 +56,11 @@ export default function AddressModal({
 
   function set(key: keyof AddressForm, value: string | boolean) {
     setForm(f => ({ ...f, [key]: value }));
-    setErrors(e => ({ ...e, [key]: undefined }));
+    setErrors(e => { const next = { ...e }; delete next[key]; return next; });
   }
 
   function validate() {
-    const e: Partial<Record<keyof AddressForm, string>> = {};
+    const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = 'Bắt buộc';
     if (!form.phone.trim()) e.phone = 'Bắt buộc';
     if (!form.street.trim()) e.street = 'Bắt buộc';
@@ -80,8 +81,12 @@ export default function AddressModal({
         postalCode: form.postalCode.trim() || '',
       });
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setGeneralError(msg ?? 'Đã có lỗi xảy ra');
+      const { general, fields: serverFields } = parseApiError(err);
+      if (Object.keys(serverFields).length > 0) {
+        setErrors(prev => ({ ...prev, ...serverFields }));
+      } else {
+        setGeneralError(general);
+      }
     } finally {
       setPending(false);
     }

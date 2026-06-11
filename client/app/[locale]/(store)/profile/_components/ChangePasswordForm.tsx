@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import axios from 'axios';
 import clientAxios from '@/lib/axios/clientAxios';
+import { parseApiError } from '@/lib/parseApiError';
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -49,16 +49,6 @@ function PasswordField({
   );
 }
 
-function parseError(err: unknown) {
-  if (!axios.isAxiosError(err)) return { general: 'Lỗi kết nối', fields: {} };
-  const d = err.response?.data as { fields?: { field: string; message: string }[]; message?: string } | undefined;
-  const fields: Record<string, string> = {};
-  d?.fields?.forEach(f => { fields[f.field] = f.message; });
-  return {
-    general: Object.keys(fields).length === 0 ? (d?.message ?? 'Đã có lỗi xảy ra') : '',
-    fields,
-  };
-}
 
 export default function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
   const t = useTranslations('profile');
@@ -99,7 +89,7 @@ export default function ChangePasswordForm({ hasPassword }: { hasPassword: boole
         setSuccess(hasPassword ? 'Đổi mật khẩu thành công' : 'Đặt mật khẩu thành công');
         reset();
       } catch (err) {
-        const { general, fields } = parseError(err);
+        const { general, fields } = parseApiError(err, 'Lỗi kết nối');
         setFieldErrors(fields);
         setGeneralError(general);
       }
