@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import axios from 'axios';
 import { createServerAxios } from '@/lib/axios/serverAxios';
 
@@ -20,6 +21,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const api = await createServerAxios();
     const { data } = await api.patch('/me', body);
+    revalidatePath('/', 'layout');
     return NextResponse.json(data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
