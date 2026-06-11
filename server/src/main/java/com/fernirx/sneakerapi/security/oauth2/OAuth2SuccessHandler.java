@@ -7,12 +7,11 @@ import com.fernirx.sneakerapi.common.response.ErrorResponse;
 import com.fernirx.sneakerapi.common.utils.MessageUtil;
 import com.fernirx.sneakerapi.security.jwt.JwtProvider;
 import com.fernirx.sneakerapi.security.model.UserTokenPayload;
-import com.fernirx.sneakerapi.security.response.TokenResponse;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -20,6 +19,8 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
@@ -28,20 +29,16 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final ObjectMapper objectMapper;
     private final OAuth2UserProcessor oAuth2UserProcessor;
 
+    @Value("${application.frontend-url}")
+    private String frontendUrl;
+
     @Override
     public void onAuthenticationSuccess(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull Authentication authentication) throws IOException, ServletException {
-        response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setCharacterEncoding("UTF-8");
+            @NonNull Authentication authentication) throws IOException {
         if (!(authentication.getPrincipal() instanceof OAuth2User oAuth2User)) {
-            response.setStatus(ErrorCode.UNAUTHORIZED.getHttpStatus().value());
-            objectMapper.writeValue(
-                    response.getWriter(),
-                    ErrorResponse.of(ErrorCode.UNAUTHORIZED, MessageUtil.getMessage("error.auth.oauth2_failed"))
-            );
+            redirectError(response, "oauth2_failed");
             return;
         }
         String provider = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
@@ -50,27 +47,22 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         try {
             userTokenPayload = oAuth2UserProcessor.process(userInfo);
         } catch (SecurityCustomException ex) {
-            response.setStatus(ex.getErrorCode().getHttpStatus().value());
-            objectMapper.writeValue(
-                    response.getWriter(),
-                    ErrorResponse.of(ex.getErrorCode(), MessageUtil.getMessage(ex.getErrorCode().getMessageKey(), ex.getArgs()))
-            );
+            redirectError(response, ex.getErrorCode().name());
             return;
         }
         if (userTokenPayload == null) {
-            response.setStatus(ErrorCode.UNAUTHORIZED.getHttpStatus().value());
-            objectMapper.writeValue(
-                    response.getWriter(),
-                    ErrorResponse.of(ErrorCode.UNAUTHORIZED, MessageUtil.getMessage("error.auth.oauth2_failed"))
-            );
+            redirectError(response, "oauth2_failed");
             return;
         }
         String accessToken = jwtProvider.generateAccessToken(userTokenPayload);
         String refreshToken = jwtProvider.generateRefreshToken(userTokenPayload);
         clearAuthenticationAttributes(request);
-        objectMapper.writeValue(response.getWriter(), TokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build());
+        response.sendRedirect(frontendUrl + "/api/auth/oauth2/callback"
+                + "?accessToken=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8)
+                + "&refreshToken=" + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8));
+    }
+
+    private void redirectError(HttpServletResponse response, String error) throws IOException {
+        response.sendRedirect(frontendUrl + "/login?error=" + URLEncoder.encode(error, StandardCharsets.UTF_8));
     }
 }
