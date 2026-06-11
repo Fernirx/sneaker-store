@@ -1,0 +1,45 @@
+{
+  "auth": {
+    "loginTab": "Log in",
+    "registerTab": "Sign up",
+    "welcomeBack": "Welcome back",
+    "loginSub": "Log in to continue shopping.",
+    "createAccount": "Create account",
+    "registerSub": "Create a STRIDE account to start shopping.",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "forgotPassword": "Forgot password?",
+    "loginBtn": "Log in",
+    "registerBtn": "Create account",
+    "loggingIn": "Logging in...",
+    "registering": "Creating account...",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUpLink": "Sign up",
+    "signInLink": "Log in",
+    "orWith": "or",
+    "memberBadge": "STRIDE Member",
+    "heroCopy": "STEP INTO\nTHE RACE.",
+    "heroSub": "Earn points on every order, get exclusive deals and early access to limited sneaker drops.",
+    "otpTitle": "Verify email",
+    "otpSub": "Enter the OTP sent to",
+    "otpCode": "OTP code (6 digits)",
+    "verifyBtn": "Verify",
+    "verifying": "Verifying...",
+    "resend": "Resend code",
+    "resendIn": "Resend in"
+  },
+  "admin": {
+    "nav": {
+      "overview": "Overview",
+      "profile": "My Profile",
+      "management": "Management",
+      "users": "Users",
+      "customers": "Customers"
+    },
+    "logout": "Log out"
+  }
+}

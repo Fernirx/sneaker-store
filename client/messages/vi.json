@@ -1,0 +1,45 @@
+{
+  "auth": {
+    "loginTab": "Đăng nhập",
+    "registerTab": "Đăng ký",
+    "welcomeBack": "Chào mừng trở lại",
+    "loginSub": "Đăng nhập để tiếp tục mua sắm.",
+    "createAccount": "Tạo tài khoản",
+    "registerSub": "Tạo tài khoản STRIDE để mua sắm.",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "firstName": "Họ",
+    "lastName": "Tên",
+    "forgotPassword": "Quên mật khẩu?",
+    "loginBtn": "Đăng nhập",
+    "registerBtn": "Tạo tài khoản",
+    "loggingIn": "Đang đăng nhập...",
+    "registering": "Đang đăng ký...",
+    "noAccount": "Chưa có tài khoản?",
+    "hasAccount": "Đã có tài khoản?",
+    "signUpLink": "Đăng ký ngay",
+    "signInLink": "Đăng nhập",
+    "orWith": "hoặc",
+    "memberBadge": "Thành viên STRIDE",
+    "heroCopy": "BƯỚC VÀO\nCUỘC ĐUA.",
+    "heroSub": "Tích điểm mỗi đơn hàng, nhận ưu đãi độc quyền và truy cập sớm các đợt drop sneaker giới hạn.",
+    "otpTitle": "Xác minh email",
+    "otpSub": "Nhập mã OTP đã gửi đến",
+    "otpCode": "Mã OTP (6 số)",
+    "verifyBtn": "Xác minh",
+    "verifying": "Đang xác minh...",
+    "resend": "Gửi lại mã",
+    "resendIn": "Gửi lại sau"
+  },
+  "admin": {
+    "nav": {
+      "overview": "Tổng quan",
+      "profile": "Trang cá nhân",
+      "management": "Quản lý",
+      "users": "Người dùng",
+      "customers": "Khách hàng"
+    },
+    "logout": "Đăng xuất"
+  }
+}
