@@ -1,10 +1,6 @@
 package com.fernirx.sneakerapi.security.oauth2;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fernirx.sneakerapi.common.enums.ErrorCode;
 import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
-import com.fernirx.sneakerapi.common.response.ErrorResponse;
-import com.fernirx.sneakerapi.common.utils.MessageUtil;
 import com.fernirx.sneakerapi.security.jwt.JwtProvider;
 import com.fernirx.sneakerapi.security.model.UserTokenPayload;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +22,6 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final JwtProvider jwtProvider;
-    private final ObjectMapper objectMapper;
     private final OAuth2UserProcessor oAuth2UserProcessor;
 
     @Value("${application.frontend-url}")

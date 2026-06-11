@@ -1,18 +1,10 @@
 import { cookies } from 'next/headers';
+import { decodeJwt } from './jwt';
 
 interface Session {
   userId: string;
   roles: string[];
   email?: string;
-}
-
-function decodeJwt(token: string): Record<string, unknown> | null {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(Buffer.from(payload, 'base64url').toString());
-  } catch {
-    return null;
-  }
 }
 
 export async function getSession(): Promise<Session | null> {
