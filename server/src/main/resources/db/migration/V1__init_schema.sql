@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS `user_profiles` (
 CREATE TABLE IF NOT EXISTS `customers` (
   `id`              BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `user_id`         BIGINT UNSIGNED  NOT NULL,
-  `loyalty_points`  INT UNSIGNED     NOT NULL DEFAULT 0,
+  `loyalty_points`  BIGINT UNSIGNED  NOT NULL DEFAULT 0,
   `total_spent`     DECIMAL(15,2)    NOT NULL DEFAULT 0,
   `membership_tier` ENUM('BRONZE', 'SILVER', 'GOLD', 'PLATINUM') NOT NULL DEFAULT 'BRONZE',
   `created_at`      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,

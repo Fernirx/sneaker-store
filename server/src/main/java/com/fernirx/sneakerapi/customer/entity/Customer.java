@@ -39,7 +39,6 @@ public class Customer extends BaseAuditEntity {
     @NotNull
     @ColumnDefault("'BRONZE'")
     @Enumerated(EnumType.STRING)
-    @Lob
     @Column(name = "membership_tier", nullable = false)
     private MembershipTier membershipTier;
 
