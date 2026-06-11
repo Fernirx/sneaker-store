@@ -8,7 +8,7 @@ clientAxios.interceptors.response.use(
   res => res,
   async err => {
     const original = err.config;
-    if (err.response?.status !== 401 || original._retry) {
+    if (err.response?.status !== 401 || original._retry || /^\/api\/auth\//i.test(original.url ?? '')) {
       return Promise.reject(err);
     }
     original._retry = true;
@@ -16,12 +16,12 @@ clientAxios.interceptors.response.use(
     if (!refreshing) {
       refreshing = axios.post('/api/auth/refresh')
         .then(() => { refreshing = null; })
-        .catch(() => { refreshing = null; });
+        .catch((e) => { refreshing = null; throw e; });
     }
 
     try {
       await refreshing;
-      return clientAxios(original);
+      return await clientAxios(original);
     } catch {
       window.location.href = '/login';
       return Promise.reject(err);

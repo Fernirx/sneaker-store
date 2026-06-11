@@ -1,7 +1,6 @@
 'use client';
 
-import { useRouter } from '@/i18n/routing';
-import axios from 'axios';
+import clientAxios from '@/lib/axios/clientAxios';
 import { useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -11,14 +10,13 @@ interface Props {
 }
 
 export default function AdminHeader({ firstName }: Props) {
-  const router = useRouter();
   const t = useTranslations('admin');
   const [pending, start] = useTransition();
 
   function handleLogout() {
     start(async () => {
-      await axios.post('/api/auth/logout').catch(() => {});
-      router.replace('/login');
+      await clientAxios.post('/api/auth/logout').catch(() => {});
+      window.location.href = '/login';
     });
   }
 

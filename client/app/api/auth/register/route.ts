@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
-import { createServerAxios } from '@/lib/axios/serverAxios';
+import { publicAxios } from '@/lib/axios/serverAxios';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
   try {
-    const api = await createServerAxios();
-    await api.post('/auth/register', body);
+    await publicAxios.post('/auth/register', body);
     return NextResponse.json({ ok: true });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {

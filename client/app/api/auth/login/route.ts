@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
-import { createServerAxios } from '@/lib/axios/serverAxios';
+import { publicAxios } from '@/lib/axios/serverAxios';
 import { decodeJwt, jwtMaxAge } from '@/lib/jwt';
 
 export async function POST(req: NextRequest) {
@@ -8,8 +8,7 @@ export async function POST(req: NextRequest) {
   const isProd = process.env.NODE_ENV === 'production';
 
   try {
-    const api = await createServerAxios();
-    const { data } = await api.post('/auth/login', body);
+    const { data } = await publicAxios.post('/auth/login', body);
 
     const { accessToken, refreshToken } = data.data;
     const payload = decodeJwt(accessToken);

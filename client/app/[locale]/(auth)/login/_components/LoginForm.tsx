@@ -4,7 +4,8 @@ import { useState, useTransition, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
-import axios from 'axios';
+import clientAxios from '@/lib/axios/clientAxios';
+import { parseApiError } from '@/lib/parseApiError';
 import { isStaffRole } from '@/lib/constants';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -17,21 +18,8 @@ const OAUTH2_ERROR_MESSAGES: Record<string, string> = {
 type Tab = 'login' | 'register' | 'otp';
 type FieldErrors = Record<string, string>;
 
-interface ApiError {
-  code?: string;
-  message?: string;
-  fields?: { field: string; message: string }[];
-}
-
-function parseError(err: unknown): { code: string; general: string; fields: FieldErrors } {
-  if (!axios.isAxiosError(err)) return { code: '', general: 'Lỗi kết nối', fields: {} };
-  const data = err.response?.data as ApiError | undefined;
-  const fields: FieldErrors = {};
-  data?.fields?.forEach(f => { fields[f.field] = f.message; });
-  const general = Object.keys(fields).length === 0
-    ? (data?.message ?? 'Đã có lỗi xảy ra')
-    : '';
-  return { code: data?.code ?? '', general, fields };
+function errCode(err: unknown): string {
+  return (err as { response?: { data?: { code?: string } } })?.response?.data?.code ?? '';
 }
 
 function FieldError({ msg }: { msg?: string }) {
@@ -100,14 +88,14 @@ export default function LoginForm() {
     clearErrors();
     start(async () => {
       try {
-        const { data } = await axios.post('/api/auth/login', { email: loginEmail, password: loginPass });
+        const { data } = await clientAxios.post('/api/auth/login', { email: loginEmail, password: loginPass });
         const roles: string[] = data.roles ?? [];
         router.replace(isStaffRole(roles) ? '/admin' : '/');
       } catch (err) {
-        const { code, general, fields } = parseError(err);
-        if (code === 'EMAIL_NOT_VERIFIED') {
+        const { general, fields } = parseApiError(err, 'Lỗi kết nối');
+        if (errCode(err) === 'EMAIL_NOT_VERIFIED') {
           setOtpEmail(loginEmail);
-          await axios.post('/api/auth/resend-otp', { email: loginEmail, purpose: 'REGISTER' }).catch(() => {});
+          await clientAxios.post('/api/auth/resend-otp', { email: loginEmail, purpose: 'REGISTER' }).catch(() => {});
           startResendTimer();
           setTab('otp');
           return;
@@ -122,7 +110,7 @@ export default function LoginForm() {
     clearErrors();
     start(async () => {
       try {
-        await axios.post('/api/auth/register', {
+        await clientAxios.post('/api/auth/register', {
           email: regEmail,
           password: regPass,
           confirmPassword: regConfirm,
@@ -133,7 +121,7 @@ export default function LoginForm() {
         startResendTimer();
         setTab('otp');
       } catch (err) {
-        const { general, fields } = parseError(err);
+        const { general, fields } = parseApiError(err, 'Lỗi kết nối');
         setGeneralError(general);
         setFieldErrors(fields);
       }
@@ -144,11 +132,11 @@ export default function LoginForm() {
     clearErrors();
     start(async () => {
       try {
-        const { data } = await axios.post('/api/auth/verify-otp', { email: otpEmail, otp });
+        const { data } = await clientAxios.post('/api/auth/verify-otp', { email: otpEmail, otp });
         const roles: string[] = data.roles ?? [];
         router.replace(isStaffRole(roles) ? '/admin' : '/');
       } catch (err) {
-        const { general } = parseError(err);
+        const { general } = parseApiError(err, 'Lỗi kết nối');
         setGeneralError(general);
       }
     });
@@ -157,7 +145,7 @@ export default function LoginForm() {
   async function handleResend() {
     if (resendSeconds > 0) return;
     try {
-      await axios.post('/api/auth/resend-otp', { email: otpEmail, purpose: 'REGISTER' });
+      await clientAxios.post('/api/auth/resend-otp', { email: otpEmail, purpose: 'REGISTER' });
       startResendTimer();
     } catch { /* ignore */ }
   }

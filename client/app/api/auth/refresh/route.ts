@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import { cookies } from 'next/headers';
-import { createServerAxios } from '@/lib/axios/serverAxios';
 import { jwtMaxAge } from '@/lib/jwt';
 
 export async function POST(_req: NextRequest) {
@@ -14,8 +13,13 @@ export async function POST(_req: NextRequest) {
   }
 
   try {
-    const api = await createServerAxios();
-    const { data } = await api.post('/auth/refresh-token', { refreshToken });
+    // Gọi thẳng không dùng createServerAxios — refresh endpoint là public,
+    // gửi expired access token sẽ bị JwtAuthenticationFilter reject trước khi xử lý
+    const { data } = await axios.post(
+      `${process.env.SPRING_API_URL}/auth/refresh-token`,
+      { refreshToken },
+      { headers: { 'Content-Type': 'application/json' } },
+    );
 
     const { accessToken, refreshToken: newRefresh } = data.data;
 
