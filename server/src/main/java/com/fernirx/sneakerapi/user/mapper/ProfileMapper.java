@@ -19,6 +19,7 @@ public interface ProfileMapper {
     @Mapping(source = "userProfile.dateOfBirth", target = "dateOfBirth")
     @Mapping(source = "userProfile.avatarPublicId", target = "avatarPublicId")
     @Mapping(target = "emailVerified", expression = "java(user.getVerifiedAt() != null)")
+    @Mapping(target = "hasPassword", expression = "java(user.getPassword() != null)")
     ProfileResponse toProfileResponse(User user);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

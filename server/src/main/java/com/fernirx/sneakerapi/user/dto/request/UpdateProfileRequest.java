@@ -2,6 +2,7 @@ package com.fernirx.sneakerapi.user.dto.request;
 
 import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ public record UpdateProfileRequest(
         @Size(max = 20, message = "{validation.size.max}")
         String phone,
 
+        @Past(message = "{validation.date.past}")
         LocalDate dateOfBirth,
 
         @NullableNotBlank

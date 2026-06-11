@@ -15,5 +15,6 @@ public record ProfileResponse(
         LocalDate dateOfBirth,
         String avatarPublicId,
         boolean emailVerified,
+        boolean hasPassword,
         LocalDateTime createdAt
 ) {}
