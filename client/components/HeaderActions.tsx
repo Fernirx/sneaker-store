@@ -2,7 +2,7 @@
 
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
-import axios from 'axios';
+import clientAxios from '@/lib/axios/clientAxios';
 import { useTransition } from 'react';
 
 interface Props {
@@ -16,7 +16,7 @@ export default function HeaderActions({ isLoggedIn, firstName }: Props) {
 
   function handleLogout() {
     start(async () => {
-      await axios.post('/api/auth/logout').catch(() => {});
+      await clientAxios.post('/api/auth/logout').catch(() => {});
       router.replace('/');
       router.refresh();
     });
@@ -44,7 +44,7 @@ export default function HeaderActions({ isLoggedIn, firstName }: Props) {
 
           <div className="w-px h-4 bg-line mx-1" />
 
-          <Link href="/account"
+          <Link href="/profile"
             className="flex items-center gap-1.5 px-3 py-2 rounded text-sm font-semibold text-ink hover:bg-paper transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
