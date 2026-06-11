@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="#{mail.verify.email.subject}">Xác minh tài khoản</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 480px; margin: 40px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .header { background: #111; padding: 28px 32px; }
+    .header h1 { color: #fff; margin: 0; font-size: 20px; letter-spacing: 1px; }
+    .body { padding: 32px; color: #333; }
+    .body p { margin: 0 0 16px; line-height: 1.6; }
+    .otp-box { text-align: center; margin: 28px 0; }
+    .otp-code { display: inline-block; font-size: 36px; font-weight: 700; letter-spacing: 10px; color: #111; background: #f4f4f4; padding: 14px 28px; border-radius: 8px; }
+    .expiry { font-size: 13px; color: #888; margin-top: 8px; }
+    .warning { font-size: 13px; color: #999; border-top: 1px solid #eee; padding-top: 16px; margin-top: 24px; }
+    .footer { background: #f9f9f9; padding: 16px 32px; font-size: 12px; color: #aaa; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>SNEAKER STORE</h1>
+  </div>
+  <div class="body">
+    <p th:text="#{mail.verify.email.greeting(${username})}">Xin chào,</p>
+    <p th:text="#{mail.verify.email.body}">Mã OTP của bạn để xác minh tài khoản:</p>
+    <div class="otp-box">
+      <div class="otp-code" th:text="${otpCode}">000000</div>
+      <div class="expiry" th:text="#{mail.verify.email.expiry(${expiryMinutes})}">Mã có hiệu lực trong 5 phút.</div>
+    </div>
+    <p class="warning" th:text="#{mail.verify.email.warning}">Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+  </div>
+  <div class="footer">
+    <span th:text="#{mail.verify.email.footer}">© 2026 Sneaker Store. Nếu bạn không yêu cầu điều này, hãy bỏ qua email này.</span>
+  </div>
+</div>
+</body>
+</html>
