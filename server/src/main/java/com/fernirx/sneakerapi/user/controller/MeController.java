@@ -1,6 +1,7 @@
 package com.fernirx.sneakerapi.user.controller;
 
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
+import com.fernirx.sneakerapi.common.utils.MessageUtil;
 import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import com.fernirx.sneakerapi.user.dto.request.ChangePasswordRequest;
 import com.fernirx.sneakerapi.user.dto.request.UpdateProfileRequest;
@@ -35,7 +36,10 @@ public class MeController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody UpdateProfileRequest request) {
         ProfileResponse response = profileService.updateProfile(userDetails.getId(), request);
-        return ResponseEntity.ok(SuccessResponse.of("success.profile.update", response));
+        return ResponseEntity.ok(SuccessResponse.of(
+                MessageUtil.getMessage("success.resource.updated", MessageUtil.getMessage("label.profile")),
+                response
+        ));
     }
 
     @PostMapping("/change-password")
@@ -44,6 +48,6 @@ public class MeController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ChangePasswordRequest request) {
         profileService.changePassword(userDetails.getId(), request);
-        return ResponseEntity.ok(SuccessResponse.of("success.profile.change_password"));
+        return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.profile.change_password")));
     }
 }

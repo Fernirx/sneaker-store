@@ -1,6 +1,7 @@
 package com.fernirx.sneakerapi.customer.controller;
 
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
+import com.fernirx.sneakerapi.common.utils.MessageUtil;
 import com.fernirx.sneakerapi.customer.dto.request.CreateAddressRequest;
 import com.fernirx.sneakerapi.customer.dto.request.UpdateAddressRequest;
 import com.fernirx.sneakerapi.customer.dto.response.AddressResponse;
@@ -39,7 +40,10 @@ public class AddressController {
             @Valid @RequestBody CreateAddressRequest request) {
         AddressResponse response = addressService.createAddress(userDetails.getId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(SuccessResponse.of("success.address.create", response));
+                .body(SuccessResponse.of(
+                        MessageUtil.getMessage("success.resource.created", MessageUtil.getMessage("label.address")),
+                        response
+                ));
     }
 
     @PatchMapping("/{id}")
@@ -49,15 +53,20 @@ public class AddressController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateAddressRequest request) {
         AddressResponse response = addressService.updateAddress(userDetails.getId(), id, request);
-        return ResponseEntity.ok(SuccessResponse.of("success.address.update", response));
+        return ResponseEntity.ok(SuccessResponse.of(
+                MessageUtil.getMessage("success.resource.updated", MessageUtil.getMessage("label.address")),
+                response
+        ));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Xóa địa chỉ")
-    public ResponseEntity<Void> deleteAddress(
+    public ResponseEntity<SuccessResponse<Void>> deleteAddress(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id) {
         addressService.deleteAddress(userDetails.getId(), id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(SuccessResponse.of(
+                MessageUtil.getMessage("success.resource.deleted", MessageUtil.getMessage("label.address"))
+        ));
     }
 }
