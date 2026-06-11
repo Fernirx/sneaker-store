@@ -75,6 +75,30 @@
     "uploading": "Đang tải lên...",
     "uploadError": "Không thể tải ảnh lên"
   },
+  "header": {
+    "searchPlaceholder": "Tìm kiếm sản phẩm...",
+    "orders": "Đơn hàng",
+    "wishlist": "Yêu thích",
+    "account": "Tài khoản",
+    "logout": "Đăng xuất",
+    "login": "Đăng nhập"
+  },
+  "footer": {
+    "tagline": "Giày chính hãng, phong cách đỉnh cao. Mua sắm trực tuyến an toàn và nhanh chóng.",
+    "colBrand": "Thương hiệu",
+    "colSupport": "Hỗ trợ",
+    "colLegal": "Pháp lý",
+    "about": "Về chúng tôi",
+    "careers": "Tuyển dụng",
+    "news": "Tin tức",
+    "buyingGuide": "Hướng dẫn mua hàng",
+    "returns": "Đổi trả & hoàn tiền",
+    "tracking": "Theo dõi đơn hàng",
+    "contact": "Liên hệ",
+    "terms": "Điều khoản sử dụng",
+    "privacy": "Chính sách bảo mật",
+    "cookies": "Chính sách cookie"
+  },
   "admin": {
     "nav": {
       "overview": "Tổng quan",
@@ -83,6 +107,11 @@
       "users": "Người dùng",
       "customers": "Khách hàng"
     },
-    "logout": "Đăng xuất"
+    "logout": "Đăng xuất",
+    "profile": {
+      "title": "Hồ sơ cá nhân",
+      "tabInfo": "Thông tin",
+      "tabSecurity": "Bảo mật"
+    }
   }
 }

@@ -1,7 +1,9 @@
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { getSession } from '@/lib/session';
 import { createServerAxios } from '@/lib/axios/serverAxios';
 import HeaderActions from './HeaderActions';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface ProfileResponse {
   firstName: string;
@@ -20,7 +22,7 @@ async function getProfile(): Promise<ProfileResponse | null> {
 }
 
 export default async function Header() {
-  const session = await getSession();
+  const [session, t] = await Promise.all([getSession(), getTranslations('header')]);
   const profile = session ? await getProfile() : null;
 
   return (
@@ -39,7 +41,7 @@ export default async function Header() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <span className="text-xs">Tìm kiếm sản phẩm...</span>
+          <span className="text-xs">{t('searchPlaceholder')}</span>
         </Link>
 
         <div className="flex-1" />
@@ -50,6 +52,8 @@ export default async function Header() {
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </Link>
+
+        <LanguageSwitcher />
 
         <HeaderActions
           isLoggedIn={!!session}

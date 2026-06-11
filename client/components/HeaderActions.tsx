@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 import { avatarUrl } from '@/lib/cloudinaryUrl';
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }: Props) {
+  const t = useTranslations('header');
   const [pending, start] = useTransition();
   const [localFirstName, setLocalFirstName] = useState(firstName);
   const [localAvatarPublicId, setLocalAvatarPublicId] = useState(avatarPublicId);
@@ -47,7 +49,7 @@ export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }:
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
             </svg>
-            <span className="hidden sm:inline text-xs font-semibold tracking-wide">Đơn hàng</span>
+            <span className="hidden sm:inline text-xs font-semibold tracking-wide">{t('orders')}</span>
           </Link>
 
           <Link href="/wishlist"
@@ -55,7 +57,7 @@ export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }:
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
-            <span className="hidden sm:inline text-xs font-semibold tracking-wide">Yêu thích</span>
+            <span className="hidden sm:inline text-xs font-semibold tracking-wide">{t('wishlist')}</span>
           </Link>
 
           <div className="w-px h-4 bg-line mx-1" />
@@ -73,7 +75,7 @@ export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }:
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
               </svg>
             )}
-            <span className="hidden sm:inline text-xs">{localFirstName ?? 'Tài khoản'}</span>
+            <span className="hidden sm:inline text-xs">{localFirstName ?? t('account')}</span>
           </Link>
 
           <button onClick={handleLogout} disabled={pending}
@@ -81,13 +83,13 @@ export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }:
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-            <span className="hidden sm:inline text-xs font-semibold tracking-wide">Đăng xuất</span>
+            <span className="hidden sm:inline text-xs font-semibold tracking-wide">{t('logout')}</span>
           </button>
         </>
       ) : (
         <Link href="/login"
           className="font-display font-bold text-[13px] uppercase tracking-wider bg-ink text-white px-4 py-2 rounded hover:bg-ink/80 transition-colors">
-          Đăng nhập
+          {t('login')}
         </Link>
       )}
     </div>

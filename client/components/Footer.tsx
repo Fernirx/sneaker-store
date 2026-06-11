@@ -1,23 +1,5 @@
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
-
-const LINKS = {
-  'Thương hiệu': [
-    { label: 'Về chúng tôi', href: '/about' },
-    { label: 'Tuyển dụng', href: '/careers' },
-    { label: 'Tin tức', href: '/news' },
-  ],
-  'Hỗ trợ': [
-    { label: 'Hướng dẫn mua hàng', href: '/help/buying' },
-    { label: 'Đổi trả & hoàn tiền', href: '/help/returns' },
-    { label: 'Theo dõi đơn hàng', href: '/help/tracking' },
-    { label: 'Liên hệ', href: '/contact' },
-  ],
-  'Pháp lý': [
-    { label: 'Điều khoản sử dụng', href: '/legal/terms' },
-    { label: 'Chính sách bảo mật', href: '/legal/privacy' },
-    { label: 'Chính sách cookie', href: '/legal/cookies' },
-  ],
-};
 
 const SOCIALS = [
   {
@@ -37,7 +19,37 @@ const SOCIALS = [
   },
 ];
 
-export default function Footer() {
+export default async function Footer() {
+  const t = await getTranslations('footer');
+
+  const LINKS = [
+    {
+      title: t('colBrand'),
+      items: [
+        { label: t('about'), href: '/about' },
+        { label: t('careers'), href: '/careers' },
+        { label: t('news'), href: '/news' },
+      ],
+    },
+    {
+      title: t('colSupport'),
+      items: [
+        { label: t('buyingGuide'), href: '/help/buying' },
+        { label: t('returns'), href: '/help/returns' },
+        { label: t('tracking'), href: '/help/tracking' },
+        { label: t('contact'), href: '/contact' },
+      ],
+    },
+    {
+      title: t('colLegal'),
+      items: [
+        { label: t('terms'), href: '/legal/terms' },
+        { label: t('privacy'), href: '/legal/privacy' },
+        { label: t('cookies'), href: '/legal/cookies' },
+      ],
+    },
+  ];
+
   return (
     <footer className="bg-ink text-white">
       <div className="max-w-7xl mx-auto px-6 pt-14 pb-8">
@@ -52,7 +64,7 @@ export default function Footer() {
               <span className="font-display font-black text-xl uppercase tracking-tight">STRIDE</span>
             </div>
             <p className="text-white/50 text-sm leading-relaxed max-w-xs">
-              Giày chính hãng, phong cách đỉnh cao. Mua sắm trực tuyến an toàn và nhanh chóng.
+              {t('tagline')}
             </p>
             <div className="flex items-center gap-3">
               {SOCIALS.map(s => (
@@ -65,7 +77,7 @@ export default function Footer() {
           </div>
 
           {/* Link columns */}
-          {Object.entries(LINKS).map(([title, items]) => (
+          {LINKS.map(({ title, items }) => (
             <div key={title}>
               <p className="font-mono text-[10px] font-semibold tracking-[0.14em] uppercase text-white/40 mb-4">
                 {title}

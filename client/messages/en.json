@@ -75,6 +75,30 @@
     "uploading": "Uploading...",
     "uploadError": "Failed to upload image"
   },
+  "header": {
+    "searchPlaceholder": "Search products...",
+    "orders": "Orders",
+    "wishlist": "Wishlist",
+    "account": "Account",
+    "logout": "Log out",
+    "login": "Log in"
+  },
+  "footer": {
+    "tagline": "Authentic sneakers, premium style. Safe and fast online shopping.",
+    "colBrand": "Brand",
+    "colSupport": "Support",
+    "colLegal": "Legal",
+    "about": "About us",
+    "careers": "Careers",
+    "news": "News",
+    "buyingGuide": "Buying guide",
+    "returns": "Returns & refunds",
+    "tracking": "Track your order",
+    "contact": "Contact us",
+    "terms": "Terms of service",
+    "privacy": "Privacy policy",
+    "cookies": "Cookie policy"
+  },
   "admin": {
     "nav": {
       "overview": "Overview",
@@ -83,6 +107,11 @@
       "users": "Users",
       "customers": "Customers"
     },
-    "logout": "Log out"
+    "logout": "Log out",
+    "profile": {
+      "title": "My Profile",
+      "tabInfo": "Info",
+      "tabSecurity": "Security"
+    }
   }
 }
