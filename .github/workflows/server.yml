@@ -98,6 +98,9 @@ jobs:
 
             JWT_SECRET=${{secrets.JWT_SECRET}}
 
+            ADMIN_EMAIL=${{secrets.ADMIN_EMAIL}}
+            ADMIN_PASSWORD=${{secrets.ADMIN_PASSWORD}}
+
             EOF
 
             docker compose -f docker-compose.prod.yml pull
