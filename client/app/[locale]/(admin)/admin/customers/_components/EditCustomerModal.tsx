@@ -1,21 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
 import Modal from '@/components/admin/Modal';
 import { TIERS, fullName, type CustomerRow } from './types';
 
-type TFunc = ReturnType<typeof useTranslations>;
-
 export default function EditCustomerModal({
-  t,
   customer,
   onClose,
   onSaved,
 }: {
-  t: TFunc;
   customer: CustomerRow;
   onClose: () => void;
   onSaved: () => void;
@@ -43,7 +38,7 @@ export default function EditCustomerModal({
   }
 
   return (
-    <Modal title={t('editTitle')} onClose={onClose}>
+    <Modal title="Cập nhật khách hàng" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
@@ -54,7 +49,7 @@ export default function EditCustomerModal({
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-            {t('fieldPoints')}
+            Điểm tích lũy
           </label>
           <input
             type="number"
@@ -67,7 +62,7 @@ export default function EditCustomerModal({
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-            {t('fieldTier')}
+            Hạng thành viên
           </label>
           <select
             value={membershipTier}
@@ -86,14 +81,14 @@ export default function EditCustomerModal({
             onClick={onClose}
             className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper transition-colors"
           >
-            {t('cancelBtn')}
+            Hủy
           </button>
           <button
             type="submit"
             disabled={saving}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors"
           >
-            {saving ? t('saving') : t('saveBtn')}
+            {saving ? 'Đang lưu...' : 'Lưu'}
           </button>
         </div>
       </form>

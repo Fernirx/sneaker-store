@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 import { ALL_ROLES, formatRole, formatDate, roleBadgeClass, type UserRow, type PageData } from './types';
 import CreateUserModal from './CreateUserModal';
@@ -19,8 +18,6 @@ export default function UsersClient({
   isAdmin: boolean;
   currentUserId: number;
 }) {
-  const t = useTranslations('admin.users');
-
   const [pageData, setPageData] = useState<PageData>(initialData);
   const [filters, setFilters] = useState<Filters>({ search: '', role: '', active: '' });
   const [pendingSearch, setPendingSearch] = useState('');
@@ -80,13 +77,13 @@ export default function UsersClient({
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="font-display font-black text-xl uppercase tracking-tight">{t('title')}</h1>
+        <h1 className="font-display font-black text-xl uppercase tracking-tight">Quản lý người dùng</h1>
         {isAdmin && (
           <button
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
           >
-            {t('createBtn')}
+            Tạo người dùng
           </button>
         )}
       </div>
@@ -95,7 +92,7 @@ export default function UsersClient({
       <div className="flex gap-3 flex-wrap">
         <input
           type="text"
-          placeholder={t('searchPlaceholder')}
+          placeholder="Tìm theo email..."
           value={pendingSearch}
           onChange={e => handleSearchChange(e.target.value)}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm w-64 focus:outline-none focus:border-ink"
@@ -105,7 +102,7 @@ export default function UsersClient({
           onChange={e => handleFilterChange('role', e.target.value)}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
         >
-          <option value="">{t('allRoles')}</option>
+          <option value="">Tất cả vai trò</option>
           {ALL_ROLES.map(r => (
             <option key={r} value={r}>{formatRole(r)}</option>
           ))}
@@ -115,9 +112,9 @@ export default function UsersClient({
           onChange={e => handleFilterChange('active', e.target.value)}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
         >
-          <option value="">{t('allStatus')}</option>
-          <option value="true">{t('active')}</option>
-          <option value="false">{t('inactive')}</option>
+          <option value="">Tất cả trạng thái</option>
+          <option value="true">Hoạt động</option>
+          <option value="false">Vô hiệu</option>
         </select>
       </div>
 
@@ -130,16 +127,16 @@ export default function UsersClient({
                 Email
               </th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colRoles')}
+                Vai trò
               </th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colActive')}
+                Trạng thái
               </th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colVerified')}
+                Xác minh email
               </th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colCreated')}
+                Ngày tạo
               </th>
               {isAdmin && <th className="px-4 py-3 w-24" />}
             </tr>
@@ -148,7 +145,7 @@ export default function UsersClient({
             {pageData.data.length === 0 ? (
               <tr>
                 <td colSpan={colCount} className="text-center py-14 text-muted text-sm">
-                  {t('noData')}
+                  Không có người dùng nào.
                 </td>
               </tr>
             ) : (
@@ -176,7 +173,7 @@ export default function UsersClient({
                         user.active ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'
                       }`}
                     >
-                      {user.active ? t('active') : t('inactive')}
+                      {user.active ? 'Hoạt động' : 'Vô hiệu'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -185,7 +182,7 @@ export default function UsersClient({
                         user.emailVerified ? 'bg-ok-bg text-ok' : 'bg-warn-bg text-warn'
                       }`}
                     >
-                      {user.emailVerified ? t('verified') : t('unverified')}
+                      {user.emailVerified ? 'Đã xác minh' : 'Chưa xác minh'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted text-xs">{formatDate(user.createdAt)}</td>
@@ -196,14 +193,14 @@ export default function UsersClient({
                           onClick={() => setEditTarget(user)}
                           className="text-xs font-bold text-muted hover:text-ink transition-colors"
                         >
-                          {t('editBtn')}
+                          Sửa
                         </button>
                         {user.id !== currentUserId && (
                           <button
                             onClick={() => setDeleteTarget(user)}
                             className="text-xs font-bold text-danger hover:opacity-75 transition-opacity"
                           >
-                            {t('deleteBtn')}
+                            Xóa
                           </button>
                         )}
                       </div>
@@ -220,7 +217,7 @@ export default function UsersClient({
       {pageData.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted text-xs">
-            {pageData.totalElements} {t('totalItems')}
+            {pageData.totalElements} người dùng
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -228,7 +225,7 @@ export default function UsersClient({
               onClick={() => setCurrentPage(p => p - 1)}
               className="px-3 py-1.5 border border-line rounded-sm text-xs font-bold disabled:opacity-40 hover:bg-paper transition-colors"
             >
-              {t('prev')}
+              Trước
             </button>
             <span className="px-2 text-xs text-muted">
               {currentPage + 1} / {pageData.totalPages}
@@ -238,7 +235,7 @@ export default function UsersClient({
               onClick={() => setCurrentPage(p => p + 1)}
               className="px-3 py-1.5 border border-line rounded-sm text-xs font-bold disabled:opacity-40 hover:bg-paper transition-colors"
             >
-              {t('next')}
+              Tiếp
             </button>
           </div>
         </div>
@@ -247,7 +244,6 @@ export default function UsersClient({
       {/* Modals */}
       {createOpen && (
         <CreateUserModal
-          t={t}
           onClose={() => setCreateOpen(false)}
           onCreated={() => {
             setCreateOpen(false);
@@ -258,7 +254,6 @@ export default function UsersClient({
       )}
       {editTarget && (
         <EditUserModal
-          t={t}
           user={editTarget}
           onClose={() => setEditTarget(null)}
           onSaved={() => {
@@ -269,7 +264,6 @@ export default function UsersClient({
       )}
       {deleteTarget && (
         <DeleteUserModal
-          t={t}
           user={deleteTarget}
           onClose={() => setDeleteTarget(null)}
           onDeleted={() => {

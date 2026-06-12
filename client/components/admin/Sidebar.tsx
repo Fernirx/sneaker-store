@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname, Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
 
 const ICONS = {
   dashboard: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
@@ -23,8 +22,6 @@ function NavItem({ href, label, icon, active }: { href: string; label: string; i
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const t = useTranslations('admin.nav');
-
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + '/');
   }
@@ -38,16 +35,16 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5">
-        <NavItem href="/admin/dashboard" label={t('overview')} icon={ICONS.dashboard} active={isActive('/admin/dashboard')} />
-        <NavItem href="/admin/profile"   label={t('profile')}  icon={ICONS.profile}   active={isActive('/admin/profile')} />
+        <NavItem href="/admin/dashboard" label="Tổng quan"   icon={ICONS.dashboard} active={isActive('/admin/dashboard')} />
+        <NavItem href="/admin/profile"   label="Trang cá nhân" icon={ICONS.profile} active={isActive('/admin/profile')} />
 
         <div className="pt-4">
           <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
-            {t('management')}
+            Quản lý
           </p>
           <div className="space-y-0.5">
-            <NavItem href="/admin/users"     label={t('users')}     icon={ICONS.users}     active={isActive('/admin/users')} />
-            <NavItem href="/admin/customers" label={t('customers')} icon={ICONS.customers} active={isActive('/admin/customers')} />
+            <NavItem href="/admin/users"     label="Người dùng" icon={ICONS.users}     active={isActive('/admin/users')} />
+            <NavItem href="/admin/customers" label="Khách hàng" icon={ICONS.customers} active={isActive('/admin/customers')} />
           </div>
         </div>
       </nav>

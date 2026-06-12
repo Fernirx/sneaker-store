@@ -1,20 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
 import Modal from '@/components/admin/Modal';
 import { ALL_ROLES, formatRole } from './types';
 
-type TFunc = ReturnType<typeof useTranslations>;
-
 export default function CreateUserModal({
-  t,
   onClose,
   onCreated,
 }: {
-  t: TFunc;
   onClose: () => void;
   onCreated: () => void;
 }) {
@@ -50,13 +45,13 @@ export default function CreateUserModal({
   }
 
   return (
-    <Modal title={t('createTitle')} onClose={onClose}>
+    <Modal title="Tạo người dùng mới" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-            {t('fieldEmail')}
+            Email
           </label>
           <input
             type="email"
@@ -70,7 +65,7 @@ export default function CreateUserModal({
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-            {t('fieldPassword')}
+            Mật khẩu
           </label>
           <input
             type="password"
@@ -84,7 +79,7 @@ export default function CreateUserModal({
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-            {t('fieldFirstName')}
+            Họ
           </label>
           <input
             type="text"
@@ -97,9 +92,7 @@ export default function CreateUserModal({
         </div>
 
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
-            {t('fieldRoles')}
-          </p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">Vai trò</p>
           <div className="grid grid-cols-2 gap-1.5">
             {ALL_ROLES.map(r => (
               <label key={r} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -121,14 +114,14 @@ export default function CreateUserModal({
             onClick={onClose}
             className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper transition-colors"
           >
-            {t('cancelBtn')}
+            Hủy
           </button>
           <button
             type="submit"
             disabled={saving}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors"
           >
-            {saving ? t('saving') : t('saveBtn')}
+            {saving ? 'Đang lưu...' : 'Lưu'}
           </button>
         </div>
       </form>

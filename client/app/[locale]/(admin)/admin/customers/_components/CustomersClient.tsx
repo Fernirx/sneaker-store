@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 import { TIERS, tierBadgeClass, formatDate, formatCurrency, fullName, type CustomerRow, type PageData } from './types';
 import EditCustomerModal from './EditCustomerModal';
@@ -16,8 +15,6 @@ export default function CustomersClient({
   initialData: PageData;
   isAdmin: boolean;
 }) {
-  const t = useTranslations('admin.customers');
-
   const [pageData, setPageData] = useState<PageData>(initialData);
   const [filters, setFilters] = useState<Filters>({ search: '', tier: '' });
   const [pendingSearch, setPendingSearch] = useState('');
@@ -75,14 +72,14 @@ export default function CustomersClient({
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="font-display font-black text-xl uppercase tracking-tight">{t('title')}</h1>
+        <h1 className="font-display font-black text-xl uppercase tracking-tight">Quản lý khách hàng</h1>
       </div>
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
         <input
           type="text"
-          placeholder={t('searchPlaceholder')}
+          placeholder="Tìm theo email, họ tên..."
           value={pendingSearch}
           onChange={e => handleSearchChange(e.target.value)}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm w-64 focus:outline-none focus:border-ink"
@@ -92,7 +89,7 @@ export default function CustomersClient({
           onChange={e => handleTierChange(e.target.value)}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
         >
-          <option value="">{t('allTiers')}</option>
+          <option value="">Tất cả hạng</option>
           {TIERS.map(tier => (
             <option key={tier} value={tier}>{tier}</option>
           ))}
@@ -105,25 +102,25 @@ export default function CustomersClient({
           <thead>
             <tr className="border-b border-line bg-paper">
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colName')}
+                Họ tên
               </th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
                 Email
               </th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colPhone')}
+                Điện thoại
               </th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colTier')}
+                Hạng
               </th>
               <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colPoints')}
+                Điểm
               </th>
               <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colSpent')}
+                Chi tiêu
               </th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">
-                {t('colJoined')}
+                Ngày tham gia
               </th>
               {isAdmin && <th className="px-4 py-3 w-24" />}
             </tr>
@@ -132,7 +129,7 @@ export default function CustomersClient({
             {pageData.data.length === 0 ? (
               <tr>
                 <td colSpan={colCount} className="text-center py-14 text-muted text-sm">
-                  {t('noData')}
+                  Không có khách hàng nào.
                 </td>
               </tr>
             ) : (
@@ -165,13 +162,13 @@ export default function CustomersClient({
                           onClick={() => setEditTarget(customer)}
                           className="text-xs font-bold text-muted hover:text-ink transition-colors"
                         >
-                          {t('editBtn')}
+                          Sửa
                         </button>
                         <button
                           onClick={() => setDeleteTarget(customer)}
                           className="text-xs font-bold text-danger hover:opacity-75 transition-opacity"
                         >
-                          {t('deleteBtn')}
+                          Xóa
                         </button>
                       </div>
                     </td>
@@ -187,7 +184,7 @@ export default function CustomersClient({
       {pageData.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted text-xs">
-            {pageData.totalElements} {t('totalItems')}
+            {pageData.totalElements} khách hàng
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -195,7 +192,7 @@ export default function CustomersClient({
               onClick={() => setCurrentPage(p => p - 1)}
               className="px-3 py-1.5 border border-line rounded-sm text-xs font-bold disabled:opacity-40 hover:bg-paper transition-colors"
             >
-              {t('prev')}
+              Trước
             </button>
             <span className="px-2 text-xs text-muted">
               {currentPage + 1} / {pageData.totalPages}
@@ -205,7 +202,7 @@ export default function CustomersClient({
               onClick={() => setCurrentPage(p => p + 1)}
               className="px-3 py-1.5 border border-line rounded-sm text-xs font-bold disabled:opacity-40 hover:bg-paper transition-colors"
             >
-              {t('next')}
+              Tiếp
             </button>
           </div>
         </div>
@@ -214,7 +211,6 @@ export default function CustomersClient({
       {/* Modals */}
       {editTarget && (
         <EditCustomerModal
-          t={t}
           customer={editTarget}
           onClose={() => setEditTarget(null)}
           onSaved={() => {
@@ -225,7 +221,6 @@ export default function CustomersClient({
       )}
       {deleteTarget && (
         <DeleteCustomerModal
-          t={t}
           customer={deleteTarget}
           onClose={() => setDeleteTarget(null)}
           onDeleted={() => {
