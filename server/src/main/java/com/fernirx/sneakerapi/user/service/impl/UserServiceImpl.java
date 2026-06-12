@@ -85,6 +85,7 @@ public class UserServiceImpl implements UserService {
         }
         if (request.roles() != null) {
             userRoleRepository.deleteAllByUser(user);
+            userRoleRepository.flush();
             request.roles().forEach(role -> {
                 UserRole ur = new UserRole();
                 ur.setUser(user);
