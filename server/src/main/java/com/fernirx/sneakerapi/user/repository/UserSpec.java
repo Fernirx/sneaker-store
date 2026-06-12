@@ -3,7 +3,6 @@ package com.fernirx.sneakerapi.user.repository;
 import com.fernirx.sneakerapi.common.enums.Role;
 import com.fernirx.sneakerapi.user.dto.request.UserFilterRequest;
 import com.fernirx.sneakerapi.user.entity.User;
-import com.fernirx.sneakerapi.user.entity.UserProfile;
 import com.fernirx.sneakerapi.user.entity.UserRole;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -22,13 +21,7 @@ public class UserSpec {
     private static Specification<User> hasKeyword(String keyword) {
         return (root, query, cb) -> {
             if (!StringUtils.hasText(keyword)) return null;
-            Join<User, UserProfile> profile = root.join("userProfile", JoinType.LEFT);
-            String pattern = "%" + keyword.toLowerCase() + "%";
-            return cb.or(
-                    cb.like(cb.lower(root.get("email")), pattern),
-                    cb.like(cb.lower(profile.get("firstName")), pattern),
-                    cb.like(cb.lower(profile.get("lastName")), pattern)
-            );
+            return cb.like(cb.lower(root.get("email")), "%" + keyword.toLowerCase() + "%");
         };
     }
 
