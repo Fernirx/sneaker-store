@@ -1,8 +1,10 @@
 package com.fernirx.sneakerapi.user.controller;
 
+import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
 import com.fernirx.sneakerapi.common.response.PageResponse;
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
 import com.fernirx.sneakerapi.common.utils.MessageUtil;
+import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import com.fernirx.sneakerapi.user.dto.request.CreateUserRequest;
 import com.fernirx.sneakerapi.user.dto.request.UpdateUserRequest;
 import com.fernirx.sneakerapi.user.dto.request.UserFilterRequest;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -70,7 +73,12 @@ public class InternalUserController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xóa người dùng")
-    public ResponseEntity<SuccessResponse<Void>> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<SuccessResponse<Void>> deleteUser(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails.getId().equals(id)) {
+            throw SecurityCustomException.forbidden();
+        }
         userService.deleteUser(id);
         return ResponseEntity.ok(SuccessResponse.of(
                 MessageUtil.getMessage("success.resource.deleted", MessageUtil.getMessage("label.user"))
