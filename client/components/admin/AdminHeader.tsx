@@ -2,7 +2,6 @@
 
 import clientAxios from '@/lib/axios/clientAxios';
 import { useTransition } from 'react';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface Props {
   firstName?: string;
@@ -20,10 +19,6 @@ export default function AdminHeader({ firstName }: Props) {
 
   return (
     <header className="h-14 border-b border-line bg-white flex items-center justify-end gap-3 px-6">
-      <LanguageSwitcher />
-
-      <div className="w-px h-4 bg-line" />
-
       <span className="text-sm text-ink-2">
         {firstName ?? 'Admin'}
       </span>
