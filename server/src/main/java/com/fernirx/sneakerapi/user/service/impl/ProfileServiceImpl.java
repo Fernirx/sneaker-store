@@ -2,6 +2,7 @@ package com.fernirx.sneakerapi.user.service.impl;
 
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.user.dto.request.ChangePasswordRequest;
+import com.fernirx.sneakerapi.user.dto.request.SetPasswordRequest;
 import com.fernirx.sneakerapi.user.dto.request.UpdateProfileRequest;
 import com.fernirx.sneakerapi.user.dto.response.ProfileResponse;
 import com.fernirx.sneakerapi.user.entity.User;
@@ -49,7 +50,20 @@ public class ProfileServiceImpl implements ProfileService {
     public void changePassword(Long userId, ChangePasswordRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> BusinessException.notFound("label.user"));
-        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+        if (user.getPassword() == null
+                || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw BusinessException.bad("label.password");
+        }
+        user.setPassword(passwordEncoder.encode(request.password()));
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void setPassword(Long userId, SetPasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> BusinessException.notFound("label.user"));
+        if (user.getPassword() != null) {
             throw BusinessException.bad("label.password");
         }
         user.setPassword(passwordEncoder.encode(request.password()));

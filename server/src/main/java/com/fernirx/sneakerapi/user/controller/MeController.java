@@ -4,6 +4,7 @@ import com.fernirx.sneakerapi.common.response.SuccessResponse;
 import com.fernirx.sneakerapi.common.utils.MessageUtil;
 import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import com.fernirx.sneakerapi.user.dto.request.ChangePasswordRequest;
+import com.fernirx.sneakerapi.user.dto.request.SetPasswordRequest;
 import com.fernirx.sneakerapi.user.dto.request.UpdateProfileRequest;
 import com.fernirx.sneakerapi.user.dto.response.ProfileResponse;
 import com.fernirx.sneakerapi.user.service.ProfileService;
@@ -49,5 +50,14 @@ public class MeController {
             @Valid @RequestBody ChangePasswordRequest request) {
         profileService.changePassword(userDetails.getId(), request);
         return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.profile.change_password")));
+    }
+
+    @PostMapping("/set-password")
+    @Operation(summary = "Đặt mật khẩu lần đầu (dành cho tài khoản OAuth2)")
+    public ResponseEntity<SuccessResponse<Void>> setPassword(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody SetPasswordRequest request) {
+        profileService.setPassword(userDetails.getId(), request);
+        return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.profile.set_password")));
     }
 }
