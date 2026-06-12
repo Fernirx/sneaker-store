@@ -2,6 +2,7 @@ package com.fernirx.sneakerapi.brand.controller;
 
 import com.fernirx.sneakerapi.brand.dto.request.BrandFilterRequest;
 import com.fernirx.sneakerapi.brand.dto.request.CreateBrandRequest;
+import com.fernirx.sneakerapi.brand.dto.request.SlugUpdateRequest;
 import com.fernirx.sneakerapi.brand.dto.request.UpdateBrandRequest;
 import com.fernirx.sneakerapi.brand.dto.response.BrandInternalResponse;
 import com.fernirx.sneakerapi.brand.service.BrandService;
@@ -61,6 +62,19 @@ public class InternalBrandController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateBrandRequest request) {
         BrandInternalResponse response = brandService.updateBrand(id, request);
+        return ResponseEntity.ok(SuccessResponse.of(
+                MessageUtil.getMessage("success.resource.updated", MessageUtil.getMessage("label.brand")),
+                response
+        ));
+    }
+
+    @PatchMapping("/{id}/slug")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Cập nhật slug thương hiệu")
+    public ResponseEntity<SuccessResponse<BrandInternalResponse>> updateBrandSlug(
+            @PathVariable Long id,
+            @Valid @RequestBody SlugUpdateRequest request) {
+        BrandInternalResponse response = brandService.updateBrandSlug(id, request.slug());
         return ResponseEntity.ok(SuccessResponse.of(
                 MessageUtil.getMessage("success.resource.updated", MessageUtil.getMessage("label.brand")),
                 response

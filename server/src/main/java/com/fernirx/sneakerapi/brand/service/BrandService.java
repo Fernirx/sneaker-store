@@ -15,5 +15,6 @@ public interface BrandService {
     BrandInternalResponse getInternalById(Long id);
     BrandInternalResponse createBrand(CreateBrandRequest request);
     BrandInternalResponse updateBrand(Long id, UpdateBrandRequest request);
+    BrandInternalResponse updateBrandSlug(Long id, String slug);
     void deleteBrand(Long id);
 }

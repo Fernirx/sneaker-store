@@ -32,8 +32,7 @@ public class Brand extends BaseAuditEntity {
     @Column(name = "slug", nullable = false, length = 100)
     private String slug;
 
-    @Lob
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Size(max = 255)

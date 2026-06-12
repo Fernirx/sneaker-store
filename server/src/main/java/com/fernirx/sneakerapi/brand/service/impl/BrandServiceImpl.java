@@ -84,6 +84,16 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
+    public BrandInternalResponse updateBrandSlug(Long id, String slug) {
+        Brand brand = findById(id);
+        if (!slug.equals(brand.getSlug()) && brandRepository.existsBySlug(slug)) {
+            throw BusinessException.alreadyExists("label.slug");
+        }
+        brand.setSlug(slug);
+        return brandMapper.toInternalResponse(brandRepository.save(brand));
+    }
+
+    @Override
     public void deleteBrand(Long id) {
         Brand brand = findById(id);
         if (!brand.getProducts().isEmpty()) {
