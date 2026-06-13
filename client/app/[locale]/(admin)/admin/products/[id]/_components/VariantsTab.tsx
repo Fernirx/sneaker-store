@@ -311,6 +311,22 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
               )}
               <span className="font-bold text-sm">{g.colorway}</span>
               {g.colorwayCode && <span className="font-mono text-xs text-muted">{g.colorwayCode}</span>}
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setAddForm({
+                      ...EMPTY,
+                      colorway: g.colorway,
+                      colorwayCode: g.colorwayCode ?? '',
+                      colorHex: g.colorHex ?? '#000000',
+                    });
+                    setAddOpen(true);
+                  }}
+                  className="ml-auto text-[11px] font-bold text-accent hover:underline"
+                >
+                  + Thêm size
+                </button>
+              )}
             </div>
             <table className="w-full text-sm">
               <thead>
