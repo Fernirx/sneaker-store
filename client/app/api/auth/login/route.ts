@@ -6,9 +6,10 @@ import { decodeJwt, jwtMaxAge } from '@/lib/jwt';
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const isProd = process.env.NODE_ENV === 'production';
+  const locale = req.cookies.get('NEXT_LOCALE')?.value ?? 'vi';
 
   try {
-    const { data } = await publicAxios.post('/auth/login', body);
+    const { data } = await publicAxios.post('/auth/login', body, { headers: { 'Accept-Language': locale } });
 
     const { accessToken, refreshToken } = data.data;
     const payload = decodeJwt(accessToken);
