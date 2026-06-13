@@ -31,7 +31,7 @@ public class ProductQueryServiceImpl implements ProductQueryService {
     @Override
     public Page<ProductResponse> getProductsByCategorySlug(String categorySlug, BySlugProductFilterRequest filter, Pageable pageable) {
         ProductFilterRequest full = new ProductFilterRequest(
-                filter.search(), filter.gender(), null,
+                filter.search(), filter.gender(), filter.brandSlugs(),
                 filter.minPrice(), filter.maxPrice(), filter.newArrival(), filter.onSale(),
                 List.of(categorySlug)
         );
