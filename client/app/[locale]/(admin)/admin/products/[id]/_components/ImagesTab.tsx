@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
 import { productUrl } from '@/lib/cloudinaryUrl';
-import ImageUpload from '@/components/admin/ImageUpload';
 
 interface ImageRow {
   id: number;
@@ -19,24 +18,17 @@ interface ImgGroup {
   images: ImageRow[];
 }
 
-type AddForm = {
+interface VariantColor {
   colorway: string;
-  colorHex: string;
-  imagePublicId: string;
-  primaryImage: boolean;
-  displayOrder: string;
-};
-
-const EMPTY_ADD: AddForm = {
-  colorway: '', colorHex: '#000000', imagePublicId: '',
-  primaryImage: false, displayOrder: '0',
-};
+  colorwayCode: string | null;
+  colorHex: string | null;
+}
 
 function InlineModal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-line">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line sticky top-0 bg-white">
           <h3 className="font-display font-black text-sm uppercase tracking-wide">{title}</h3>
           <button onClick={onClose} className="text-muted hover:text-ink text-xl leading-none">&times;</button>
         </div>
@@ -48,20 +40,29 @@ function InlineModal({ title, onClose, children }: { title: string; onClose: () 
 
 export default function ImagesTab({ productId, isAdmin }: { productId: number; isAdmin: boolean }) {
   const [groups, setGroups] = useState<ImgGroup[]>([]);
+  const [variantColors, setVariantColors] = useState<VariantColor[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Add state
   const [addOpen, setAddOpen] = useState(false);
-  const [addForm, setAddForm] = useState<AddForm>({ ...EMPTY_ADD });
+  const [colorway, setColorway] = useState('');
+  const [colorHex, setColorHex] = useState('#000000');
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [primaryIdx, setPrimaryIdx] = useState(0);
   const [addSaving, setAddSaving] = useState(false);
+  const [addProgress, setAddProgress] = useState('');
   const [addError, setAddError] = useState('');
-  const [addFieldErrors, setAddFieldErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Edit state
   const [editTarget, setEditTarget] = useState<ImageRow | null>(null);
   const [editPrimary, setEditPrimary] = useState(false);
   const [editOrder, setEditOrder] = useState('0');
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
 
+  // Delete state
   const [deleteTarget, setDeleteTarget] = useState<ImageRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -69,8 +70,18 @@ export default function ImagesTab({ productId, isAdmin }: { productId: number; i
   async function load() {
     setLoading(true);
     try {
-      const { data } = await clientAxios.get(`/api/admin/products/${productId}/images`);
-      setGroups(data.data ?? []);
+      const [imgRes, varRes] = await Promise.all([
+        clientAxios.get(`/api/admin/products/${productId}/images`),
+        clientAxios.get(`/api/admin/products/${productId}/variants`),
+      ]);
+      setGroups(imgRes.data.data ?? []);
+      setVariantColors(
+        (varRes.data.data ?? []).map((g: VariantColor) => ({
+          colorway: g.colorway,
+          colorwayCode: g.colorwayCode,
+          colorHex: g.colorHex,
+        }))
+      );
     } finally {
       setLoading(false);
     }
@@ -78,27 +89,79 @@ export default function ImagesTab({ productId, isAdmin }: { productId: number; i
 
   useEffect(() => { load(); }, [productId]);
 
+  // Revoke object URLs on unmount or when previews change
+  useEffect(() => {
+    return () => { previews.forEach(URL.revokeObjectURL); };
+  }, [previews]);
+
+  function openAdd() {
+    setColorway('');
+    setColorHex('#000000');
+    setPendingFiles([]);
+    setPreviews([]);
+    setPrimaryIdx(0);
+    setAddError('');
+    setAddProgress('');
+    setAddOpen(true);
+  }
+
+  function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    previews.forEach(URL.revokeObjectURL);
+    setPendingFiles(files);
+    setPreviews(files.map(f => URL.createObjectURL(f)));
+    setPrimaryIdx(0);
+    setAddError('');
+    e.target.value = '';
+  }
+
+  function removeFile(idx: number) {
+    URL.revokeObjectURL(previews[idx]);
+    const newFiles = pendingFiles.filter((_, i) => i !== idx);
+    const newPreviews = previews.filter((_, i) => i !== idx);
+    setPendingFiles(newFiles);
+    setPreviews(newPreviews);
+    if (primaryIdx >= newFiles.length) setPrimaryIdx(Math.max(0, newFiles.length - 1));
+    else if (idx < primaryIdx) setPrimaryIdx(primaryIdx - 1);
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    if (!addForm.imagePublicId) { setAddError('Vui lòng chọn ảnh.'); return; }
-    setAddSaving(true); setAddError(''); setAddFieldErrors({});
+    if (!colorway.trim()) { setAddError('Vui lòng chọn hoặc nhập tên màu.'); return; }
+    if (pendingFiles.length === 0) { setAddError('Vui lòng chọn ít nhất 1 ảnh.'); return; }
+
+    setAddSaving(true);
+    setAddError('');
+
     try {
-      await clientAxios.post(`/api/admin/products/${productId}/images`, {
-        colorway:      addForm.colorway,
-        colorHex:      addForm.colorHex      || null,
-        imagePublicId: addForm.imagePublicId,
-        primaryImage:  addForm.primaryImage,
-        displayOrder:  Number(addForm.displayOrder),
-      });
+      for (let i = 0; i < pendingFiles.length; i++) {
+        setAddProgress(`Đang tải ${i + 1}/${pendingFiles.length}...`);
+
+        const fd = new FormData();
+        fd.append('file', pendingFiles[i]);
+        fd.append('folder', 'products');
+        const { data: uploaded } = await clientAxios.post('/api/upload', fd);
+
+        await clientAxios.post(`/api/admin/products/${productId}/images`, {
+          colorway:      colorway.trim(),
+          colorHex:      colorHex || null,
+          imagePublicId: uploaded.publicId,
+          primaryImage:  i === primaryIdx,
+          displayOrder:  i,
+        });
+      }
+
       setAddOpen(false);
-      setAddForm({ ...EMPTY_ADD });
+      previews.forEach(URL.revokeObjectURL);
+      setPendingFiles([]);
+      setPreviews([]);
       load();
     } catch (err) {
-      const p = parseApiError(err);
-      setAddError(p.general);
-      setAddFieldErrors(p.fields);
+      setAddError(parseApiError(err).general || 'Upload thất bại, thử lại.');
     } finally {
       setAddSaving(false);
+      setAddProgress('');
     }
   }
 
@@ -150,8 +213,10 @@ export default function ImagesTab({ productId, isAdmin }: { productId: number; i
           {groups.reduce((s, g) => s + g.images.length, 0)} ảnh · {groups.length} màu
         </h2>
         {isAdmin && (
-          <button onClick={() => { setAddOpen(true); setAddForm({ ...EMPTY_ADD }); }}
-            className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors">
+          <button
+            onClick={openAdd}
+            className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
+          >
             Thêm ảnh
           </button>
         )}
@@ -202,60 +267,131 @@ export default function ImagesTab({ productId, isAdmin }: { productId: number; i
       {/* Add modal */}
       {addOpen && (
         <InlineModal title="Thêm ảnh" onClose={() => setAddOpen(false)}>
-          <form onSubmit={handleAdd} className="space-y-4">
+          <form onSubmit={handleAdd} className="space-y-5">
             {addError && <p className="text-danger text-sm">{addError}</p>}
 
+            {/* Color selector */}
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-                Ảnh <span className="text-danger">*</span>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
+                Màu <span className="text-danger">*</span>
               </label>
-              <ImageUpload
-                value={addForm.imagePublicId}
-                folder="products"
-                onChange={v => setAddForm(f => ({ ...f, imagePublicId: v }))}
+              {variantColors.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {variantColors.map(c => (
+                    <button
+                      key={c.colorway}
+                      type="button"
+                      onClick={() => { setColorway(c.colorway); setColorHex(c.colorHex ?? '#000000'); }}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm border text-xs font-bold transition-all ${
+                        colorway === c.colorway
+                          ? 'border-ink bg-ink text-white'
+                          : 'border-line hover:border-ink'
+                      }`}
+                    >
+                      <span
+                        className="w-3 h-3 rounded-full border border-white/30 flex-shrink-0"
+                        style={{ backgroundColor: c.colorHex ?? '#ccc' }}
+                      />
+                      {c.colorway}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  value={colorway}
+                  onChange={e => setColorway(e.target.value)}
+                  placeholder="Tên colorway"
+                  className="flex-1 border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
+                />
+                <input
+                  type="color"
+                  value={colorHex}
+                  onChange={e => setColorHex(e.target.value)}
+                  className="w-10 h-9 border border-line rounded-sm cursor-pointer p-0.5"
+                />
+              </div>
+            </div>
+
+            {/* File picker */}
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
+                Ảnh <span className="text-danger">*</span>
+                {pendingFiles.length > 0 && (
+                  <span className="ml-2 font-normal normal-case tracking-normal text-ink">
+                    {pendingFiles.length} file đã chọn
+                  </span>
+                )}
+              </label>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 border border-line rounded-sm text-sm font-bold hover:bg-paper transition-colors"
+              >
+                Chọn ảnh (nhiều file)
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                className="hidden"
+                onChange={handleFilesChange}
               />
             </div>
 
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-                Colorway <span className="text-danger">*</span>
-              </label>
-              <input value={addForm.colorway} onChange={e => setAddForm(f => ({ ...f, colorway: e.target.value }))} required
-                className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
-              {addFieldErrors.colorway && <p className="text-danger text-xs mt-1">{addFieldErrors.colorway}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+            {/* Preview grid */}
+            {previews.length > 0 && (
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Màu HEX</label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={addForm.colorHex}
-                    onChange={e => setAddForm(f => ({ ...f, colorHex: e.target.value }))}
-                    className="w-10 h-9 border border-line rounded-sm cursor-pointer p-0.5" />
-                  <input value={addForm.colorHex} maxLength={7}
-                    onChange={e => setAddForm(f => ({ ...f, colorHex: e.target.value }))}
-                    className="flex-1 border border-line rounded-sm px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink" />
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
+                  Click để chọn ảnh chính
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {previews.map((src, i) => (
+                    <div key={i} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setPrimaryIdx(i)}
+                        className={`block border-2 rounded-sm overflow-hidden transition-all ${
+                          i === primaryIdx ? 'border-accent' : 'border-line hover:border-muted'
+                        }`}
+                      >
+                        <img src={src} alt="" className="w-20 h-20 object-contain bg-paper" />
+                      </button>
+                      {i === primaryIdx && (
+                        <span className="absolute top-1 left-1 bg-accent text-white text-[9px] font-bold px-1 py-0.5 rounded pointer-events-none">
+                          CHÍNH
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeFile(i)}
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-danger text-white rounded-full text-[10px] font-bold flex items-center justify-center leading-none hover:opacity-80"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Thứ tự</label>
-                <input type="number" value={addForm.displayOrder} min="0"
-                  onChange={e => setAddForm(f => ({ ...f, displayOrder: e.target.value }))}
-                  className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
-              </div>
-            </div>
-
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" checked={addForm.primaryImage}
-                onChange={e => setAddForm(f => ({ ...f, primaryImage: e.target.checked }))} className="accent-accent" />
-              <span className="text-sm">Ảnh chính của màu này</span>
-            </label>
+            )}
 
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={() => setAddOpen(false)} className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper">Hủy</button>
-              <button type="submit" disabled={addSaving}
-                className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60">
-                {addSaving ? 'Đang lưu...' : 'Lưu'}
+              <button
+                type="button"
+                onClick={() => setAddOpen(false)}
+                className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={addSaving}
+                className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 min-w-[100px]"
+              >
+                {addSaving
+                  ? (addProgress || 'Đang tải...')
+                  : `Thêm${pendingFiles.length > 1 ? ` ${pendingFiles.length} ảnh` : ' ảnh'}`}
               </button>
             </div>
           </form>
