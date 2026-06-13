@@ -14,10 +14,21 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p FROM Product p JOIN FETCH p.brand WHERE p.id IN :ids")
     List<Product> findAllWithBrandByIds(List<Long> ids);
 
+    @Query("SELECT p FROM Product p JOIN FETCH p.brand WHERE p.id = :id")
+    Optional<Product> findByIdWithBrand(Long id);
+
     @Query("SELECT p FROM Product p JOIN FETCH p.brand WHERE p.slug = :slug AND p.active = true")
     Optional<Product> findActiveBySlugWithBrand(String slug);
 
     @Modifying
     @Query("UPDATE Product p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
     void incrementViewCount(Long id);
+
+    boolean existsByCode(String code);
+
+    boolean existsByCodeAndIdNot(String code, Long id);
+
+    boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndIdNot(String slug, Long id);
 }
