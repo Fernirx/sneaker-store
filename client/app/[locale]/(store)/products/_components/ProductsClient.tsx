@@ -184,25 +184,6 @@ export default function ProductsClient({
         </div>
       )}
 
-      {/* Categories */}
-      {categories.length > 0 && (
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">{t('filterCategory')}</p>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-            {categories.map(c => (
-              <label key={c.id} className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={filters.categorySlugs.includes(c.slug)}
-                  onChange={() => toggleCategory(c.slug)}
-                  className="accent-accent w-3.5 h-3.5"
-                />
-                <span className="text-sm">{c.name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Price */}
       <div>
