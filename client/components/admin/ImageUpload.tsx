@@ -2,13 +2,14 @@
 
 import { useRef, useState } from 'react';
 import clientAxios from '@/lib/axios/clientAxios';
-import { brandUrl, categoryUrl, collectionUrl } from '@/lib/cloudinaryUrl';
+import { brandUrl, categoryUrl, collectionUrl, productUrl } from '@/lib/cloudinaryUrl';
 
-type Folder = 'brands' | 'categories' | 'collections';
+type Folder = 'brands' | 'categories' | 'collections' | 'products';
 
 function previewUrl(folder: Folder, publicId: string) {
   if (folder === 'brands') return brandUrl(publicId, 120, 60);
   if (folder === 'categories') return categoryUrl(publicId, 80, 80);
+  if (folder === 'products') return productUrl(publicId, 120, 120);
   return collectionUrl(publicId, 160, 100);
 }
 
