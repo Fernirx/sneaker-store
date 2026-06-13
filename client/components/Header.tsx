@@ -1,8 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { getSession } from '@/lib/session';
-import { createServerAxios } from '@/lib/axios/serverAxios';
+import { createServerAxios, publicAxios } from '@/lib/axios/serverAxios';
 import HeaderActions from './HeaderActions';
+import HeaderNav from './HeaderNav';
 import LanguageSwitcher from './LanguageSwitcher';
 
 interface ProfileResponse {
@@ -21,8 +22,19 @@ async function getProfile(): Promise<ProfileResponse | null> {
   }
 }
 
+async function getNavData() {
+  const [brandsRes, catsRes] = await Promise.allSettled([
+    publicAxios.get('/brands?page=0&size=50&sort=name,asc'),
+    publicAxios.get('/categories?page=0&size=50&sort=displayOrder,asc'),
+  ]);
+  return {
+    brands: brandsRes.status === 'fulfilled' ? (brandsRes.value.data.data ?? []) : [],
+    categories: catsRes.status === 'fulfilled' ? (catsRes.value.data.data ?? []) : [],
+  };
+}
+
 export default async function Header() {
-  const [session, t] = await Promise.all([getSession(), getTranslations('header')]);
+  const [session, t, nav] = await Promise.all([getSession(), getTranslations('header'), getNavData()]);
   const profile = session ? await getProfile() : null;
 
   return (
@@ -34,6 +46,8 @@ export default async function Header() {
           <span className="w-2.5 h-2.5 bg-accent rounded-xs rotate-45" />
           <span className="font-display font-black text-lg uppercase tracking-tight">STRIDE</span>
         </Link>
+
+        <HeaderNav brands={nav.brands} categories={nav.categories} />
 
         {/* Search bar — desktop */}
         <Link href="/search"
