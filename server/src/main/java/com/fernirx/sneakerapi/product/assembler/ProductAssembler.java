@@ -1,7 +1,10 @@
 package com.fernirx.sneakerapi.product.assembler;
 
 import com.fernirx.sneakerapi.product.dto.response.ProductDetailResponse;
+import com.fernirx.sneakerapi.product.dto.response.ProductImageGroupResponse;
+import com.fernirx.sneakerapi.product.dto.response.ProductInternalResponse;
 import com.fernirx.sneakerapi.product.dto.response.ProductResponse;
+import com.fernirx.sneakerapi.product.dto.response.ProductVariantGroupResponse;
 import com.fernirx.sneakerapi.product.entity.Product;
 import com.fernirx.sneakerapi.product.entity.ProductImage;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
@@ -61,6 +64,86 @@ public class ProductAssembler {
                 productMapper.toDetailBrandInfo(product.getBrand()),
                 buildColorDetails(variants, images)
         );
+    }
+
+    public ProductInternalResponse toInternalResponse(Product product, String primaryImagePublicId) {
+        return new ProductInternalResponse(
+                product.getId(),
+                product.getSlug(),
+                product.getCode(),
+                product.getStyleCode(),
+                product.getName(),
+                product.getGender(),
+                product.getDescription(),
+                product.getUpperMaterial(),
+                product.getSoleType(),
+                product.getClosureType(),
+                product.getShaftStyle(),
+                product.getBasePrice(),
+                product.getOriginalPrice(),
+                product.getCostPrice(),
+                product.getNewArrival(),
+                product.getOnSale(),
+                product.getActive(),
+                product.getSoldCount(),
+                product.getViewCount(),
+                productMapper.toInternalBrandInfo(product.getBrand()),
+                primaryImagePublicId,
+                product.getCreatedAt(),
+                product.getUpdatedAt()
+        );
+    }
+
+    public List<ProductVariantGroupResponse> toVariantGroups(List<ProductVariant> variants) {
+        Map<String, List<ProductVariant>> byColorway = variants.stream()
+                .collect(Collectors.groupingBy(
+                        ProductVariant::getColorway,
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        return byColorway.entrySet().stream()
+                .map(entry -> {
+                    ProductVariant first = entry.getValue().getFirst();
+                    List<ProductVariantGroupResponse.VariantResponse> variantResponses = entry.getValue().stream()
+                            .map(productVariantMapper::toVariantResponse)
+                            .toList();
+                    return new ProductVariantGroupResponse(
+                            entry.getKey(),
+                            first.getColorwayCode(),
+                            first.getColorHex(),
+                            variantResponses
+                    );
+                })
+                .toList();
+    }
+
+    public List<ProductImageGroupResponse> toImageGroups(List<ProductImage> images) {
+        Map<String, List<ProductImage>> byColorway = images.stream()
+                .collect(Collectors.groupingBy(
+                        ProductImage::getColorway,
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        return byColorway.entrySet().stream()
+                .map(entry -> {
+                    ProductImage first = entry.getValue().getFirst();
+                    List<ProductImageGroupResponse.ImageResponse> imageResponses = entry.getValue().stream()
+                            .map(img -> new ProductImageGroupResponse.ImageResponse(
+                                    img.getId(),
+                                    img.getImagePublicId(),
+                                    img.getPrimaryImage(),
+                                    img.getDisplayOrder()
+                            ))
+                            .toList();
+                    return new ProductImageGroupResponse(
+                            entry.getKey(),
+                            first.getColorHex(),
+                            imageResponses
+                    );
+                })
+                .toList();
     }
 
     private List<ProductResponse.ColorSwatchResponse> buildColorSwatches(
