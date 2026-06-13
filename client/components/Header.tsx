@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { cookies } from 'next/headers';
 import { Link } from '@/i18n/routing';
 import { getSession } from '@/lib/session';
 import { createServerAxios, publicAxios } from '@/lib/axios/serverAxios';
@@ -22,19 +23,38 @@ async function getProfile(): Promise<ProfileResponse | null> {
   }
 }
 
-async function getNavData() {
+interface RawCategory {
+  id: number;
+  name: string;
+  slug: string;
+  parentId: number | null;
+  translations?: { locale: string; name: string }[];
+}
+
+async function getNavData(locale: string) {
   const [brandsRes, catsRes] = await Promise.allSettled([
     publicAxios.get('/brands?page=0&size=50&sort=name,asc'),
     publicAxios.get('/categories?page=0&size=50&sort=displayOrder,asc'),
   ]);
+
+  const rawCategories: RawCategory[] =
+    catsRes.status === 'fulfilled' ? (catsRes.value.data.data ?? []) : [];
+
   return {
     brands: brandsRes.status === 'fulfilled' ? (brandsRes.value.data.data ?? []) : [],
-    categories: catsRes.status === 'fulfilled' ? (catsRes.value.data.data ?? []) : [],
+    categories: rawCategories.map(c => ({
+      id: c.id,
+      slug: c.slug,
+      parentId: c.parentId,
+      name: c.translations?.find(t => t.locale === locale)?.name ?? c.name,
+    })),
   };
 }
 
 export default async function Header() {
-  const [session, t, nav] = await Promise.all([getSession(), getTranslations('header'), getNavData()]);
+  const store = await cookies();
+  const locale = store.get('NEXT_LOCALE')?.value ?? 'vi';
+  const [session, t, nav] = await Promise.all([getSession(), getTranslations('header'), getNavData(locale)]);
   const profile = session ? await getProfile() : null;
 
   return (

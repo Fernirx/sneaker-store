@@ -81,7 +81,10 @@
     "wishlist": "Wishlist",
     "account": "Account",
     "logout": "Log out",
-    "login": "Log in"
+    "login": "Log in",
+    "navProducts": "Products",
+    "navBrands": "Brands",
+    "navCategories": "Categories"
   },
   "products": {
     "title": "Products",

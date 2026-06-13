@@ -81,7 +81,10 @@
     "wishlist": "Yêu thích",
     "account": "Tài khoản",
     "logout": "Đăng xuất",
-    "login": "Đăng nhập"
+    "login": "Đăng nhập",
+    "navProducts": "Sản phẩm",
+    "navBrands": "Thương hiệu",
+    "navCategories": "Danh mục"
   },
   "products": {
     "title": "Sản phẩm",
