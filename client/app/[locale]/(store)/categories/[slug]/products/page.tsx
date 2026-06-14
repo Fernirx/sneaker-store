@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { publicAxios } from '@/lib/axios/serverAxios';
 import { categoryUrl } from '@/lib/cloudinaryUrl';
@@ -34,6 +35,7 @@ function buildQuery(sp: { [key: string]: string | string[] | undefined }) {
 export default async function CategoryProductsPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const sp = await searchParams;
+  const t = await getTranslations('products');
 
   const [categoryRes, productsRes, brandsRes] = await Promise.allSettled([
     publicAxios.get<{ data: CategoryFull }>(`/categories/${slug}`),
@@ -66,9 +68,9 @@ export default async function CategoryProductsPage({ params, searchParams }: Pro
         )}
         <div className="max-w-7xl mx-auto px-4 py-6">
           <nav className="text-xs text-muted mb-3 flex items-center gap-1.5">
-            <Link href="/" className="hover:text-ink transition-colors">Home</Link>
+            <Link href="/" className="hover:text-ink transition-colors">{t('breadcrumbHome')}</Link>
             <span>/</span>
-            <Link href="/products" className="hover:text-ink transition-colors">Sản phẩm</Link>
+            <Link href="/products" className="hover:text-ink transition-colors">{t('breadcrumbProducts')}</Link>
             <span>/</span>
             <span className="text-ink font-medium">{category.name}</span>
           </nav>

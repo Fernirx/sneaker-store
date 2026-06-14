@@ -121,7 +121,9 @@
     "sole": "Sole type",
     "closure": "Closure type",
     "shaft": "Shaft style",
-    "sold": "Sold"
+    "sold": "Sold",
+    "breadcrumbHome": "Home",
+    "breadcrumbProducts": "Products"
   },
   "footer": {
     "tagline": "Authentic sneakers, premium style. Safe and fast online shopping.",

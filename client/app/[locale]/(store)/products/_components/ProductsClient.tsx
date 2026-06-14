@@ -82,6 +82,8 @@ export default function ProductsClient({
     try {
       const { data } = await clientAxios.get(`/api/products?${buildQuery(f, page)}`);
       setPageData(data);
+    } catch {
+      // keep current data on error
     } finally {
       setLoading(false);
     }
