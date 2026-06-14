@@ -1,13 +1,17 @@
 'use client';
 
-import { usePathname, Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const ICONS = {
-  dashboard: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
-  profile: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-  users: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-  customers: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="14" x2="12" y2="21"/></svg>,
+  dashboard:   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+  profile:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  users:       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  customers:   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="14" x2="12" y2="21"/></svg>,
+  brands:      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+  categories:  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h7v7H3z"/></svg>,
+  collections: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+  products:    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
 };
 
 function NavItem({ href, label, icon, active }: { href: string; label: string; icon: React.ReactNode; active: boolean }) {
@@ -23,8 +27,6 @@ function NavItem({ href, label, icon, active }: { href: string; label: string; i
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const t = useTranslations('admin.nav');
-
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + '/');
   }
@@ -38,16 +40,28 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5">
-        <NavItem href="/admin/dashboard" label={t('overview')} icon={ICONS.dashboard} active={isActive('/admin/dashboard')} />
-        <NavItem href="/admin/profile"   label={t('profile')}  icon={ICONS.profile}   active={isActive('/admin/profile')} />
+        <NavItem href="/admin/dashboard" label="Tổng quan"   icon={ICONS.dashboard} active={isActive('/admin/dashboard')} />
+        <NavItem href="/admin/profile"   label="Trang cá nhân" icon={ICONS.profile} active={isActive('/admin/profile')} />
 
         <div className="pt-4">
           <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
-            {t('management')}
+            Tài khoản
           </p>
           <div className="space-y-0.5">
-            <NavItem href="/admin/users"     label={t('users')}     icon={ICONS.users}     active={isActive('/admin/users')} />
-            <NavItem href="/admin/customers" label={t('customers')} icon={ICONS.customers} active={isActive('/admin/customers')} />
+            <NavItem href="/admin/users"     label="Người dùng" icon={ICONS.users}     active={isActive('/admin/users')} />
+            <NavItem href="/admin/customers" label="Khách hàng" icon={ICONS.customers} active={isActive('/admin/customers')} />
+          </div>
+        </div>
+
+        <div className="pt-4">
+          <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+            Catalog
+          </p>
+          <div className="space-y-0.5">
+            <NavItem href="/admin/brands"      label="Thương hiệu"   icon={ICONS.brands}      active={isActive('/admin/brands')} />
+            <NavItem href="/admin/categories"  label="Danh mục"      icon={ICONS.categories}  active={isActive('/admin/categories')} />
+            <NavItem href="/admin/collections" label="Bộ sưu tập"    icon={ICONS.collections} active={isActive('/admin/collections')} />
+            <NavItem href="/admin/products"    label="Sản phẩm"      icon={ICONS.products}    active={isActive('/admin/products')} />
           </div>
         </div>
       </nav>

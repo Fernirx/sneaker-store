@@ -1,21 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
 import Modal from '@/components/admin/Modal';
 import { type CustomerRow } from './types';
 
-type TFunc = ReturnType<typeof useTranslations>;
-
 export default function DeleteCustomerModal({
-  t,
   customer,
   onClose,
   onDeleted,
 }: {
-  t: TFunc;
   customer: CustomerRow;
   onClose: () => void;
   onDeleted: () => void;
@@ -36,24 +31,26 @@ export default function DeleteCustomerModal({
   }
 
   return (
-    <Modal title={t('deleteTitle')} onClose={onClose}>
+    <Modal title="Xóa khách hàng" onClose={onClose}>
       <div className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
-        <p className="text-sm">{t('deleteConfirm', { email: customer.email })}</p>
-        <p className="text-xs text-muted">{t('deleteWarning')}</p>
+        <p className="text-sm">
+          Bạn có chắc muốn xóa khách hàng <span className="font-mono font-bold">{customer.email}</span>?
+        </p>
+        <p className="text-xs text-muted">Hành động này không thể hoàn tác.</p>
         <div className="flex justify-end gap-2 pt-1">
           <button
             onClick={onClose}
             className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper transition-colors"
           >
-            {t('cancelBtn')}
+            Hủy
           </button>
           <button
             onClick={handleDelete}
             disabled={deleting}
             className="px-4 py-2 bg-danger text-white text-sm font-bold rounded-sm hover:opacity-90 disabled:opacity-60 transition-opacity"
           >
-            {deleting ? t('deleting') : t('deleteBtn')}
+            {deleting ? 'Đang xóa...' : 'Xóa'}
           </button>
         </div>
       </div>

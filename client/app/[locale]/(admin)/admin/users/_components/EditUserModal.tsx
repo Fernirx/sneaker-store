@@ -1,21 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
 import Modal from '@/components/admin/Modal';
 import { ALL_ROLES, formatRole, type UserRow } from './types';
 
-type TFunc = ReturnType<typeof useTranslations>;
-
 export default function EditUserModal({
-  t,
   user,
   onClose,
   onSaved,
 }: {
-  t: TFunc;
   user: UserRow;
   onClose: () => void;
   onSaved: () => void;
@@ -46,7 +41,7 @@ export default function EditUserModal({
   }
 
   return (
-    <Modal title={t('editTitle')} onClose={onClose}>
+    <Modal title="Cập nhật người dùng" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
@@ -60,14 +55,12 @@ export default function EditUserModal({
               onChange={e => setActive(e.target.checked)}
               className="accent-accent"
             />
-            <span className="text-[11px] font-bold uppercase tracking-wider">{t('fieldActive')}</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">Kích hoạt tài khoản</span>
           </label>
         </div>
 
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
-            {t('fieldRoles')}
-          </p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">Vai trò</p>
           <div className="grid grid-cols-2 gap-1.5">
             {ALL_ROLES.map(r => (
               <label key={r} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -89,14 +82,14 @@ export default function EditUserModal({
             onClick={onClose}
             className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper transition-colors"
           >
-            {t('cancelBtn')}
+            Hủy
           </button>
           <button
             type="submit"
             disabled={saving}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors"
           >
-            {saving ? t('saving') : t('saveBtn')}
+            {saving ? 'Đang lưu...' : 'Lưu'}
           </button>
         </div>
       </form>
