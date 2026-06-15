@@ -13,7 +13,7 @@ import { parseApiError } from '@/lib/parseApiError';
 
 function CartItemRow({ item }: { item: CartItemData }) {
   const t = useTranslations('cart');
-  const { updateItem, removeItem } = useCart();
+  const { updateItem, removeItem, toggleSelection } = useCart();
   const [qty, setQty] = useState(item.quantity);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
@@ -43,11 +43,32 @@ function CartItemRow({ item }: { item: CartItemData }) {
     }
   }
 
+  async function handleToggleSelection(selected: boolean) {
+    setUpdating(true);
+    try {
+      await toggleSelection(item.id, selected);
+    } catch {
+      // ignore
+    } finally {
+      setUpdating(false);
+    }
+  }
+
   const lowStock = !item.outOfStock && item.stockQuantity > 0 && item.stockQuantity <= 3;
   const lineTotal = Number(item.unitPrice) * qty;
 
   return (
-    <div className={`grid grid-cols-[96px_1fr_auto] gap-4 py-5 border-b border-line transition-opacity ${updating ? 'opacity-40 pointer-events-none' : ''}`}>
+    <div className={`grid grid-cols-[20px_96px_1fr_auto] gap-3 py-5 border-b border-line transition-opacity ${updating ? 'opacity-40 pointer-events-none' : ''} ${!item.selected ? 'opacity-50' : ''}`}>
+      {/* Checkbox */}
+      <div className="flex items-start pt-1.5">
+        <input
+          type="checkbox"
+          checked={item.selected}
+          onChange={(e) => handleToggleSelection(e.target.checked)}
+          className="w-4 h-4 rounded-sm cursor-pointer accent-accent"
+        />
+      </div>
+
       {/* Image */}
       <Link href={`/products/${item.productSlug}`} className="block w-24 h-24 rounded-sm overflow-hidden border border-line bg-paper shrink-0">
         {item.primaryImagePublicId ? (
@@ -70,67 +91,96 @@ function CartItemRow({ item }: { item: CartItemData }) {
           {item.productName}
         </Link>
 
+        {/* Attribute pills */}
         <div className="flex flex-wrap gap-1.5 mt-2">
-          <span className="text-[11px] text-muted bg-paper border border-line rounded-sm px-2 py-0.5">
+          <span className="inline-flex items-center text-[11px] font-bold text-ink border border-ink/20 bg-white rounded-sm px-2 py-0.5 tracking-wide">
             {t('size')} {item.size}
           </span>
-          <span className="text-[11px] text-muted bg-paper border border-line rounded-sm px-2 py-0.5">
+          <span className="inline-flex items-center text-[11px] text-muted bg-paper border border-line rounded-sm px-2 py-0.5">
             {item.colorway}
           </span>
         </div>
 
-        {item.outOfStock && (
-          <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-wide text-danger bg-danger-bg px-2 py-0.5 rounded-sm">
-            {t('outOfStock')}
-          </span>
-        )}
-        {lowStock && (
-          <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-wide text-warn bg-warn-bg px-2 py-0.5 rounded-sm">
-            {t('lowStock', { n: item.stockQuantity })}
-          </span>
-        )}
+        {/* Stock badges */}
+        <div className="flex flex-wrap gap-1.5 mt-1.5">
+          {item.outOfStock && (
+            <span className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-white bg-danger px-2 py-0.5 rounded-sm">
+              {t('outOfStock')}
+            </span>
+          )}
+          {lowStock && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-warn px-2 py-0.5 rounded-sm border border-warn/30 bg-warn-bg">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              {t('lowStock', { n: item.stockQuantity })}
+            </span>
+          )}
+        </div>
+
         {error && <p className="text-xs text-danger mt-1">{error}</p>}
 
-        <div className="flex items-center gap-4 mt-3">
-          <div className="flex items-center border border-line rounded-sm overflow-hidden">
+        {/* Controls */}
+        <div className="flex items-center gap-3 mt-3">
+          {/* Stepper */}
+          <div className="inline-flex items-center h-8 rounded-sm border border-line overflow-hidden divide-x divide-line bg-white">
             <button
               onClick={() => handleQty(qty - 1)}
               disabled={updating || qty <= 1}
-              className="w-8 h-8 flex items-center justify-center text-ink-2 hover:bg-paper disabled:opacity-30 transition-colors text-lg leading-none"
+              className="w-8 h-8 flex items-center justify-center text-ink hover:bg-paper disabled:opacity-25 disabled:cursor-not-allowed transition-colors text-base leading-none select-none"
             >
               −
             </button>
-            <span className="w-8 text-center text-sm font-bold tabular-nums">{qty}</span>
+            <span className="w-9 h-8 flex items-center justify-center text-sm font-bold tabular-nums text-ink">{qty}</span>
             <button
               onClick={() => handleQty(qty + 1)}
               disabled={updating || item.outOfStock || qty >= item.stockQuantity}
-              className="w-8 h-8 flex items-center justify-center text-ink-2 hover:bg-paper disabled:opacity-30 transition-colors text-lg leading-none"
+              className="w-8 h-8 flex items-center justify-center text-ink hover:bg-paper disabled:opacity-25 disabled:cursor-not-allowed transition-colors text-base leading-none select-none"
             >
               +
             </button>
           </div>
 
+          {/* Remove */}
           <button
             onClick={handleRemove}
             disabled={updating}
-            className="text-xs text-muted hover:text-danger transition-colors disabled:opacity-40"
+            className="inline-flex items-center gap-1 text-[11px] text-faint hover:text-danger transition-colors disabled:opacity-40"
           >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
             {t('remove')}
           </button>
         </div>
       </div>
 
       {/* Price */}
-      <div className="flex flex-col items-end gap-1 shrink-0 pt-0.5">
-        <span className="font-display font-bold text-base leading-tight tabular-nums">
-          {formatPrice(lineTotal)}
-        </span>
-        {qty > 1 && (
-          <span className="text-[11px] text-faint font-mono tabular-nums">
-            {formatPrice(Number(item.unitPrice))} × {qty}
-          </span>
-        )}
-      </div>
+      {(() => {
+        const orig = item.originalPrice ? Number(item.originalPrice) : null;
+        const unit = Number(item.unitPrice);
+        const discountPct = orig ? Math.round((1 - unit / orig) * 100) : 0;
+        return (
+          <div className="flex flex-col items-end gap-0.5 shrink-0 pt-0.5 min-w-[90px]">
+            {orig && (
+              <>
+                <span className="text-[10px] font-black text-white bg-accent px-1.5 py-0.5 rounded-sm tabular-nums leading-tight">
+                  -{discountPct}%
+                </span>
+                <span className="text-xs text-faint line-through tabular-nums font-mono leading-tight">
+                  {formatPrice(orig * qty)}
+                </span>
+              </>
+            )}
+            <span className={`font-display font-black text-base leading-tight tabular-nums ${orig ? 'text-accent' : 'text-ink'}`}>
+              {formatPrice(unit * qty)}
+            </span>
+            {qty > 1 && (
+              <span className="text-[11px] text-faint font-mono tabular-nums leading-tight">
+                {formatPrice(unit)} × {qty}
+              </span>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -138,17 +188,27 @@ function CartItemRow({ item }: { item: CartItemData }) {
 // ── Order summary sidebar ─────────────────────────────────────────────────────
 
 function OrderSummary({
+  items,
   totalAmount,
   onCheckout,
   onClear,
   clearing,
 }: {
+  items: CartItemData[];
   totalAmount: number;
   onCheckout: () => void;
   onClear: () => void;
   clearing: boolean;
 }) {
   const t = useTranslations('cart');
+
+  const selectedItems = items.filter(i => i.selected);
+  const subtotalOriginal = selectedItems.reduce((sum, i) => {
+    const price = i.originalPrice ? Number(i.originalPrice) : Number(i.unitPrice);
+    return sum + price * i.quantity;
+  }, 0);
+  const totalDiscount = subtotalOriginal - totalAmount;
+  const hasOutOfStockSelected = selectedItems.some(i => i.outOfStock);
 
   return (
     <aside className="lg:sticky lg:top-[84px]">
@@ -162,23 +222,47 @@ function OrderSummary({
 
         {/* Body */}
         <div className="px-5 py-5 space-y-3">
-          {/* Total */}
-          <div className="flex justify-between items-baseline">
-            <span className="font-display font-black text-sm uppercase tracking-wider">
-              {t('total')}
-            </span>
-            <span className="font-display font-black text-2xl tabular-nums">
-              {formatPrice(totalAmount)}
-            </span>
+          {/* Subtotal at original price */}
+          <div className="flex justify-between items-baseline text-sm">
+            <span className="text-muted">{t('subtotal')}</span>
+            <span className="tabular-nums font-mono">{formatPrice(subtotalOriginal)}</span>
+          </div>
+
+          {/* Discount row — only shown when there is a discount */}
+          {totalDiscount > 0 && (
+            <div className="flex justify-between items-baseline text-sm">
+              <span className="text-muted">{t('discount')}</span>
+              <span className="tabular-nums font-mono text-ok font-semibold">
+                -{formatPrice(totalDiscount)}
+              </span>
+            </div>
+          )}
+
+          {/* Divider + total */}
+          <div className="border-t border-line pt-3">
+            <div className="flex justify-between items-baseline">
+              <span className="font-display font-black text-sm uppercase tracking-wider">
+                {t('total')}
+              </span>
+              <span className="font-display font-black text-2xl tabular-nums">
+                {formatPrice(totalAmount)}
+              </span>
+            </div>
           </div>
 
           {/* Checkout */}
           <button
             onClick={onCheckout}
-            className="w-full font-display font-black text-sm uppercase tracking-wider bg-accent text-white py-4 rounded-sm hover:bg-accent-700 transition-colors"
+            disabled={hasOutOfStockSelected || selectedItems.length === 0}
+            className="w-full font-display font-black text-sm uppercase tracking-wider bg-accent text-white py-4 rounded-sm hover:bg-accent-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-accent"
           >
             {t('checkout')}
           </button>
+          {hasOutOfStockSelected && (
+            <p className="text-[11px] text-danger text-center leading-tight">
+              {t('checkoutBlockedByOutOfStock')}
+            </p>
+          )}
 
           {/* Payment badges */}
           <div className="flex justify-center gap-2 pt-1">
@@ -296,6 +380,7 @@ export default function CartPageClient() {
 
         {/* Summary */}
         <OrderSummary
+          items={items}
           totalAmount={Number(cart?.totalAmount ?? 0)}
           onCheckout={() => {}}
           onClear={handleClear}
