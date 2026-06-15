@@ -9,9 +9,10 @@ import com.fernirx.sneakerapi.customer.entity.Customer;
 import com.fernirx.sneakerapi.customer.enums.MembershipTier;
 import com.fernirx.sneakerapi.customer.mapper.CustomerMapper;
 import com.fernirx.sneakerapi.customer.repository.CustomerRepository;
-import com.fernirx.sneakerapi.customer.service.CustomerService;
 import com.fernirx.sneakerapi.customer.repository.CustomerSpec;
+import com.fernirx.sneakerapi.customer.service.CustomerService;
 import com.fernirx.sneakerapi.user.entity.User;
+import com.fernirx.sneakerapi.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,19 @@ import java.math.BigDecimal;
 public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final UserRepository userRepository;
+
+    @Override
+    public Customer getOrCreateByUserId(Long userId) {
+        return customerRepository.findByUserId(userId).orElseGet(() -> {
+            Customer customer = new Customer();
+            customer.setUser(userRepository.getReferenceById(userId));
+            customer.setLoyaltyPoints(0L);
+            customer.setTotalSpent(BigDecimal.ZERO);
+            customer.setMembershipTier(MembershipTier.BRONZE);
+            return customerRepository.save(customer);
+        });
+    }
 
     @Override
     public void initCustomer(User user) {

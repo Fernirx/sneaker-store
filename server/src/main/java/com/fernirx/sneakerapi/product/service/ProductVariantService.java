@@ -3,10 +3,13 @@ package com.fernirx.sneakerapi.product.service;
 import com.fernirx.sneakerapi.product.dto.request.CreateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.request.UpdateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.response.ProductVariantGroupResponse;
+import com.fernirx.sneakerapi.product.entity.ProductVariant;
 
 import java.util.List;
 
 public interface ProductVariantService {
+
+    ProductVariant findActiveById(Long id);
 
     List<ProductVariantGroupResponse> getVariants(Long productId);
 

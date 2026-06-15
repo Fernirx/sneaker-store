@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -24,6 +26,19 @@ public class ProductImageServiceImpl implements ProductImageService {
     private final ProductImageRepository productImageRepository;
     private final ProductRepository productRepository;
     private final ProductAssembler productAssembler;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, String> getPrimaryImageMap(List<Long> productIds) {
+        return productImageRepository
+                .findByProductIdInAndPrimaryImageTrueOrderByProductIdAscDisplayOrderAsc(productIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        img -> img.getProduct().getId() + ":" + img.getColorway(),
+                        ProductImage::getImagePublicId,
+                        (a, b) -> a
+                ));
+    }
 
     @Override
     @Transactional(readOnly = true)
