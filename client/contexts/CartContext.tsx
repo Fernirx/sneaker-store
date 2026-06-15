@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 
@@ -71,20 +72,19 @@ function extractAdjustments(data: CartData): CartAdjustment[] {
 function AdjustmentToast({
   adjustments,
   onDismiss,
+  getMsg,
 }: {
   adjustments: CartAdjustment[];
   onDismiss: (idx: number) => void;
+  getMsg: (adj: CartAdjustment) => string;
 }) {
-  const t = useTranslations('cart');
-
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+    <div className="fixed top-6 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
       {adjustments.map((adj, i) => (
         <div
           key={i}
           className="pointer-events-auto bg-ink text-white text-sm px-4 py-3 rounded-sm shadow-xl flex items-start gap-3 animate-toast-in"
         >
-          {/* Warning icon */}
           <svg
             className="shrink-0 mt-0.5 text-yellow-400"
             width="16"
@@ -102,7 +102,7 @@ function AdjustmentToast({
           </svg>
 
           <p className="flex-1 text-xs leading-relaxed">
-            {t('adjusted', { name: adj.productName, from: adj.from, to: adj.to })}
+            {getMsg(adj)}
           </p>
 
           <button
@@ -126,16 +126,28 @@ export function CartProvider({
   children: React.ReactNode;
   isLoggedIn: boolean;
 }) {
+  const t = useTranslations('cart');
   const [cart, setCart] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [adjustments, setAdjustments] = useState<CartAdjustment[]>([]);
+  const [mounted, setMounted] = useState(false);
+  // Track cart object identity to avoid showing the same adjustments twice
+  const lastCartRef = useRef<CartData | null>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   const applyCart = useCallback((data: CartData) => {
     setCart(data);
     if (data.guestToken) saveGuestToken(data.guestToken);
-    const adj = extractAdjustments(data);
-    if (adj.length > 0) setAdjustments(prev => [...prev, ...adj]);
   }, []);
+
+  // Detect stock-adjustment toasts whenever cart state changes
+  useEffect(() => {
+    if (!cart || cart === lastCartRef.current) return;
+    lastCartRef.current = cart;
+    const adj = extractAdjustments(cart);
+    if (adj.length > 0) setAdjustments(prev => [...prev, ...adj]);
+  }, [cart]);
 
   // Auto-dismiss toasts after 6s
   useEffect(() => {
@@ -214,8 +226,13 @@ export function CartProvider({
   return (
     <CartContext.Provider value={{ cart, loading, addItem, updateItem, removeItem, clearCart }}>
       {children}
-      {adjustments.length > 0 && (
-        <AdjustmentToast adjustments={adjustments} onDismiss={dismissOne} />
+      {mounted && adjustments.length > 0 && createPortal(
+        <AdjustmentToast
+          adjustments={adjustments}
+          onDismiss={dismissOne}
+          getMsg={(adj) => t('adjusted', { name: adj.productName, from: adj.from, to: adj.to })}
+        />,
+        document.body,
       )}
     </CartContext.Provider>
   );
