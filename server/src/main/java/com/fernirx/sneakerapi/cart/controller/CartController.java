@@ -3,6 +3,7 @@ package com.fernirx.sneakerapi.cart.controller;
 import com.fernirx.sneakerapi.cart.dto.request.AddCartItemRequest;
 import com.fernirx.sneakerapi.cart.dto.request.MergeCartRequest;
 import com.fernirx.sneakerapi.cart.dto.request.UpdateCartItemRequest;
+import com.fernirx.sneakerapi.cart.dto.request.UpdateCartItemSelectionRequest;
 import com.fernirx.sneakerapi.cart.dto.response.CartResponse;
 import com.fernirx.sneakerapi.cart.service.CartService;
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
@@ -53,6 +54,17 @@ public class CartController {
             @Valid @RequestBody UpdateCartItemRequest request) {
         Long userId = userId(userDetails);
         return ResponseEntity.ok(SuccessResponse.of(cartService.updateItem(userId, guestToken, itemId, request)));
+    }
+
+    @PatchMapping("/items/{itemId}/selection")
+    @Operation(summary = "Chọn hoặc bỏ chọn sản phẩm trong giỏ")
+    public ResponseEntity<SuccessResponse<CartResponse>> selectItem(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(value = "X-Guest-Token", required = false) String guestToken,
+            @PathVariable Long itemId,
+            @Valid @RequestBody UpdateCartItemSelectionRequest request) {
+        Long userId = userId(userDetails);
+        return ResponseEntity.ok(SuccessResponse.of(cartService.selectItem(userId, guestToken, itemId, request)));
     }
 
     @DeleteMapping("/items/{itemId}")

@@ -2,6 +2,7 @@ package com.fernirx.sneakerapi.cart.service;
 
 import com.fernirx.sneakerapi.cart.dto.request.AddCartItemRequest;
 import com.fernirx.sneakerapi.cart.dto.request.UpdateCartItemRequest;
+import com.fernirx.sneakerapi.cart.dto.request.UpdateCartItemSelectionRequest;
 import com.fernirx.sneakerapi.cart.dto.response.CartResponse;
 
 public interface CartService {
@@ -11,4 +12,5 @@ public interface CartService {
     CartResponse removeItem(Long userId, String guestToken, Long itemId);
     CartResponse clearCart(Long userId, String guestToken);
     CartResponse mergeGuestCart(Long userId, String guestToken);
+    CartResponse selectItem(Long userId, String guestToken, Long itemId, UpdateCartItemSelectionRequest request);
 }

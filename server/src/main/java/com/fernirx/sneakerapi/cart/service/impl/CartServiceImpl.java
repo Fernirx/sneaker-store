@@ -2,6 +2,7 @@ package com.fernirx.sneakerapi.cart.service.impl;
 
 import com.fernirx.sneakerapi.cart.dto.request.AddCartItemRequest;
 import com.fernirx.sneakerapi.cart.dto.request.UpdateCartItemRequest;
+import com.fernirx.sneakerapi.cart.dto.request.UpdateCartItemSelectionRequest;
 import com.fernirx.sneakerapi.cart.dto.response.CartItemResponse;
 import com.fernirx.sneakerapi.cart.dto.response.CartResponse;
 import com.fernirx.sneakerapi.cart.entity.Cart;
@@ -100,6 +101,16 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> BusinessException.notFound("label.cart"));
         cartItemRepository.deleteAllByCart(cart);
         return emptyCartResponse(cart.getGuestToken());
+    }
+
+    @Override
+    public CartResponse selectItem(Long userId, String guestToken, Long itemId, UpdateCartItemSelectionRequest request) {
+        Cart cart = resolveCart(userId, guestToken)
+                .orElseThrow(() -> BusinessException.notFound("label.cart"));
+        CartItem item = cartItemRepository.findByIdAndCart(itemId, cart)
+                .orElseThrow(() -> BusinessException.notFound("label.cart.item"));
+        item.setSelected(request.selected());
+        return buildCartResponse(cart);
     }
 
     @Override
@@ -224,6 +235,7 @@ public class CartServiceImpl implements CartService {
                 .toList();
 
         BigDecimal totalAmount = itemResponses.stream()
+                .filter(r -> Boolean.TRUE.equals(r.selected()))
                 .map(r -> r.unitPrice().multiply(BigDecimal.valueOf(r.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
