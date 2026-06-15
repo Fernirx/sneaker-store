@@ -16,6 +16,8 @@ export interface CartItemData {
   colorway: string;
   size: number;
   unitPrice: number;
+  originalPrice?: number | null;
+  selected: boolean;
   stockQuantity: number;
   outOfStock: boolean;
 }
@@ -39,6 +41,7 @@ interface CartContextValue {
   addItem: (variantId: number, quantity?: number) => Promise<void>;
   updateItem: (itemId: number, quantity: number) => Promise<void>;
   removeItem: (itemId: number) => Promise<void>;
+  toggleSelection: (itemId: number, selected: boolean) => Promise<void>;
   clearCart: () => Promise<void>;
 }
 
@@ -218,13 +221,22 @@ export function CartProvider({
     applyCart(res.data);
   }, [applyCart]);
 
+  const toggleSelection = useCallback(async (itemId: number, selected: boolean) => {
+    const { data: res } = await clientAxios.patch(
+      `/api/cart/items/${itemId}/selection`,
+      { selected },
+      { headers: guestHeaders() },
+    );
+    applyCart(res.data);
+  }, [applyCart]);
+
   const clearCart = useCallback(async () => {
     const { data: res } = await clientAxios.delete('/api/cart', { headers: guestHeaders() });
     applyCart(res.data);
   }, [applyCart]);
 
   return (
-    <CartContext.Provider value={{ cart, loading, addItem, updateItem, removeItem, clearCart }}>
+    <CartContext.Provider value={{ cart, loading, addItem, updateItem, removeItem, toggleSelection, clearCart }}>
       {children}
       {mounted && adjustments.length > 0 && createPortal(
         <AdjustmentToast
