@@ -8,8 +8,6 @@ import { productUrl } from '@/lib/cloudinaryUrl';
 import { formatPrice } from '../../products/_components/types';
 import { parseApiError } from '@/lib/parseApiError';
 
-const FREESHIP_THRESHOLD = 1_500_000;
-const SHIPPING_FEE = 35_000;
 
 // ── Item row ──────────────────────────────────────────────────────────────────
 
@@ -151,15 +149,12 @@ function OrderSummary({
   clearing: boolean;
 }) {
   const t = useTranslations('cart');
-  const shipping = totalAmount >= FREESHIP_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = totalAmount + shipping;
-  const gap = FREESHIP_THRESHOLD - totalAmount;
 
   return (
     <aside className="lg:sticky lg:top-[84px]">
-      <div className="border border-line rounded-sm overflow-hidden">
+      <div className="border border-line rounded-sm overflow-hidden bg-white">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-line bg-paper">
+        <div className="px-5 py-4 border-b border-line">
           <h2 className="font-display font-black text-sm uppercase tracking-wider">
             {t('orderSummary')}
           </h2>
@@ -167,32 +162,20 @@ function OrderSummary({
 
         {/* Body */}
         <div className="px-5 py-5 space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted">{t('subtotal')}</span>
-            <span className="font-mono tabular-nums">{formatPrice(totalAmount)}</span>
-          </div>
-
-          <div className="flex justify-between text-sm">
-            <span className="text-muted">{t('shipping')}</span>
-            <span className={`font-mono tabular-nums ${shipping === 0 ? 'text-ok font-semibold' : ''}`}>
-              {shipping === 0 ? t('freeShip') : formatPrice(shipping)}
-            </span>
-          </div>
-
           {/* Total */}
-          <div className="flex justify-between items-baseline pt-4 border-t border-line">
+          <div className="flex justify-between items-baseline">
             <span className="font-display font-black text-sm uppercase tracking-wider">
               {t('total')}
             </span>
             <span className="font-display font-black text-2xl tabular-nums">
-              {formatPrice(total)}
+              {formatPrice(totalAmount)}
             </span>
           </div>
 
           {/* Checkout */}
           <button
             onClick={onCheckout}
-            className="w-full font-display font-black text-sm uppercase tracking-wider bg-ink text-white py-4 rounded-sm hover:bg-accent transition-colors"
+            className="w-full font-display font-black text-sm uppercase tracking-wider bg-accent text-white py-4 rounded-sm hover:bg-accent-700 transition-colors"
           >
             {t('checkout')}
           </button>
@@ -209,17 +192,6 @@ function OrderSummary({
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Freeship note */}
-      <div className={`mt-3 text-xs px-3 py-2.5 rounded-sm ${
-        shipping === 0
-          ? 'bg-ok-bg text-ok'
-          : 'bg-paper border border-line text-muted'
-      }`}>
-        {shipping === 0
-          ? t('freeShipDone')
-          : t('freeShipNote', { amount: formatPrice(gap) })}
       </div>
 
       {/* Clear cart */}
