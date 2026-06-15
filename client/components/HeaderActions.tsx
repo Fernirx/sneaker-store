@@ -5,6 +5,7 @@ import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 import { avatarUrl } from '@/lib/cloudinaryUrl';
+import { useCart } from '@/contexts/CartContext';
 
 interface Props {
   isLoggedIn: boolean;
@@ -17,6 +18,9 @@ export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }:
   const [pending, start] = useTransition();
   const [localFirstName, setLocalFirstName] = useState(firstName);
   const [localAvatarPublicId, setLocalAvatarPublicId] = useState(avatarPublicId);
+
+  const { cart } = useCart();
+  const itemCount = cart?.totalItems ?? 0;
 
   useEffect(() => {
     setLocalFirstName(firstName);
@@ -42,12 +46,26 @@ export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }:
 
   return (
     <div className="flex items-center gap-1">
+      {/* Cart icon — shown for everyone */}
+      <Link href="/cart"
+        className="relative flex items-center gap-1.5 px-3 py-2 rounded text-sm text-ink-2 hover:text-ink hover:bg-paper transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        {itemCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+            {itemCount > 99 ? '99+' : itemCount}
+          </span>
+        )}
+        <span className="hidden sm:inline text-xs font-semibold tracking-wide">{t('cart')}</span>
+      </Link>
+
       {isLoggedIn ? (
         <>
           <Link href="/orders"
             className="flex items-center gap-1.5 px-3 py-2 rounded text-sm text-ink-2 hover:text-ink hover:bg-paper transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>
             </svg>
             <span className="hidden sm:inline text-xs font-semibold tracking-wide">{t('orders')}</span>
           </Link>

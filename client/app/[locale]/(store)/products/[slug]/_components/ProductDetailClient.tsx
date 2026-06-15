@@ -5,6 +5,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { productUrl, brandUrl } from '@/lib/cloudinaryUrl';
 import { type ProductDetailResponse, formatPrice } from '../../_components/types';
+import { useCart } from '@/contexts/CartContext';
+import { parseApiError } from '@/lib/parseApiError';
 
 const GENDER_LABEL: Record<string, { vi: string; en: string }> = {
   MEN:    { vi: 'Nam',     en: 'Men' },
@@ -40,11 +42,14 @@ function label(map: Record<string, { vi: string; en: string }>, key: string | nu
 export default function ProductDetailClient({ product }: { product: ProductDetailResponse }) {
   const t = useTranslations('products');
   const locale = useLocale();
+  const { addItem } = useCart();
 
   const [colorIdx, setColorIdx] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [mainImgIdx, setMainImgIdx] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState('');
 
   const color = product.colors[colorIdx];
   const primaryImg = color?.images.find(i => i.primary) ?? color?.images[0];
@@ -57,10 +62,20 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
     setMainImgIdx(0);
   }
 
-  function handleAddToCart() {
-    if (!selectedVariantId) return;
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
+  async function handleAddToCart() {
+    if (!selectedVariantId || addLoading) return;
+    setAddError('');
+    setAddLoading(true);
+    try {
+      await addItem(selectedVariantId, 1);
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+    } catch (err) {
+      const { general } = parseApiError(err, 'Không thể thêm vào giỏ hàng');
+      setAddError(general);
+    } finally {
+      setAddLoading(false);
+    }
   }
 
   return (
@@ -214,23 +229,30 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
           )}
 
           {/* Add to cart */}
-          <button
-            onClick={handleAddToCart}
-            disabled={!selectedVariantId}
-            className={`w-full py-4 font-display font-black text-sm uppercase tracking-wider rounded-sm transition-all ${
-              addedToCart
-                ? 'bg-ok text-white'
-                : selectedVariantId
-                ? 'bg-ink text-white hover:bg-accent'
-                : 'bg-paper text-muted border border-line cursor-not-allowed'
-            }`}
-          >
-            {addedToCart
-              ? '✓ Đã thêm vào giỏ'
-              : !selectedVariantId
-              ? t('selectSize')
-              : t('addToCart')}
-          </button>
+          <div>
+            <button
+              onClick={handleAddToCart}
+              disabled={!selectedVariantId || addLoading}
+              className={`w-full py-4 font-display font-black text-sm uppercase tracking-wider rounded-sm transition-all ${
+                addedToCart
+                  ? 'bg-ok text-white'
+                  : selectedVariantId && !addLoading
+                  ? 'bg-ink text-white hover:bg-accent'
+                  : 'bg-paper text-muted border border-line cursor-not-allowed'
+              }`}
+            >
+              {addedToCart
+                ? `✓ ${t('addedToCart')}`
+                : addLoading
+                ? '...'
+                : !selectedVariantId
+                ? t('selectSize')
+                : t('addToCart')}
+            </button>
+            {addError && (
+              <p className="text-xs text-danger mt-2">{addError}</p>
+            )}
+          </div>
 
           {/* Product details */}
           <div className="border-t border-line pt-5 space-y-3">

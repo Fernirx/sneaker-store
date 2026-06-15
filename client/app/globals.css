@@ -33,3 +33,9 @@
   to { transform: translateX(-50%); }
 }
 .animate-marquee { animation: marquee 24s linear infinite; }
+
+@keyframes toast-in {
+  from { transform: translateX(calc(100% + 1.5rem)); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.animate-toast-in { animation: toast-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
