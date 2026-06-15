@@ -25,8 +25,10 @@ public interface CartMapper {
     @Mapping(target = "colorway", source = "item.variant.colorway")
     @Mapping(target = "size", source = "item.variant.size")
     @Mapping(target = "stockQuantity", source = "item.variant.stockQuantity")
+    @Mapping(target = "selected", source = "item.selected")
     @Mapping(target = "outOfStock", expression = "java(resolveOutOfStock(item))")
     @Mapping(target = "unitPrice", expression = "java(resolveUnitPrice(item))")
+    @Mapping(target = "originalPrice", expression = "java(resolveOriginalPrice(item))")
     CartItemResponse toItemResponse(CartItem item, String primaryImagePublicId, Integer previousQuantity);
 
     default boolean resolveOutOfStock(CartItem item) {
@@ -38,5 +40,12 @@ public interface CartMapper {
     default BigDecimal resolveUnitPrice(CartItem item) {
         BigDecimal variantPrice = item.getVariant().getPrice();
         return variantPrice != null ? variantPrice : item.getVariant().getProduct().getBasePrice();
+    }
+
+    default BigDecimal resolveOriginalPrice(CartItem item) {
+        BigDecimal originalPrice = item.getVariant().getProduct().getOriginalPrice();
+        if (originalPrice == null) return null;
+        BigDecimal unitPrice = resolveUnitPrice(item);
+        return originalPrice.compareTo(unitPrice) > 0 ? originalPrice : null;
     }
 }

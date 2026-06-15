@@ -35,4 +35,9 @@ public class CartItem extends BaseAuditEntity {
     @ColumnDefault("1")
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
+
+    @NotNull
+    @ColumnDefault("1")
+    @Column(name = "selected", nullable = false)
+    private Boolean selected = true;
 }

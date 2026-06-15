@@ -16,6 +16,8 @@ public record CartItemResponse(
         String colorway,
         Short size,
         BigDecimal unitPrice,
+        BigDecimal originalPrice,
+        Boolean selected,
         Integer stockQuantity,
         Boolean outOfStock
 ) {}
