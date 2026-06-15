@@ -79,6 +79,7 @@
     "searchPlaceholder": "Search products...",
     "orders": "Orders",
     "wishlist": "Wishlist",
+    "cart": "Cart",
     "account": "Account",
     "logout": "Log out",
     "login": "Log in",
@@ -123,7 +124,23 @@
     "shaft": "Shaft style",
     "sold": "Sold",
     "breadcrumbHome": "Home",
-    "breadcrumbProducts": "Products"
+    "breadcrumbProducts": "Products",
+    "addedToCart": "Added to cart"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty.",
+    "continueShopping": "Continue shopping",
+    "totalItems": "{count} items",
+    "total": "Total",
+    "checkout": "Proceed to checkout",
+    "remove": "Remove",
+    "clearCart": "Clear cart",
+    "clearing": "Clearing...",
+    "outOfStock": "Out of stock",
+    "size": "Size",
+    "color": "Color",
+    "adjusted": "Quantity of {name} adjusted from {from} to {to} due to limited stock."
   },
   "footer": {
     "tagline": "Authentic sneakers, premium style. Safe and fast online shopping.",

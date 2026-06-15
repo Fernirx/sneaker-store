@@ -79,6 +79,7 @@
     "searchPlaceholder": "Tìm kiếm sản phẩm...",
     "orders": "Đơn hàng",
     "wishlist": "Yêu thích",
+    "cart": "Giỏ hàng",
     "account": "Tài khoản",
     "logout": "Đăng xuất",
     "login": "Đăng nhập",
@@ -123,7 +124,23 @@
     "shaft": "Kiểu cổ",
     "sold": "Đã bán",
     "breadcrumbHome": "Trang chủ",
-    "breadcrumbProducts": "Sản phẩm"
+    "breadcrumbProducts": "Sản phẩm",
+    "addedToCart": "Đã thêm vào giỏ"
+  },
+  "cart": {
+    "title": "Giỏ hàng",
+    "empty": "Giỏ hàng của bạn đang trống.",
+    "continueShopping": "Tiếp tục mua sắm",
+    "totalItems": "{count} sản phẩm",
+    "total": "Tổng cộng",
+    "checkout": "Tiến hành thanh toán",
+    "remove": "Xóa",
+    "clearCart": "Xóa giỏ hàng",
+    "clearing": "Đang xóa...",
+    "outOfStock": "Hết hàng",
+    "size": "Size",
+    "color": "Màu",
+    "adjusted": "Số lượng {name} đã được điều chỉnh từ {from} xuống {to} do hàng có hạn."
   },
   "footer": {
     "tagline": "Giày chính hãng, phong cách đỉnh cao. Mua sắm trực tuyến an toàn và nhanh chóng.",
