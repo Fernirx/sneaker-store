@@ -18,6 +18,7 @@ public interface CartMapper {
     @Mapping(target = "id", source = "item.id")
     @Mapping(target = "variantId", source = "item.variant.id")
     @Mapping(target = "quantity", source = "item.quantity")
+    @Mapping(target = "previousQuantity", source = "previousQuantity")
     @Mapping(target = "productName", source = "item.variant.product.name")
     @Mapping(target = "productSlug", source = "item.variant.product.slug")
     @Mapping(target = "primaryImagePublicId", source = "primaryImagePublicId")
@@ -26,7 +27,7 @@ public interface CartMapper {
     @Mapping(target = "stockQuantity", source = "item.variant.stockQuantity")
     @Mapping(target = "outOfStock", expression = "java(resolveOutOfStock(item))")
     @Mapping(target = "unitPrice", expression = "java(resolveUnitPrice(item))")
-    CartItemResponse toItemResponse(CartItem item, String primaryImagePublicId);
+    CartItemResponse toItemResponse(CartItem item, String primaryImagePublicId, Integer previousQuantity);
 
     default boolean resolveOutOfStock(CartItem item) {
         return !item.getVariant().getActive()

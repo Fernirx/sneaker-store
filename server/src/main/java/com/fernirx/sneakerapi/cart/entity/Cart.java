@@ -1,7 +1,7 @@
 package com.fernirx.sneakerapi.cart.entity;
 
 import com.fernirx.sneakerapi.common.entity.BaseAuditEntity;
-import com.fernirx.sneakerapi.user.entity.User;
+import com.fernirx.sneakerapi.customer.entity.Customer;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -16,15 +16,15 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "carts", uniqueConstraints = {
-        @UniqueConstraint(name = "user_cart_user_UNIQUE",
-                columnNames = {"user_id"}),
-        @UniqueConstraint(name = "user_cart_guest_UNIQUE",
+        @UniqueConstraint(name = "cart_customer_UNIQUE",
+                columnNames = {"customer_id"}),
+        @UniqueConstraint(name = "cart_guest_UNIQUE",
                 columnNames = {"guest_token"})})
 public class Cart extends BaseAuditEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 
     @Size(max = 64)
     @Column(name = "guest_token", length = 64)

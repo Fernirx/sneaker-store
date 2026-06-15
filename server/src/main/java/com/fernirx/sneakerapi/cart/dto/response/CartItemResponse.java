@@ -9,6 +9,7 @@ public record CartItemResponse(
         Long id,
         Long variantId,
         Integer quantity,
+        Integer previousQuantity,
         String productName,
         String productSlug,
         String primaryImagePublicId,

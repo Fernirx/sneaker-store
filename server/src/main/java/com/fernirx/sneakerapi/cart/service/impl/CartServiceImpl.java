@@ -11,11 +11,11 @@ import com.fernirx.sneakerapi.cart.repository.CartItemRepository;
 import com.fernirx.sneakerapi.cart.repository.CartRepository;
 import com.fernirx.sneakerapi.cart.service.CartService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
-import com.fernirx.sneakerapi.product.entity.ProductImage;
+import com.fernirx.sneakerapi.customer.entity.Customer;
+import com.fernirx.sneakerapi.customer.service.CustomerService;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
-import com.fernirx.sneakerapi.product.repository.ProductImageRepository;
-import com.fernirx.sneakerapi.product.repository.ProductVariantRepository;
-import com.fernirx.sneakerapi.user.repository.UserRepository;
+import com.fernirx.sneakerapi.product.service.ProductImageService;
+import com.fernirx.sneakerapi.product.service.ProductVariantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -34,13 +35,12 @@ import java.util.stream.Collectors;
 public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-    private final ProductVariantRepository productVariantRepository;
-    private final ProductImageRepository productImageRepository;
-    private final UserRepository userRepository;
+    private final ProductVariantService productVariantService;
+    private final ProductImageService productImageService;
+    private final CustomerService customerService;
     private final CartMapper cartMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public CartResponse getCart(Long userId, String guestToken) {
         return resolveCart(userId, guestToken)
                 .map(this::buildCartResponse)
@@ -143,7 +143,7 @@ public class CartServiceImpl implements CartService {
     // ---- Private helpers ----
 
     private Optional<Cart> resolveCart(Long userId, String guestToken) {
-        if (userId != null) return cartRepository.findByUser_Id(userId);
+        if (userId != null) return cartRepository.findByCustomer_User_Id(userId);
         if (guestToken != null) return cartRepository.findByGuestToken(guestToken);
         return Optional.empty();
     }
@@ -152,7 +152,7 @@ public class CartServiceImpl implements CartService {
         return resolveCart(userId, guestToken).orElseGet(() -> {
             Cart cart = new Cart();
             if (userId != null) {
-                cart.setUser(userRepository.getReferenceById(userId));
+                cart.setCustomer(findOrCreateCustomer(userId));
             } else {
                 cart.setGuestToken(UUID.randomUUID().toString());
             }
@@ -161,20 +161,19 @@ public class CartServiceImpl implements CartService {
     }
 
     private Cart getOrCreateUserCart(Long userId) {
-        return cartRepository.findByUser_Id(userId).orElseGet(() -> {
+        return cartRepository.findByCustomer_User_Id(userId).orElseGet(() -> {
             Cart cart = new Cart();
-            cart.setUser(userRepository.getReferenceById(userId));
+            cart.setCustomer(findOrCreateCustomer(userId));
             return cartRepository.save(cart);
         });
     }
 
+    private Customer findOrCreateCustomer(Long userId) {
+        return customerService.getOrCreateByUserId(userId);
+    }
+
     private ProductVariant findActiveVariant(Long variantId) {
-        ProductVariant variant = productVariantRepository.findById(variantId)
-                .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
-        if (!variant.getActive()) {
-            throw BusinessException.notFound("label.product.variant");
-        }
-        return variant;
+        return productVariantService.findActiveById(variantId);
     }
 
     private void validateStock(ProductVariant variant, int requestedQty) {
@@ -190,24 +189,37 @@ public class CartServiceImpl implements CartService {
             return emptyCartResponse(cart.getGuestToken());
         }
 
+        Map<Long, Integer> previousQties = items.stream()
+                .collect(Collectors.toMap(CartItem::getId, CartItem::getQuantity));
+
+        List<CartItem> toUpdate = items.stream()
+                .filter(item -> {
+                    int stock = item.getVariant().getStockQuantity();
+                    return stock > 0 && item.getQuantity() > stock;
+                })
+                .peek(item -> item.setQuantity(item.getVariant().getStockQuantity()))
+                .toList();
+        if (!toUpdate.isEmpty()) {
+            cartItemRepository.saveAll(toUpdate);
+        }
+
+        Set<Long> adjustedIds = toUpdate.stream()
+                .map(CartItem::getId)
+                .collect(Collectors.toSet());
+
         List<Long> productIds = items.stream()
                 .map(ci -> ci.getVariant().getProduct().getId())
                 .distinct()
                 .toList();
 
-        Map<String, String> primaryImages = productImageRepository
-                .findByProductIdInAndPrimaryImageTrueOrderByProductIdAscDisplayOrderAsc(productIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        img -> img.getProduct().getId() + ":" + img.getColorway(),
-                        ProductImage::getImagePublicId,
-                        (a, b) -> a
-                ));
+        Map<String, String> primaryImages = productImageService.getPrimaryImageMap(productIds);
 
         List<CartItemResponse> itemResponses = items.stream()
                 .map(item -> {
                     String key = item.getVariant().getProduct().getId() + ":" + item.getVariant().getColorway();
-                    return cartMapper.toItemResponse(item, primaryImages.get(key));
+                    Integer previousQuantity = adjustedIds.contains(item.getId())
+                            ? previousQties.get(item.getId()) : null;
+                    return cartMapper.toItemResponse(item, primaryImages.get(key), previousQuantity);
                 })
                 .toList();
 
