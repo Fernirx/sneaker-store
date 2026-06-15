@@ -36,44 +36,44 @@ function CartItemRow({ item }: { item: CartItemData }) {
 
   async function handleRemove() {
     setUpdating(true);
-    try {
-      await removeItem(item.id);
-    } catch {
-      setUpdating(false);
-    }
+    try { await removeItem(item.id); } catch { setUpdating(false); }
   }
 
   async function handleToggleSelection(selected: boolean) {
     setUpdating(true);
-    try {
-      await toggleSelection(item.id, selected);
-    } catch {
-      // ignore
-    } finally {
-      setUpdating(false);
-    }
+    try { await toggleSelection(item.id, selected); } catch { /* ignore */ }
+    finally { setUpdating(false); }
   }
 
   const lowStock = !item.outOfStock && item.stockQuantity > 0 && item.stockQuantity <= 3;
-  const lineTotal = Number(item.unitPrice) * qty;
+  const orig     = item.originalPrice ? Number(item.originalPrice) : null;
+  const unit     = Number(item.unitPrice);
+  const pct      = orig ? Math.round((1 - unit / orig) * 100) : 0;
 
   return (
-    <div className={`grid grid-cols-[20px_96px_1fr_auto] gap-3 py-5 border-b border-line transition-opacity ${updating ? 'opacity-40 pointer-events-none' : ''} ${!item.selected ? 'opacity-50' : ''}`}>
+    <div
+      className={`flex gap-4 py-5 border-b border-line transition-opacity ${
+        updating ? 'opacity-40 pointer-events-none' : ''
+      } ${!item.selected ? 'opacity-50' : ''}`}
+    >
       {/* Checkbox */}
-      <div className="flex items-start pt-1.5">
+      <div className="pt-1 shrink-0">
         <input
           type="checkbox"
           checked={item.selected}
           onChange={(e) => handleToggleSelection(e.target.checked)}
-          className="w-4 h-4 rounded-sm cursor-pointer accent-accent"
+          className="w-4 h-4 rounded-sm cursor-pointer accent-ink"
         />
       </div>
 
       {/* Image */}
-      <Link href={`/products/${item.productSlug}`} className="block w-24 h-24 rounded-sm overflow-hidden border border-line bg-paper shrink-0">
+      <Link
+        href={`/products/${item.productSlug}`}
+        className="shrink-0 w-[88px] h-[88px] rounded-sm border border-line bg-paper overflow-hidden"
+      >
         {item.primaryImagePublicId ? (
           <img
-            src={productUrl(item.primaryImagePublicId, 192, 192)}
+            src={productUrl(item.primaryImagePublicId, 176, 176)}
             alt={item.productName}
             className="w-full h-full object-contain p-1.5"
           />
@@ -83,104 +83,118 @@ function CartItemRow({ item }: { item: CartItemData }) {
       </Link>
 
       {/* Info */}
-      <div className="min-w-0">
-        <Link
-          href={`/products/${item.productSlug}`}
-          className="font-semibold text-sm leading-snug text-ink hover:text-accent transition-colors line-clamp-2"
-        >
-          {item.productName}
-        </Link>
+      <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
+        <div>
+          <Link
+            href={`/products/${item.productSlug}`}
+            className="text-[13px] font-semibold leading-snug text-ink hover:text-accent transition-colors line-clamp-2"
+          >
+            {item.productName}
+          </Link>
 
-        {/* Attribute pills */}
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          <span className="inline-flex items-center text-[11px] font-bold text-ink border border-ink/20 bg-white rounded-sm px-2 py-0.5 tracking-wide">
-            {t('size')} {item.size}
-          </span>
-          <span className="inline-flex items-center text-[11px] text-muted bg-paper border border-line rounded-sm px-2 py-0.5">
-            {item.colorway}
-          </span>
+          {/* Màu · Size */}
+          <p className="text-[12px] text-muted mt-1 leading-tight">
+            {item.colorway} &nbsp;·&nbsp; {t('size')} {item.size}
+          </p>
+
+          {/* Out of stock / low stock */}
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            {item.outOfStock && (
+              <span className="text-[10px] font-black uppercase tracking-widest text-danger">
+                {t('outOfStock')}
+              </span>
+            )}
+            {lowStock && (
+              <span className="text-[10px] text-warn">
+                {t('lowStock', { n: item.stockQuantity })}
+              </span>
+            )}
+          </div>
+
+          {error && <p className="text-xs text-danger mt-1">{error}</p>}
         </div>
 
-        {/* Stock badges */}
-        <div className="flex flex-wrap gap-1.5 mt-1.5">
-          {item.outOfStock && (
-            <span className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-white bg-danger px-2 py-0.5 rounded-sm">
-              {t('outOfStock')}
-            </span>
-          )}
-          {lowStock && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-warn px-2 py-0.5 rounded-sm border border-warn/30 bg-warn-bg">
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-              {t('lowStock', { n: item.stockQuantity })}
-            </span>
-          )}
-        </div>
-
-        {error && <p className="text-xs text-danger mt-1">{error}</p>}
-
-        {/* Controls */}
-        <div className="flex items-center gap-3 mt-3">
-          {/* Stepper */}
-          <div className="inline-flex items-center h-8 rounded-sm border border-line overflow-hidden divide-x divide-line bg-white">
+        {/* Stepper + Remove */}
+        <div className="flex items-center gap-4">
+          <div className="inline-flex items-center border border-line rounded-sm overflow-hidden divide-x divide-line h-8">
             <button
               onClick={() => handleQty(qty - 1)}
               disabled={updating || qty <= 1}
-              className="w-8 h-8 flex items-center justify-center text-ink hover:bg-paper disabled:opacity-25 disabled:cursor-not-allowed transition-colors text-base leading-none select-none"
+              className="w-8 h-8 flex items-center justify-center text-ink text-base hover:bg-paper disabled:opacity-30 disabled:cursor-not-allowed transition-colors select-none"
             >
               −
             </button>
-            <span className="w-9 h-8 flex items-center justify-center text-sm font-bold tabular-nums text-ink">{qty}</span>
+            <span className="w-9 h-8 flex items-center justify-center text-[13px] font-semibold tabular-nums text-ink">
+              {qty}
+            </span>
             <button
               onClick={() => handleQty(qty + 1)}
               disabled={updating || item.outOfStock || qty >= item.stockQuantity}
-              className="w-8 h-8 flex items-center justify-center text-ink hover:bg-paper disabled:opacity-25 disabled:cursor-not-allowed transition-colors text-base leading-none select-none"
+              className="w-8 h-8 flex items-center justify-center text-ink text-base hover:bg-paper disabled:opacity-30 disabled:cursor-not-allowed transition-colors select-none"
             >
               +
             </button>
           </div>
 
-          {/* Remove */}
           <button
             onClick={handleRemove}
             disabled={updating}
-            className="inline-flex items-center gap-1 text-[11px] text-faint hover:text-danger transition-colors disabled:opacity-40"
+            className="text-[12px] text-muted hover:text-danger transition-colors disabled:opacity-40"
           >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
             {t('remove')}
           </button>
         </div>
       </div>
 
       {/* Price */}
-      {(() => {
-        const orig = item.originalPrice ? Number(item.originalPrice) : null;
-        const unit = Number(item.unitPrice);
-        const discountPct = orig ? Math.round((1 - unit / orig) * 100) : 0;
-        return (
-          <div className="flex flex-col items-end gap-0.5 shrink-0 pt-0.5 min-w-[90px]">
-            {orig && (
-              <>
-                <span className="text-[10px] font-black text-white bg-accent px-1.5 py-0.5 rounded-sm tabular-nums leading-tight">
-                  -{discountPct}%
-                </span>
-                <span className="text-xs text-faint line-through tabular-nums font-mono leading-tight">
-                  {formatPrice(orig * qty)}
-                </span>
-              </>
-            )}
-            <span className={`font-display font-black text-base leading-tight tabular-nums ${orig ? 'text-accent' : 'text-ink'}`}>
-              {formatPrice(unit * qty)}
-            </span>
-            {qty > 1 && (
-              <span className="text-[11px] text-faint font-mono tabular-nums leading-tight">
-                {formatPrice(unit)} × {qty}
-              </span>
-            )}
-          </div>
-        );
-      })()}
+      <div className="shrink-0 flex flex-col items-end gap-0.5 pt-0.5 min-w-[80px]">
+        {orig && (
+          <span className="text-[10px] font-bold text-white bg-accent px-1.5 py-0.5 rounded-sm tabular-nums leading-none">
+            -{pct}%
+          </span>
+        )}
+        <span className={`text-[15px] font-bold tabular-nums leading-tight ${orig ? 'text-accent' : 'text-ink'}`}>
+          {formatPrice(unit * qty)}
+        </span>
+        {orig && (
+          <span className="text-[11px] text-faint line-through tabular-nums leading-none">
+            {formatPrice(orig * qty)}
+          </span>
+        )}
+        {qty > 1 && (
+          <span className="text-[11px] text-muted tabular-nums leading-none mt-0.5">
+            {formatPrice(unit)} × {qty}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── FAQ accordion item ────────────────────────────────────────────────────────
+
+function FaqItem({ title, body }: { title: string; body: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-line last:border-b-0">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex justify-between items-center px-5 py-3.5 text-left text-[13px] font-medium text-ink hover:bg-paper transition-colors"
+      >
+        <span>{title}</span>
+        <svg
+          width="12" height="12" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+          className={`text-muted shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+        >
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </button>
+      {open && (
+        <p className="px-5 pb-4 text-[12px] text-muted leading-relaxed">
+          {body}
+        </p>
+      )}
     </div>
   );
 }
@@ -202,87 +216,105 @@ function OrderSummary({
 }) {
   const t = useTranslations('cart');
 
-  const selectedItems = items.filter(i => i.selected);
-  const subtotalOriginal = selectedItems.reduce((sum, i) => {
+  const selectedItems         = items.filter(i => i.selected);
+  const subtotalOriginal      = selectedItems.reduce((sum, i) => {
     const price = i.originalPrice ? Number(i.originalPrice) : Number(i.unitPrice);
     return sum + price * i.quantity;
   }, 0);
-  const totalDiscount = subtotalOriginal - totalAmount;
+  const totalDiscount         = subtotalOriginal - totalAmount;
   const hasOutOfStockSelected = selectedItems.some(i => i.outOfStock);
 
   return (
-    <aside className="lg:sticky lg:top-[84px]">
-      <div className="border border-line rounded-sm overflow-hidden bg-white">
+    <aside className="lg:sticky lg:top-[84px] space-y-3">
+
+      {/* ── Price block ── */}
+      <div className="border border-line rounded-sm overflow-hidden bg-line-2">
+
         {/* Header */}
-        <div className="px-5 py-4 border-b border-line">
-          <h2 className="font-display font-black text-sm uppercase tracking-wider">
+        <div className="px-5 py-3.5 border-b border-line">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
             {t('orderSummary')}
           </h2>
         </div>
 
-        {/* Body */}
-        <div className="px-5 py-5 space-y-3">
-          {/* Subtotal at original price */}
-          <div className="flex justify-between items-baseline text-sm">
-            <span className="text-muted">{t('subtotal')}</span>
-            <span className="tabular-nums font-mono">{formatPrice(subtotalOriginal)}</span>
+        {/* Price rows */}
+        <div className="px-5 pt-4 pb-3 space-y-2.5">
+          <div className="flex justify-between items-baseline text-[13px]">
+            <span className="text-muted">{t('subtotal')}:</span>
+            <span className="tabular-nums text-ink">{formatPrice(subtotalOriginal)}</span>
           </div>
-
-          {/* Discount row — only shown when there is a discount */}
           {totalDiscount > 0 && (
-            <div className="flex justify-between items-baseline text-sm">
-              <span className="text-muted">{t('discount')}</span>
-              <span className="tabular-nums font-mono text-ok font-semibold">
-                -{formatPrice(totalDiscount)}
-              </span>
+            <div className="flex justify-between items-baseline text-[13px]">
+              <span className="text-muted">{t('discount')}:</span>
+              <span className="tabular-nums text-ok">-{formatPrice(totalDiscount)}</span>
             </div>
           )}
-
-          {/* Divider + total */}
-          <div className="border-t border-line pt-3">
-            <div className="flex justify-between items-baseline">
-              <span className="font-display font-black text-sm uppercase tracking-wider">
-                {t('total')}
-              </span>
-              <span className="font-display font-black text-2xl tabular-nums">
-                {formatPrice(totalAmount)}
-              </span>
-            </div>
+          <div className="flex justify-between items-baseline text-[13px]">
+            <span className="text-muted">{t('total')}:</span>
+            <span className="tabular-nums text-ink">{formatPrice(totalAmount)}</span>
           </div>
+        </div>
 
-          {/* Checkout */}
+        {/* Coupon section */}
+        <div className="border-t border-line mx-5" />
+        <div className="px-5 py-3 flex items-center gap-2">
+          <svg className="text-ink shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+          <span className="text-[13px] font-medium text-ink">Mã giảm giá</span>
+        </div>
+        <div className="px-5 pb-4 flex gap-2">
+          <input
+            type="text"
+            placeholder="Nhập mã khuyến mãi"
+            disabled
+            className="flex-1 border border-line rounded-sm px-3 py-2 text-[13px] placeholder:text-faint bg-paper focus:outline-none focus:border-ink transition-colors disabled:cursor-not-allowed"
+          />
           <button
-            onClick={onCheckout}
-            disabled={hasOutOfStockSelected || selectedItems.length === 0}
-            className="w-full font-display font-black text-sm uppercase tracking-wider bg-accent text-white py-4 rounded-sm hover:bg-accent-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-accent"
+            disabled
+            className="px-4 py-2 bg-ink text-white text-[12px] font-bold rounded-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {t('checkout')}
+            Áp dụng
           </button>
-          {hasOutOfStockSelected && (
-            <p className="text-[11px] text-danger text-center leading-tight">
-              {t('checkoutBlockedByOutOfStock')}
-            </p>
-          )}
+        </div>
 
-          {/* Payment badges */}
-          <div className="flex justify-center gap-2 pt-1">
-            {['VNPAY', 'COD', 'GHN'].map(m => (
-              <span
-                key={m}
-                className="text-[10px] text-muted bg-paper border border-line rounded-sm px-2 py-0.5 font-mono"
-              >
-                {m}
-              </span>
-            ))}
-          </div>
+        {/* Final total */}
+        <div className="border-t border-line px-5 py-4 flex justify-between items-center bg-line-2">
+          <span className="text-[12px] font-bold uppercase tracking-widest text-ink">
+            {t('orderSummary')}:
+          </span>
+          <span className="text-[20px] font-bold tabular-nums text-ink">
+            {formatPrice(totalAmount)}
+          </span>
         </div>
       </div>
 
-      {/* Clear cart */}
+      {/* ── Checkout ── */}
+      <button
+        onClick={onCheckout}
+        disabled={hasOutOfStockSelected || selectedItems.length === 0}
+        className="w-full bg-ink text-white text-[12px] font-bold uppercase tracking-widest py-3.5 rounded-sm hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-ink"
+      >
+        {t('checkout')}
+      </button>
+      {hasOutOfStockSelected && (
+        <p className="text-[11px] text-danger text-center leading-snug -mt-1">
+          {t('checkoutBlockedByOutOfStock')}
+        </p>
+      )}
+
+      {/* ── Policy accordion ── */}
+      <div className="border border-line rounded-sm overflow-hidden bg-white">
+        <FaqItem title={t('policyWarrantyTitle')} body={t('policyWarrantyBody')} />
+        <FaqItem title={t('policyReturnTitle')}   body={t('policyReturnBody')} />
+      </div>
+
+      {/* ── Clear cart ── */}
       <button
         onClick={onClear}
         disabled={clearing}
-        className="w-full text-xs text-muted hover:text-danger transition-colors disabled:opacity-40 mt-4 text-center"
+        className="w-full text-[12px] text-muted hover:text-danger transition-colors disabled:opacity-40 text-center py-1"
       >
         {clearing ? t('clearing') : t('clearCart')}
       </button>
@@ -294,24 +326,23 @@ function OrderSummary({
 
 function CartSkeleton() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <div className="h-9 w-40 bg-line rounded-sm mb-2 animate-pulse" />
-      <div className="h-4 w-28 bg-line rounded-sm mb-10 animate-pulse" />
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
-        <div className="space-y-0">
+    <div className="max-w-5xl mx-auto px-4 py-12">
+      <div className="h-8 w-36 bg-line rounded-sm mb-2 animate-pulse" />
+      <div className="h-4 w-24 bg-line rounded-sm mb-10 animate-pulse" />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
+        <div>
           {[1, 2, 3].map(i => (
-            <div key={i} className="grid grid-cols-[96px_1fr_auto] gap-4 py-5 border-b border-line">
-              <div className="w-24 h-24 bg-line rounded-sm animate-pulse" />
-              <div className="space-y-2 pt-1">
+            <div key={i} className="flex gap-4 py-5 border-b border-line">
+              <div className="w-[88px] h-[88px] bg-line rounded-sm animate-pulse shrink-0" />
+              <div className="flex-1 space-y-2 pt-1">
                 <div className="h-4 w-3/4 bg-line rounded-sm animate-pulse" />
                 <div className="h-3 w-2/5 bg-line rounded-sm animate-pulse" />
                 <div className="h-8 w-24 bg-line rounded-sm animate-pulse mt-4" />
               </div>
-              <div className="w-20 h-5 bg-line rounded-sm animate-pulse" />
             </div>
           ))}
         </div>
-        <div className="h-64 bg-line rounded-sm animate-pulse" />
+        <div className="h-52 bg-line rounded-sm animate-pulse" />
       </div>
     </div>
   );
@@ -334,16 +365,16 @@ export default function CartPageClient() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-24 flex flex-col items-center gap-6">
-        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-faint">
+      <div className="max-w-3xl mx-auto px-4 py-28 flex flex-col items-center gap-5">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-line">
           <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
           <line x1="3" y1="6" x2="21" y2="6"/>
           <path d="M16 10a4 4 0 0 1-8 0"/>
         </svg>
-        <p className="text-muted text-base">{t('empty')}</p>
+        <p className="text-muted text-[14px]">{t('empty')}</p>
         <Link
           href="/products"
-          className="font-display font-black text-sm uppercase tracking-wider bg-ink text-white px-6 py-3 rounded-sm hover:bg-accent transition-colors"
+          className="text-[12px] font-bold uppercase tracking-widest bg-ink text-white px-6 py-3 rounded-sm hover:bg-accent transition-colors"
         >
           {t('continueShopping')}
         </Link>
@@ -352,15 +383,15 @@ export default function CartPageClient() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <h1 className="font-display font-black text-4xl uppercase tracking-tight mb-1">
+    <div className="max-w-5xl mx-auto px-4 py-10">
+      <h1 className="font-display font-black text-3xl uppercase tracking-tight mb-1">
         {t('title')}
       </h1>
-      <p className="text-sm text-muted mb-10">
+      <p className="text-[13px] text-muted mb-8">
         {t('totalItems', { count: cart?.totalItems ?? 0 })}
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10 items-start">
         {/* Item list */}
         <section>
           {items.map(item => (
@@ -369,9 +400,9 @@ export default function CartPageClient() {
 
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 mt-6 text-sm font-semibold text-accent hover:underline underline-offset-2"
+            className="inline-flex items-center gap-1.5 mt-6 text-[12px] text-muted hover:text-ink transition-colors"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M11 6l-6 6 6 6"/>
             </svg>
             {t('continueShopping')}
