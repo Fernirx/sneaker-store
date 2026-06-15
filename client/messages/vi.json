@@ -133,8 +133,9 @@
     "continueShopping": "Tiếp tục mua sắm",
     "totalItems": "{count} sản phẩm",
     "orderSummary": "Tóm tắt đơn",
-    "subtotal": "Tạm tính",
-    "total": "Tổng cộng",
+    "subtotal": "Tổng tiền hàng",
+    "discount": "Giảm giá sản phẩm",
+    "total": "Tổng phải trả",
     "checkout": "Tiến hành thanh toán",
     "remove": "Xóa",
     "clearCart": "Xóa giỏ hàng",
@@ -143,6 +144,7 @@
     "lowStock": "Chỉ còn {n}",
     "size": "Size",
     "color": "Màu",
+    "checkoutBlockedByOutOfStock": "Giỏ hàng có sản phẩm hết hàng, vui lòng bỏ chọn hoặc xóa để tiếp tục.",
     "adjusted": "Số lượng {name} đã được điều chỉnh từ {from} xuống {to} do hàng có hạn."
   },
   "footer": {

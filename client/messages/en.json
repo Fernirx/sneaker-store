@@ -134,7 +134,8 @@
     "totalItems": "{count} items",
     "orderSummary": "Order summary",
     "subtotal": "Subtotal",
-    "total": "Total",
+    "discount": "Product discount",
+    "total": "Total to pay",
     "checkout": "Proceed to checkout",
     "remove": "Remove",
     "clearCart": "Clear cart",
@@ -143,6 +144,7 @@
     "lowStock": "Only {n} left",
     "size": "Size",
     "color": "Color",
+    "checkoutBlockedByOutOfStock": "Cart contains out-of-stock items. Unselect or remove them to continue.",
     "adjusted": "Quantity of {name} adjusted from {from} to {to} due to limited stock."
   },
   "footer": {
