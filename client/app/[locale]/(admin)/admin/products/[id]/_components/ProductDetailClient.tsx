@@ -35,7 +35,7 @@ export default function ProductDetailClient({
         </Link>
         <span className="text-muted">/</span>
         <span className="font-bold truncate max-w-xs">{product.name}</span>
-        <span className="font-mono text-xs text-muted ml-1">#{product.id}</span>
+        <span className="text-xs text-muted ml-1">#{product.id}</span>
       </div>
 
       {/* Tab bar */}

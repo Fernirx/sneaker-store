@@ -125,7 +125,7 @@ export default function BrandsClient({
               pageData.data.map(brand => (
                 <tr key={brand.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
                   <td className="px-4 py-3 font-bold text-sm">{brand.name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted">{brand.slug}</td>
+                  <td className="px-4 py-3 text-xs text-muted">{brand.slug}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${brand.active ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'}`}>
                       {brand.active ? 'Hoạt động' : 'Ẩn'}

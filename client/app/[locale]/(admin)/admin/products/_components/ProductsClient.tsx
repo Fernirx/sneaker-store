@@ -169,7 +169,7 @@ export default function ProductsClient({
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-bold text-sm leading-snug">{p.name}</p>
-                    <p className="font-mono text-xs text-muted mt-0.5">{p.code}</p>
+                    <p className="text-xs text-muted mt-0.5">{p.code}</p>
                     <div className="flex gap-1 mt-1">
                       {p.newArrival && (
                         <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[9px] font-bold rounded">MỚI</span>

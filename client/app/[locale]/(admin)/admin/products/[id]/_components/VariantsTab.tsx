@@ -310,7 +310,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
                 <span className="w-4 h-4 rounded-full border border-line flex-shrink-0" style={{ backgroundColor: g.colorHex }} />
               )}
               <span className="font-bold text-sm">{g.colorway}</span>
-              {g.colorwayCode && <span className="font-mono text-xs text-muted">{g.colorwayCode}</span>}
+              {g.colorwayCode && <span className="text-xs text-muted">{g.colorwayCode}</span>}
               {isAdmin && (
                 <button
                   onClick={() => {
@@ -347,7 +347,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
                     <td className="px-4 py-2.5 text-muted text-xs">
                       {SHOE_WIDTH_OPTIONS.find(o => o.value === v.shoeWidth)?.label ?? v.shoeWidth}
                     </td>
-                    <td className="px-4 py-2.5 font-mono text-xs">{v.sku}</td>
+                    <td className="px-4 py-2.5 text-xs">{v.sku}</td>
                     <td className="px-4 py-2.5 text-muted">
                       {v.price != null ? new Intl.NumberFormat('vi-VN').format(v.price) : '—'}
                     </td>
@@ -397,7 +397,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
             <h3 className="font-display font-black text-sm uppercase tracking-wide">Xóa variant</h3>
             {deleteError && <p className="text-danger text-sm">{deleteError}</p>}
-            <p className="text-sm">Xóa variant <span className="font-bold font-mono">{deleteTarget.sku}</span> (size {deleteTarget.size})?</p>
+            <p className="text-sm">Xóa variant <span className="font-bold">{deleteTarget.sku}</span> (size {deleteTarget.size})?</p>
             <div className="flex justify-end gap-2">
               <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper">Hủy</button>
               <button onClick={handleDelete} disabled={deleting}

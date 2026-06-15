@@ -84,7 +84,7 @@ export default function BasicInfoTab({
       {error   && <p className="text-danger text-sm">{error}</p>}
       {success && <p className="text-ok text-sm">{success}</p>}
 
-      <p className="font-mono text-xs text-muted">
+      <p className="text-xs text-muted">
         slug: {product.slug} &nbsp;·&nbsp; brand: {product.brand.name}
       </p>
 
@@ -208,7 +208,7 @@ export default function BasicInfoTab({
       </div>
 
       {/* Stats */}
-      <div className="flex gap-6 text-xs text-muted font-mono border-t border-line pt-4">
+      <div className="flex gap-6 text-xs text-muted border-t border-line pt-4">
         <span>Đã bán: {product.soldCount}</span>
         <span>Lượt xem: {product.viewCount}</span>
         <span>Tạo: {formatDate(product.createdAt)}</span>

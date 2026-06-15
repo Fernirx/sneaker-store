@@ -127,7 +127,7 @@ export default function CollectionsClient({
               pageData.data.map(col => (
                 <tr key={col.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
                   <td className="px-4 py-3 font-bold text-sm">{col.name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted">{col.slug}</td>
+                  <td className="px-4 py-3 text-xs text-muted">{col.slug}</td>
                   <td className="px-4 py-3 text-xs text-muted">{col.launchDate ?? '—'}</td>
                   <td className="px-4 py-3 text-xs text-muted">{col.endDate ?? '—'}</td>
                   <td className="px-4 py-3">

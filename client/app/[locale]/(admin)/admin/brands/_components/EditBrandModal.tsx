@@ -51,7 +51,7 @@ export default function EditBrandModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
-        <p className="font-mono text-xs text-muted">slug: {brand.slug}</p>
+        <p className="text-xs text-muted">slug: {brand.slug}</p>
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">

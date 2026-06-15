@@ -45,7 +45,7 @@ export default function EditUserModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
-        <p className="font-mono text-xs text-muted">{user.email}</p>
+        <p className="text-xs text-muted">{user.email}</p>
 
         <div>
           <label className="flex items-center gap-2 cursor-pointer select-none">

@@ -154,7 +154,7 @@ export default function UsersClient({
                   key={user.id}
                   className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors"
                 >
-                  <td className="px-4 py-3 font-mono text-xs">{user.email}</td>
+                  <td className="px-4 py-3 text-xs">{user.email}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       {user.roles.map(r => (

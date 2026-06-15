@@ -117,7 +117,7 @@ export default function AddressSection() {
                     <span className="text-muted text-sm">·</span>
                     <span className="text-sm text-ink-2">{addr.phone}</span>
                     {addr.defaultAddress && (
-                      <span className="font-mono text-[10px] font-semibold tracking-wider uppercase bg-accent text-white px-2 py-0.5 rounded-sm">
+                      <span className="text-[10px] font-semibold tracking-wider uppercase bg-accent text-white px-2 py-0.5 rounded-sm">
                         {t('defaultBadge')}
                       </span>
                     )}

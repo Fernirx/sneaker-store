@@ -169,7 +169,7 @@ export default function LoginForm() {
         </div>
         <div className="flex-1" />
         <div className="relative z-10 space-y-5">
-          <span className="inline-block font-mono text-[10px] font-semibold tracking-[0.12em] uppercase bg-accent px-2.5 py-1 rounded-sm">
+          <span className="inline-block text-[10px] font-semibold tracking-[0.12em] uppercase bg-accent px-2.5 py-1 rounded-sm">
             {t('memberBadge')}
           </span>
           <h1 className="font-display font-black text-[clamp(3rem,5vw,4.5rem)] uppercase leading-[0.9] tracking-tight whitespace-pre-line">
@@ -261,7 +261,7 @@ export default function LoginForm() {
 
               <div className="flex items-center gap-3 mb-5">
                 <div className="flex-1 h-px bg-line" />
-                <span className="font-mono text-[11px] uppercase tracking-widest text-faint">{t('orWith')}</span>
+                <span className="text-[11px] uppercase tracking-widest text-faint">{t('orWith')}</span>
                 <div className="flex-1 h-px bg-line" />
               </div>
 
@@ -293,7 +293,7 @@ export default function LoginForm() {
                     <FieldError msg={fieldErrors['password']} />
                   </div>
                   <div className="flex justify-end text-sm">
-                    <button type="button" className="font-mono text-[11px] uppercase tracking-wider text-accent hover:underline">
+                    <button type="button" className="text-[11px] uppercase tracking-wider text-accent hover:underline">
                       {t('forgotPassword')}
                     </button>
                   </div>

@@ -60,7 +60,7 @@ export default function EditCollectionModal({
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
         {error && <p className="text-danger text-sm">{error}</p>}
 
-        <p className="font-mono text-xs text-muted">slug: {collection.slug}</p>
+        <p className="text-xs text-muted">slug: {collection.slug}</p>
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">

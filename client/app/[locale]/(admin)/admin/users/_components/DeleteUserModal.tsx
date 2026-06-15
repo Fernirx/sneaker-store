@@ -35,7 +35,7 @@ export default function DeleteUserModal({
       <div className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
         <p className="text-sm">
-          Bạn có chắc muốn xóa tài khoản <span className="font-mono font-bold">{user.email}</span>?
+          Bạn có chắc muốn xóa tài khoản <span className="font-bold">{user.email}</span>?
         </p>
         <p className="text-xs text-muted">Hành động này không thể hoàn tác.</p>
         <div className="flex justify-end gap-2 pt-1">

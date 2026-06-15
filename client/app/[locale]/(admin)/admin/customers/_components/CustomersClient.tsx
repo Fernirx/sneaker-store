@@ -139,7 +139,7 @@ export default function CustomersClient({
                   className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors"
                 >
                   <td className="px-4 py-3 font-medium">{fullName(customer)}</td>
-                  <td className="px-4 py-3 font-mono text-xs">{customer.email}</td>
+                  <td className="px-4 py-3 text-xs">{customer.email}</td>
                   <td className="px-4 py-3 text-sm text-muted">{customer.phone ?? '—'}</td>
                   <td className="px-4 py-3">
                     <span

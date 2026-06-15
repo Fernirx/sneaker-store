@@ -63,7 +63,7 @@ export default function MembershipCard({
             )}
           </div>
           <div className="space-y-1.5 min-w-0">
-            <span className="inline-block font-mono text-[10px] font-semibold tracking-[0.14em] uppercase bg-white/20 px-2.5 py-1 rounded-sm">
+            <span className="inline-block text-[10px] font-semibold tracking-[0.14em] uppercase bg-white/20 px-2.5 py-1 rounded-sm">
               {cfg.label} Member
             </span>
             <p className="font-display font-black text-xl leading-tight truncate">{fullName || email}</p>

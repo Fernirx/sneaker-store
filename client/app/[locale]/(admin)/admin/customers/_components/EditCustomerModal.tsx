@@ -43,7 +43,7 @@ export default function EditCustomerModal({
         {error && <p className="text-danger text-sm">{error}</p>}
 
         <div>
-          <p className="font-mono text-xs text-muted">{customer.email}</p>
+          <p className="text-xs text-muted">{customer.email}</p>
           <p className="text-sm font-bold mt-0.5">{fullName(customer)}</p>
         </div>
 

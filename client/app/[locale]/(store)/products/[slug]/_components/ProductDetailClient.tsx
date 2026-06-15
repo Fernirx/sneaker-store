@@ -178,7 +178,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
                 className="h-6 object-contain"
               />
             ) : (
-              <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-muted">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-muted">
                 {product.brand.name}
               </span>
             )}
@@ -270,7 +270,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
                 })}
               </div>
               {selectedSize && selectedSize.stockQuantity > 0 && selectedSize.stockQuantity <= 5 && (
-                <p className="font-mono text-[11.5px] text-warn mt-2.5">
+                <p className="text-[11.5px] text-warn mt-2.5">
                   ⚡ {locale === 'vi'
                     ? `Chỉ còn ${selectedSize.stockQuantity} đôi size ${selectedSize.size} — đặt nhanh!`
                     : `Only ${selectedSize.stockQuantity} pairs of size ${selectedSize.size} left!`}
@@ -351,7 +351,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
 
           {/* Specs grid */}
           <div>
-            <p className="text-[11px] font-mono font-bold uppercase tracking-widest text-muted mb-3">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted mb-3">
               {t('productInfo')}
             </p>
             <div className="grid grid-cols-2 border-l border-t border-line rounded-sm overflow-hidden">
@@ -359,10 +359,10 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
                 <div key={i} className="border-r border-b border-line px-4 py-3">
                   {spec.k && (
                     <>
-                      <div className="text-[10.5px] font-mono uppercase tracking-widest text-muted">
+                      <div className="text-[10.5px] uppercase tracking-widest text-muted">
                         {spec.k}
                       </div>
-                      <div className={`font-semibold text-sm mt-0.5 ${spec.mono ? 'font-mono' : ''}`}>
+                      <div className="font-semibold text-sm mt-0.5">
                         {spec.v}
                       </div>
                     </>
@@ -411,11 +411,11 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
               <div className="space-y-2 mt-[18px]">
                 {[5, 4, 3, 2, 1].map(star => (
                   <div key={star} className="flex items-center gap-2.5">
-                    <span className="font-mono text-[12px] w-3.5 text-right shrink-0">{star}</span>
+                    <span className="text-[12px] w-3.5 text-right shrink-0">{star}</span>
                     <div className="flex-1 h-[7px] bg-line-2 rounded-full overflow-hidden">
                       <div className="h-full bg-accent" style={{ width: '0%' }} />
                     </div>
-                    <span className="font-mono text-[11px] text-muted w-7 shrink-0">0%</span>
+                    <span className="text-[11px] text-muted w-7 shrink-0">0%</span>
                   </div>
                 ))}
               </div>
