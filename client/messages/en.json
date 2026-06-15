@@ -112,6 +112,8 @@
     "next": "Next",
     "chooseColor": "Color",
     "selectSize": "Select size",
+    "colorLabel": "Color",
+    "sizeLabel": "Size",
     "addToCart": "Add to cart",
     "outOfStock": "Out of stock",
     "productInfo": "Product details",
