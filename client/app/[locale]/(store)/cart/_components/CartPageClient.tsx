@@ -255,30 +255,6 @@ function OrderSummary({
           </div>
         </div>
 
-        {/* Coupon section */}
-        <div className="border-t border-line mx-5" />
-        <div className="px-5 py-3 flex items-center gap-2">
-          <svg className="text-ink shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-            <line x1="7" y1="7" x2="7.01" y2="7"/>
-          </svg>
-          <span className="text-[13px] font-medium text-ink">Mã giảm giá</span>
-        </div>
-        <div className="px-5 pb-4 flex gap-2">
-          <input
-            type="text"
-            placeholder="Nhập mã khuyến mãi"
-            disabled
-            className="flex-1 border border-line rounded-sm px-3 py-2 text-[13px] placeholder:text-faint bg-paper focus:outline-none focus:border-ink transition-colors disabled:cursor-not-allowed"
-          />
-          <button
-            disabled
-            className="px-4 py-2 bg-ink text-white text-[12px] font-bold rounded-sm disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Áp dụng
-          </button>
-        </div>
-
         {/* Final total */}
         <div className="border-t border-line px-5 py-4 flex justify-between items-center bg-line-2">
           <span className="text-[12px] font-bold uppercase tracking-widest text-ink">
