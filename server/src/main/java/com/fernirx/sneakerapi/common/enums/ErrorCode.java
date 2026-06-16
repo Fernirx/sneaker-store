@@ -28,7 +28,11 @@ public enum ErrorCode {
 
     /* ================== RATE LIMIT & SPAM ================== */
     LIMIT_EXCEEDED("LIMIT_EXCEEDED", "error.bus.limit_exceeded", HttpStatus.TOO_MANY_REQUESTS),
-    COOLDOWN_ACTIVE("COOLDOWN_ACTIVE", "error.bus.cooldown", HttpStatus.TOO_MANY_REQUESTS);
+    COOLDOWN_ACTIVE("COOLDOWN_ACTIVE", "error.bus.cooldown", HttpStatus.TOO_MANY_REQUESTS),
+
+    /* ================== COUPON ================== */
+    COUPON_EXHAUSTED("COUPON_EXHAUSTED", "error.coupon.exhausted", HttpStatus.BAD_REQUEST),
+    COUPON_MIN_AMOUNT("COUPON_MIN_AMOUNT", "error.coupon.min_amount", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String messageKey;
