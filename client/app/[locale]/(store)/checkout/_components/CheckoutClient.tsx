@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
 import { useCart, type CartItemData } from '@/contexts/CartContext';
@@ -19,6 +19,18 @@ type ShippingForm = {
   shippingProvince: string;
   note: string;
 };
+
+interface Address {
+  id: number;
+  name: string;
+  phone: string;
+  street: string;
+  ward?: string;
+  district: string;
+  province: string;
+  postalCode?: string;
+  defaultAddress: boolean;
+}
 
 type PaymentMethod = 'VNPAY' | 'COD';
 
@@ -120,6 +132,46 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    setLoadingAddresses(true);
+    clientAxios.get('/api/me/addresses')
+      .then(({ data }) => {
+        const addrs = data.data ?? [];
+        setSavedAddresses(addrs);
+        const def = addrs.find((a: Address) => a.defaultAddress) || addrs[0];
+        if (def) {
+          setForm(prev => ({
+            ...prev,
+            recipientName: def.name,
+            recipientPhone: def.phone,
+            shippingStreet: def.street,
+            shippingWard: def.ward ?? '',
+            shippingDistrict: def.district,
+            shippingProvince: def.province,
+          }));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingAddresses(false));
+  }, [isLoggedIn]);
+
+  function handleSelectAddress(addr: Address) {
+    setForm(prev => ({
+      ...prev,
+      recipientName: addr.name,
+      recipientPhone: addr.phone,
+      shippingStreet: addr.street,
+      shippingWard: addr.ward ?? '',
+      shippingDistrict: addr.district,
+      shippingProvince: addr.province,
+    }));
+    setFieldErrors({});
+  }
 
   if (loading) return <CheckoutSkeleton />;
 
@@ -307,6 +359,62 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                     <FieldError msg={fieldErrors.otpCode} />
                   </div>
                 )}
+              </div>
+            </section>
+          )}
+
+          {/* Saved Addresses */}
+          {isLoggedIn && savedAddresses.length > 0 && (
+            <section className="border border-line rounded-sm overflow-hidden mb-6">
+              <div className="px-5 py-3.5 border-b border-line bg-line-2 flex items-center justify-between">
+                <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
+                  Địa chỉ đã lưu
+                </h2>
+              </div>
+              <div className="p-5">
+                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                  {savedAddresses.map(addr => {
+                    const isSelected = form.recipientName === addr.name &&
+                                       form.recipientPhone === addr.phone &&
+                                       form.shippingStreet === addr.street &&
+                                       form.shippingDistrict === addr.district;
+                    return (
+                      <label
+                        key={addr.id}
+                        className={`flex items-start gap-3 p-3 border rounded-sm cursor-pointer transition-colors ${
+                          isSelected ? 'border-ink bg-paper' : 'border-line hover:bg-paper/50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="savedAddress"
+                          checked={isSelected}
+                          onChange={() => handleSelectAddress(addr)}
+                          className="mt-0.5 accent-ink shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-ink">
+                            {addr.name} <span className="text-muted font-normal mx-1">·</span> {addr.phone}
+                            {addr.defaultAddress && (
+                              <span className="ml-2 px-1.5 py-0.5 text-[9px] bg-accent text-white uppercase rounded-sm tracking-wider">
+                                Mặc định
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[12px] text-muted mt-0.5 truncate">
+                            {[addr.street, addr.ward, addr.district, addr.province].filter(Boolean).join(', ')}
+                          </p>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+                
+                <div className="flex items-center gap-3 mt-5 mb-1">
+                  <div className="flex-1 h-px bg-line" />
+                  <span className="text-[10px] uppercase tracking-widest text-faint">Hoặc nhập địa chỉ mới</span>
+                  <div className="flex-1 h-px bg-line" />
+                </div>
               </div>
             </section>
           )}
