@@ -5,6 +5,7 @@ import com.fernirx.sneakerapi.product.assembler.ProductAssembler;
 import com.fernirx.sneakerapi.product.dto.request.CreateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.request.UpdateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.response.ProductVariantGroupResponse;
+import com.fernirx.sneakerapi.product.dto.response.StockChangeResult;
 import com.fernirx.sneakerapi.product.entity.Product;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import com.fernirx.sneakerapi.product.mapper.ProductVariantMapper;
@@ -96,6 +97,31 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         findProduct(productId);
         ProductVariant variant = findVariant(productId, variantId);
         productVariantRepository.delete(variant);
+    }
+
+    @Override
+    public StockChangeResult decreaseStock(Long variantId, int quantity) {
+        ProductVariant variant = productVariantRepository.findById(variantId)
+                .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
+        int oldStock = variant.getStockQuantity();
+        if (oldStock < quantity) {
+            throw BusinessException.bad("label.product.stock");
+        }
+        int newStock = oldStock - quantity;
+        variant.setStockQuantity(newStock);
+        productVariantRepository.save(variant);
+        return new StockChangeResult(variantId, oldStock, newStock);
+    }
+
+    @Override
+    public StockChangeResult increaseStock(Long variantId, int quantity) {
+        ProductVariant variant = productVariantRepository.findById(variantId)
+                .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
+        int oldStock = variant.getStockQuantity();
+        int newStock = oldStock + quantity;
+        variant.setStockQuantity(newStock);
+        productVariantRepository.save(variant);
+        return new StockChangeResult(variantId, oldStock, newStock);
     }
 
     private Product findProduct(Long productId) {

@@ -2,5 +2,6 @@ package com.fernirx.sneakerapi.user.enums;
 
 public enum OtpPurpose {
     REGISTER,
-    FORGOT_PASSWORD
+    FORGOT_PASSWORD,
+    GUEST_ORDER
 }

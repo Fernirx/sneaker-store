@@ -151,6 +151,11 @@ public class CartServiceImpl implements CartService {
         return buildCartResponse(userCart);
     }
 
+    @Override
+    public void clearSelectedItems(Long userId, String guestToken) {
+        resolveCart(userId, guestToken).ifPresent(cartItemRepository::deleteSelectedByCart);
+    }
+
     // ---- Private helpers ----
 
     private Optional<Cart> resolveCart(Long userId, String guestToken) {

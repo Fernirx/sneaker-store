@@ -6,14 +6,18 @@ import com.fernirx.sneakerapi.coupon.dto.request.CouponFilterRequest;
 import com.fernirx.sneakerapi.coupon.dto.request.CouponPreviewRequest;
 import com.fernirx.sneakerapi.coupon.dto.request.CreateCouponRequest;
 import com.fernirx.sneakerapi.coupon.dto.request.UpdateCouponRequest;
+import com.fernirx.sneakerapi.coupon.dto.response.CouponApplyResult;
 import com.fernirx.sneakerapi.coupon.dto.response.CouponInternalResponse;
 import com.fernirx.sneakerapi.coupon.dto.response.CouponPreviewResponse;
 import com.fernirx.sneakerapi.coupon.entity.Coupon;
+import com.fernirx.sneakerapi.coupon.entity.CouponUsage;
 import com.fernirx.sneakerapi.coupon.enums.DiscountType;
 import com.fernirx.sneakerapi.coupon.mapper.CouponMapper;
 import com.fernirx.sneakerapi.coupon.repository.CouponRepository;
 import com.fernirx.sneakerapi.coupon.repository.CouponSpec;
+import com.fernirx.sneakerapi.coupon.repository.CouponUsageRepository;
 import com.fernirx.sneakerapi.coupon.service.CouponService;
+import com.fernirx.sneakerapi.order.entity.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +34,7 @@ import java.time.LocalDateTime;
 public class CouponServiceImpl implements CouponService {
 
     private final CouponRepository couponRepository;
+    private final CouponUsageRepository couponUsageRepository;
     private final CouponMapper couponMapper;
 
     @Override
@@ -95,6 +100,54 @@ public class CouponServiceImpl implements CouponService {
     @Override
     public void delete(Long id) {
         couponRepository.delete(findById(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CouponApplyResult validate(String code, BigDecimal orderAmount, String email, String phone) {
+        Coupon coupon = couponRepository.findByCodeIgnoreCase(code)
+                .orElseThrow(() -> BusinessException.notFound("label.coupon"));
+        validate(coupon, orderAmount);
+        validateUserUsageLimit(coupon, email, phone);
+        BigDecimal discountAmount = calculateDiscount(coupon, orderAmount);
+        return new CouponApplyResult(coupon.getId(), coupon.getCode(), discountAmount);
+    }
+
+    @Override
+    public void recordUsage(Long couponId, Order order, String email, String phone) {
+        Coupon coupon = findById(couponId);
+        coupon.setUsedCount(coupon.getUsedCount() + 1);
+        couponRepository.save(coupon);
+
+        CouponUsage usage = new CouponUsage();
+        usage.setCoupon(coupon);
+        usage.setEmail(email);
+        usage.setPhone(phone);
+        usage.setOrder(order);
+        couponUsageRepository.save(usage);
+    }
+
+    @Override
+    public void releaseUsage(Long orderId) {
+        couponUsageRepository.findByOrder_Id(orderId).ifPresent(usage -> {
+            Coupon coupon = usage.getCoupon();
+            coupon.setUsedCount(Math.max(0, coupon.getUsedCount() - 1));
+            couponRepository.save(coupon);
+            couponUsageRepository.delete(usage);
+        });
+    }
+
+    private void validateUserUsageLimit(Coupon coupon, String email, String phone) {
+        if (coupon.getUserUsageLimit() == null) {
+            return;
+        }
+        long usedByEmail = email != null
+                ? couponUsageRepository.countByCoupon_IdAndEmailIgnoreCase(coupon.getId(), email) : 0;
+        long usedByPhone = phone != null
+                ? couponUsageRepository.countByCoupon_IdAndPhone(coupon.getId(), phone) : 0;
+        if (Math.max(usedByEmail, usedByPhone) >= coupon.getUserUsageLimit()) {
+            throw BusinessException.of(ErrorCode.COUPON_USAGE_LIMIT);
+        }
     }
 
     private void validate(Coupon coupon, BigDecimal orderAmount) {

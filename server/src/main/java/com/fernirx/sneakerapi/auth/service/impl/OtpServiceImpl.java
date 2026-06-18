@@ -51,6 +51,7 @@ public class OtpServiceImpl implements OtpService {
         switch (purpose) {
             case REGISTER -> mailService.sendVerifyEmailOtp(email, displayName, rawOtp, otpProperties.getTtl());
             case FORGOT_PASSWORD -> mailService.sendForgotPasswordOtp(email, displayName, rawOtp, otpProperties.getTtl());
+            case GUEST_ORDER -> mailService.sendOrderVerificationOtp(email, displayName, rawOtp, otpProperties.getTtl());
         }
     }
 
