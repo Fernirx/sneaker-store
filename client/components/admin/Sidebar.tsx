@@ -13,6 +13,7 @@ const ICONS = {
   collections: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
   products:    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
   coupons:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
+  orders:      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 2 2 6.5V21a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V6.5L15 2z"/><path d="M2 6.5h20"/><path d="M9 11v4"/><path d="M15 11v4"/></svg>,
 };
 
 function NavItem({ href, label, icon, active }: { href: string; label: string; icon: React.ReactNode; active: boolean }) {
@@ -63,6 +64,15 @@ export default function Sidebar() {
             <NavItem href="/admin/categories"  label="Danh mục"      icon={ICONS.categories}  active={isActive('/admin/categories')} />
             <NavItem href="/admin/collections" label="Bộ sưu tập"    icon={ICONS.collections} active={isActive('/admin/collections')} />
             <NavItem href="/admin/products"    label="Sản phẩm"      icon={ICONS.products}    active={isActive('/admin/products')} />
+          </div>
+        </div>
+
+        <div className="pt-4">
+          <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+            Bán hàng
+          </p>
+          <div className="space-y-0.5">
+            <NavItem href="/admin/orders" label="Đơn hàng" icon={ICONS.orders} active={isActive('/admin/orders')} />
           </div>
         </div>
 
