@@ -25,7 +25,7 @@ public class PaymentController {
             HttpServletRequest httpRequest) {
         String ipAddress = resolveClientIp(httpRequest);
         String paymentUrl = paymentService.create(request.orderId(), ipAddress);
-        return ResponseEntity.ok(SuccessResponse.of(paymentUrl));
+        return ResponseEntity.ok(SuccessResponse.of(null, paymentUrl));
     }
 
     @GetMapping("/vnpay-ipn")

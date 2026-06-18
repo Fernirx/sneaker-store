@@ -48,7 +48,7 @@ public class OrderItem extends BaseEntity {
     private String variantSku;
 
     @NotNull
-    @Column(name = "variant_size", columnDefinition = "tinyint UNSIGNED not null")
+    @Column(name = "variant_size", columnDefinition = "tinyint UNSIGNED", nullable = false)
     private Short variantSize;
 
     @Size(max = 100)
