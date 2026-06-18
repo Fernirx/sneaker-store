@@ -1,7 +1,7 @@
 package com.fernirx.sneakerapi.payment.controller;
 
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
-import com.fernirx.sneakerapi.payment.dto.request.PaymentRequest;
+import com.fernirx.sneakerapi.payment.dto.request.CreatePaymentRequest;
 import com.fernirx.sneakerapi.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -21,10 +21,10 @@ public class PaymentController {
 
     @PostMapping("/create")
     public ResponseEntity<SuccessResponse<String>> create(
-            @Valid @RequestBody PaymentRequest request,
+            @Valid @RequestBody CreatePaymentRequest request,
             HttpServletRequest httpRequest) {
         String ipAddress = resolveClientIp(httpRequest);
-        String paymentUrl = paymentService.create(request, ipAddress);
+        String paymentUrl = paymentService.create(request.orderId(), ipAddress);
         return ResponseEntity.ok(SuccessResponse.of(paymentUrl));
     }
 
