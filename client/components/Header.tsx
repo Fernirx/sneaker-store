@@ -87,13 +87,14 @@ export default async function Header() {
           </svg>
         </Link>
 
-        <LanguageSwitcher />
-
         <HeaderActions
           isLoggedIn={!!session}
           firstName={profile?.firstName}
           avatarPublicId={profile?.avatarPublicId}
         />
+
+        <div className="hidden sm:block w-px h-4 bg-line mx-1" />
+        <LanguageSwitcher />
       </div>
     </header>
   );
