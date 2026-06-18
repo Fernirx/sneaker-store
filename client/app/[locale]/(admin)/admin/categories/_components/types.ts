@@ -18,12 +18,17 @@ export interface CategoryRow {
   translations: TranslationRow[];
 }
 
-export interface PageData {
-  data: CategoryRow[];
+export interface PageMeta {
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
+  last: boolean;
+}
+
+export interface PageData {
+  data: CategoryRow[];
+  meta: PageMeta;
 }
 
 export function formatDate(iso: string) {

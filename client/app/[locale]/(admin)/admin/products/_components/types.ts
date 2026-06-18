@@ -31,12 +31,17 @@ export interface ProductRow {
   updatedAt: string;
 }
 
-export interface PageData {
-  data: ProductRow[];
+export interface PageMeta {
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
+  last: boolean;
+}
+
+export interface PageData {
+  data: ProductRow[];
+  meta: PageMeta;
 }
 
 export const GENDER_OPTIONS = [

@@ -7,12 +7,17 @@ export interface UserRow {
   createdAt: string;
 }
 
-export interface PageData {
-  data: UserRow[];
+export interface PageMeta {
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
+  last: boolean;
+}
+
+export interface PageData {
+  data: UserRow[];
+  meta: PageMeta;
 }
 
 export const ALL_ROLES = [

@@ -17,12 +17,17 @@ export interface CollectionRow {
   translations: TranslationRow[];
 }
 
-export interface PageData {
-  data: CollectionRow[];
+export interface PageMeta {
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
+  last: boolean;
+}
+
+export interface PageData {
+  data: CollectionRow[];
+  meta: PageMeta;
 }
 
 export function formatDate(iso: string) {

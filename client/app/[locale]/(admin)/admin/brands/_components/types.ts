@@ -8,12 +8,17 @@ export interface BrandRow {
   createdAt: string;
 }
 
-export interface PageData {
-  data: BrandRow[];
+export interface PageMeta {
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
+  last: boolean;
+}
+
+export interface PageData {
+  data: BrandRow[];
+  meta: PageMeta;
 }
 
 export function formatDate(iso: string) {

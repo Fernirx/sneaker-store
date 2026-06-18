@@ -162,9 +162,9 @@ export default function CategoriesClient({
         </table>
       </div>
 
-      {pageData.totalPages > 1 && (
+      {pageData.meta.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted text-xs">{pageData.totalElements} danh mục</span>
+          <span className="text-muted text-xs">{pageData.meta.totalElements} danh mục</span>
           <div className="flex items-center gap-2">
             <button
               disabled={currentPage === 0}
@@ -173,9 +173,9 @@ export default function CategoriesClient({
             >
               Trước
             </button>
-            <span className="px-2 text-xs text-muted">{currentPage + 1} / {pageData.totalPages}</span>
+            <span className="px-2 text-xs text-muted">{currentPage + 1} / {pageData.meta.totalPages}</span>
             <button
-              disabled={currentPage >= pageData.totalPages - 1}
+              disabled={pageData.meta.last}
               onClick={() => setCurrentPage(p => p + 1)}
               className="px-3 py-1.5 border border-line rounded-sm text-xs font-bold disabled:opacity-40 hover:bg-paper transition-colors"
             >

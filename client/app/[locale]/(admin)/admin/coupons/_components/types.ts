@@ -18,12 +18,17 @@ export interface CouponRow {
   updatedAt: string;
 }
 
-export interface PageData {
-  data: CouponRow[];
+export interface PageMeta {
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
+  last: boolean;
+}
+
+export interface PageData {
+  data: CouponRow[];
+  meta: PageMeta;
 }
 
 export function formatDate(iso: string | null): string {

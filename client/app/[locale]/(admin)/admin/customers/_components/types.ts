@@ -10,12 +10,17 @@ export interface CustomerRow {
   createdAt: string;
 }
 
-export interface PageData {
-  data: CustomerRow[];
+export interface PageMeta {
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
+  last: boolean;
+}
+
+export interface PageData {
+  data: CustomerRow[];
+  meta: PageMeta;
 }
 
 export const TIERS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'] as const;
