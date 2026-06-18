@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
 import { useCart, type CartItemData } from '@/contexts/CartContext';
 import { productUrl } from '@/lib/cloudinaryUrl';
 import { formatPrice } from '../../products/_components/types';
@@ -328,6 +328,7 @@ function CartSkeleton() {
 
 export default function CartPageClient() {
   const t = useTranslations('cart');
+  const router = useRouter();
   const { cart, loading, clearCart } = useCart();
   const [clearing, startClearing] = useTransition();
 
@@ -389,7 +390,7 @@ export default function CartPageClient() {
         <OrderSummary
           items={items}
           totalAmount={Number(cart?.totalAmount ?? 0)}
-          onCheckout={() => {}}
+          onCheckout={() => router.push('/checkout')}
           onClear={handleClear}
           clearing={clearing}
         />

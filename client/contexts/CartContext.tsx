@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
+import { getGuestToken, saveGuestToken, clearGuestToken, guestHeaders } from '@/lib/guestToken';
 
 export interface CartItemData {
   id: number;
@@ -47,22 +48,7 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const GUEST_TOKEN_KEY = 'guest_cart_token';
 const EMPTY_CART: CartData = { guestToken: null, items: [], totalItems: 0, totalAmount: 0 };
-
-function getGuestToken(): string | null {
-  try { return localStorage.getItem(GUEST_TOKEN_KEY); } catch { return null; }
-}
-function saveGuestToken(token: string | null) {
-  try { if (token) localStorage.setItem(GUEST_TOKEN_KEY, token); } catch { /* ignore */ }
-}
-function clearGuestToken() {
-  try { localStorage.removeItem(GUEST_TOKEN_KEY); } catch { /* ignore */ }
-}
-function guestHeaders(): Record<string, string> {
-  const t = getGuestToken();
-  return t ? { 'X-Guest-Token': t } : {};
-}
 
 function extractAdjustments(data: CartData): CartAdjustment[] {
   return (data.items ?? [])

@@ -1,19 +1,40 @@
 'use client';
 
 import { useState } from 'react';
-import { Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
+import { Link, useRouter } from '@/i18n/routing';
 import { useCart, type CartItemData } from '@/contexts/CartContext';
 import { productUrl } from '@/lib/cloudinaryUrl';
 import { parseApiError } from '@/lib/parseApiError';
+import { guestHeaders } from '@/lib/guestToken';
 import { formatPrice } from '../../products/_components/types';
 import clientAxios from '@/lib/axios/clientAxios';
 
 type ShippingForm = {
-  fullName: string;
-  phone: string;
-  address: string;
+  recipientName: string;
+  recipientPhone: string;
+  shippingStreet: string;
+  shippingWard: string;
+  shippingDistrict: string;
+  shippingProvince: string;
   note: string;
 };
+
+type PaymentMethod = 'VNPAY' | 'COD';
+
+const EMPTY_FORM: ShippingForm = {
+  recipientName: '',
+  recipientPhone: '',
+  shippingStreet: '',
+  shippingWard: '',
+  shippingDistrict: '',
+  shippingProvince: '',
+  note: '',
+};
+
+function FieldError({ msg }: { msg?: string }) {
+  return msg ? <p className="text-[11px] text-danger mt-1">{msg}</p> : null;
+}
 
 // ── Read-only item row ────────────────────────────────────────────────────────
 
@@ -82,16 +103,23 @@ function CheckoutSkeleton() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function CheckoutClient() {
+export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) {
+  const t = useTranslations('checkout');
+  const router = useRouter();
   const { cart, loading } = useCart();
-  const [paying, setPaying] = useState(false);
+
+  const [form, setForm] = useState<ShippingForm>(EMPTY_FORM);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('VNPAY');
+
+  const [guestEmail, setGuestEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
+
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState<ShippingForm>({
-    fullName: '',
-    phone: '',
-    address: '',
-    note: '',
-  });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   if (loading) return <CheckoutSkeleton />;
 
@@ -101,12 +129,12 @@ export default function CheckoutClient() {
   if (selectedItems.length === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-28 flex flex-col items-center gap-5">
-        <p className="text-muted text-[14px]">Không có sản phẩm nào được chọn để thanh toán.</p>
+        <p className="text-muted text-[14px]">{t('emptyCart')}</p>
         <Link
           href="/cart"
           className="text-[12px] font-bold uppercase tracking-widest bg-ink text-white px-6 py-3 rounded-sm hover:bg-accent transition-colors"
         >
-          Quay lại giỏ hàng
+          {t('backToCart')}
         </Link>
       </div>
     );
@@ -118,35 +146,81 @@ export default function CheckoutClient() {
     };
   }
 
-  async function handlePayment() {
+  function startResendTimer() {
+    setResendSeconds(60);
+    const iv = setInterval(() => {
+      setResendSeconds(s => { if (s <= 1) { clearInterval(iv); return 0; } return s - 1; });
+    }, 1000);
+  }
+
+  async function handleSendOtp() {
     setError('');
-    if (!form.fullName.trim() || !form.phone.trim() || !form.address.trim()) {
-      setError('Vui lòng điền đầy đủ họ tên, số điện thoại và địa chỉ.');
+    if (!guestEmail.trim()) {
+      setError(t('errorRequiredOtp'));
+      return;
+    }
+    setSendingOtp(true);
+    try {
+      await clientAxios.post('/api/orders/guest-otp', { email: guestEmail.trim() });
+      setOtpSent(true);
+      startResendTimer();
+    } catch (err) {
+      const { general } = parseApiError(err, t('errorGeneric'));
+      setError(general);
+    } finally {
+      setSendingOtp(false);
+    }
+  }
+
+  async function handleSubmit() {
+    setError('');
+    setFieldErrors({});
+
+    const missingRequired =
+      !form.recipientName.trim() ||
+      !form.recipientPhone.trim() ||
+      !form.shippingStreet.trim() ||
+      !form.shippingDistrict.trim() ||
+      !form.shippingProvince.trim();
+    if (missingRequired) {
+      setError(t('errorRequiredFields'));
+      return;
+    }
+    if (!isLoggedIn && (!guestEmail.trim() || !otpCode.trim())) {
+      setError(t('errorRequiredOtp'));
       return;
     }
 
-    setPaying(true);
+    setSubmitting(true);
     try {
-      // TODO: Thay bằng order creation endpoint khi order module sẵn sàng
-      // const { data: order } = await clientAxios.post('/api/orders', {
-      //   items: selectedItems.map(i => ({ cartItemId: i.id })),
-      //   shipping: form,
-      // });
-      // const { orderId, orderCode } = order.data;
-      const orderId    = 0;
-      const orderCode  = 'TEST-ORDER';
+      const { data: orderRes } = await clientAxios.post(
+        '/api/orders',
+        {
+          recipientName: form.recipientName.trim(),
+          recipientPhone: form.recipientPhone.trim(),
+          shippingStreet: form.shippingStreet.trim(),
+          shippingWard: form.shippingWard.trim() || undefined,
+          shippingDistrict: form.shippingDistrict.trim(),
+          shippingProvince: form.shippingProvince.trim(),
+          paymentMethod,
+          note: form.note.trim() || undefined,
+          ...(isLoggedIn ? {} : { guestEmail: guestEmail.trim(), otpCode: otpCode.trim() }),
+        },
+        { headers: guestHeaders() },
+      );
+      const order = orderRes.data;
 
-      const { data } = await clientAxios.post('/api/payment', {
-        orderId,
-        orderCode,
-        amount: totalAmount,
-      });
-
-      window.location.href = data.data; // redirect sang VNPay
+      if (paymentMethod === 'VNPAY') {
+        const { data: payRes } = await clientAxios.post('/api/payment', { orderId: order.id });
+        window.location.href = payRes.data;
+      } else {
+        router.push(`/orders/${order.id}`);
+      }
     } catch (err) {
-      const { general } = parseApiError(err, 'Không thể khởi tạo thanh toán. Vui lòng thử lại.');
+      const { general, fields } = parseApiError(err, t('errorGeneric'));
       setError(general);
-      setPaying(false);
+      setFieldErrors(fields);
+      setSubmitting(false);
     }
   }
 
@@ -155,6 +229,12 @@ export default function CheckoutClient() {
     return sum + price * i.quantity;
   }, 0);
   const totalDiscount = subtotalOriginal - totalAmount;
+
+  function fieldCls(field: string) {
+    return `w-full h-10 px-3 border rounded-sm text-[13px] text-ink placeholder:text-faint bg-white focus:outline-none transition-colors ${
+      fieldErrors[field] ? 'border-danger focus:border-danger' : 'border-line focus:border-ink'
+    }`;
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
@@ -166,7 +246,7 @@ export default function CheckoutClient() {
             <path d="M19 12H5M11 6l-6 6 6 6"/>
           </svg>
         </Link>
-        <h1 className="font-display font-black text-3xl uppercase tracking-tight">Thanh toán</h1>
+        <h1 className="font-display font-black text-3xl uppercase tracking-tight">{t('title')}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10 items-start">
@@ -174,62 +254,162 @@ export default function CheckoutClient() {
         {/* ── LEFT ── */}
         <div className="space-y-6">
 
+          {/* Guest contact */}
+          {!isLoggedIn && (
+            <section className="border border-line rounded-sm overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-line bg-line-2">
+                <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
+                  {t('guestSectionTitle')}
+                </h2>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
+                    {t('guestEmail')} <span className="text-danger">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={e => setGuestEmail(e.target.value)}
+                      placeholder={t('guestEmailPlaceholder')}
+                      className={fieldCls('guestEmail')}
+                    />
+                    <button
+                      onClick={handleSendOtp}
+                      disabled={sendingOtp || resendSeconds > 0 || !guestEmail.trim()}
+                      className="shrink-0 px-4 h-10 text-[11px] font-bold uppercase tracking-wide border border-line rounded-sm hover:bg-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {sendingOtp
+                        ? t('sendingOtp')
+                        : resendSeconds > 0
+                          ? t('resendIn', { n: resendSeconds })
+                          : otpSent ? t('resendOtp') : t('sendOtp')}
+                    </button>
+                  </div>
+                  <FieldError msg={fieldErrors.guestEmail} />
+                </div>
+
+                {otpSent && (
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
+                      {t('otpCode')}
+                    </label>
+                    <p className="text-[12px] text-muted mb-1.5">
+                      {t('otpSentTo', { email: guestEmail })}
+                    </p>
+                    <input
+                      value={otpCode}
+                      onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      className={`${fieldCls('otpCode')} font-mono text-center tracking-[0.3em]`}
+                    />
+                    <FieldError msg={fieldErrors.otpCode} />
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
           {/* Shipping form */}
           <section className="border border-line rounded-sm overflow-hidden">
             <div className="px-5 py-3.5 border-b border-line bg-line-2">
               <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                Thông tin giao hàng
+                {t('shippingSectionTitle')}
               </h2>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                    Họ và tên <span className="text-danger">*</span>
+                    {t('recipientName')} <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"
-                    value={form.fullName}
-                    onChange={handleField('fullName')}
+                    value={form.recipientName}
+                    onChange={handleField('recipientName')}
                     placeholder="Nguyễn Văn A"
-                    className="w-full h-10 px-3 border border-line rounded-sm text-[13px] text-ink placeholder:text-faint bg-white focus:outline-none focus:border-ink transition-colors"
+                    className={fieldCls('recipientName')}
                   />
+                  <FieldError msg={fieldErrors.recipientName} />
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                    Số điện thoại <span className="text-danger">*</span>
+                    {t('recipientPhone')} <span className="text-danger">*</span>
                   </label>
                   <input
                     type="tel"
-                    value={form.phone}
-                    onChange={handleField('phone')}
+                    value={form.recipientPhone}
+                    onChange={handleField('recipientPhone')}
                     placeholder="0901234567"
-                    className="w-full h-10 px-3 border border-line rounded-sm text-[13px] text-ink placeholder:text-faint bg-white focus:outline-none focus:border-ink transition-colors"
+                    className={fieldCls('recipientPhone')}
                   />
+                  <FieldError msg={fieldErrors.recipientPhone} />
                 </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                  Địa chỉ <span className="text-danger">*</span>
+                  {t('shippingStreet')} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
-                  value={form.address}
-                  onChange={handleField('address')}
-                  placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                  className="w-full h-10 px-3 border border-line rounded-sm text-[13px] text-ink placeholder:text-faint bg-white focus:outline-none focus:border-ink transition-colors"
+                  value={form.shippingStreet}
+                  onChange={handleField('shippingStreet')}
+                  placeholder="123 Lê Lợi"
+                  className={fieldCls('shippingStreet')}
                 />
+                <FieldError msg={fieldErrors.shippingStreet} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
+                    {t('shippingWard')}
+                  </label>
+                  <input
+                    type="text"
+                    value={form.shippingWard}
+                    onChange={handleField('shippingWard')}
+                    className={fieldCls('shippingWard')}
+                  />
+                  <FieldError msg={fieldErrors.shippingWard} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
+                    {t('shippingDistrict')} <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.shippingDistrict}
+                    onChange={handleField('shippingDistrict')}
+                    className={fieldCls('shippingDistrict')}
+                  />
+                  <FieldError msg={fieldErrors.shippingDistrict} />
+                </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                  Ghi chú
+                  {t('shippingProvince')} <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.shippingProvince}
+                  onChange={handleField('shippingProvince')}
+                  className={fieldCls('shippingProvince')}
+                />
+                <FieldError msg={fieldErrors.shippingProvince} />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
+                  {t('note')}
                 </label>
                 <textarea
                   value={form.note}
                   onChange={handleField('note')}
-                  placeholder="Ghi chú cho đơn hàng (không bắt buộc)"
+                  placeholder={t('notePlaceholder')}
                   rows={3}
                   className="w-full px-3 py-2.5 border border-line rounded-sm text-[13px] text-ink placeholder:text-faint bg-white focus:outline-none focus:border-ink transition-colors resize-none"
                 />
@@ -237,11 +417,45 @@ export default function CheckoutClient() {
             </div>
           </section>
 
+          {/* Payment method */}
+          <section className="border border-line rounded-sm overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-line bg-line-2">
+              <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
+                {t('paymentMethodTitle')}
+              </h2>
+            </div>
+            <div className="p-5 space-y-3">
+              {([
+                { value: 'VNPAY' as const, title: t('paymentMethodVnpay'), desc: t('paymentMethodVnpayDesc') },
+                { value: 'COD' as const,   title: t('paymentMethodCod'),   desc: t('paymentMethodCodDesc') },
+              ]).map(opt => (
+                <label
+                  key={opt.value}
+                  className={`flex items-start gap-3 p-3.5 border rounded-sm cursor-pointer transition-colors ${
+                    paymentMethod === opt.value ? 'border-ink bg-paper' : 'border-line hover:bg-paper/50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    checked={paymentMethod === opt.value}
+                    onChange={() => setPaymentMethod(opt.value)}
+                    className="mt-0.5 accent-ink"
+                  />
+                  <span>
+                    <span className="block text-[13px] font-semibold text-ink">{opt.title}</span>
+                    <span className="block text-[12px] text-muted mt-0.5">{opt.desc}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </section>
+
           {/* Items list */}
           <section className="border border-line rounded-sm overflow-hidden">
             <div className="px-5 py-3.5 border-b border-line bg-line-2">
               <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                Sản phẩm ({selectedItems.length})
+                {t('itemsSectionTitle', { count: selectedItems.length })}
               </h2>
             </div>
             <div className="px-5">
@@ -259,30 +473,29 @@ export default function CheckoutClient() {
           <div className="border border-line rounded-sm overflow-hidden bg-line-2">
             <div className="px-5 py-3.5 border-b border-line">
               <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                Tóm tắt đơn hàng
+                {t('summaryTitle')}
               </h2>
             </div>
             <div className="px-5 pt-4 pb-3 space-y-2.5">
               <div className="flex justify-between items-baseline text-[13px]">
-                <span className="text-muted">Tạm tính:</span>
+                <span className="text-muted">{t('subtotal')}:</span>
                 <span className="tabular-nums text-ink">{formatPrice(subtotalOriginal)}</span>
               </div>
               {totalDiscount > 0 && (
                 <div className="flex justify-between items-baseline text-[13px]">
-                  <span className="text-muted">Giảm giá:</span>
+                  <span className="text-muted">{t('discount')}:</span>
                   <span className="tabular-nums text-ok">-{formatPrice(totalDiscount)}</span>
                 </div>
               )}
-              <div className="flex justify-between items-baseline text-[13px]">
-                <span className="text-muted">Phí giao hàng:</span>
-                <span className="tabular-nums text-ok">Miễn phí</span>
-              </div>
             </div>
             <div className="border-t border-line px-5 py-4 flex justify-between items-center">
-              <span className="text-[12px] font-bold uppercase tracking-widest text-ink">Tổng cộng:</span>
+              <span className="text-[12px] font-bold uppercase tracking-widest text-ink">{t('total')}:</span>
               <span className="text-[20px] font-bold tabular-nums text-ink">{formatPrice(totalAmount)}</span>
             </div>
           </div>
+          <p className="text-[11px] text-muted leading-relaxed px-1">
+            {t('shippingFeeNote')}
+          </p>
 
           {error && (
             <p className="text-[12px] text-danger bg-danger/5 border border-danger/20 rounded-sm px-3 py-2.5">
@@ -291,26 +504,28 @@ export default function CheckoutClient() {
           )}
 
           <button
-            onClick={handlePayment}
-            disabled={paying}
+            onClick={handleSubmit}
+            disabled={submitting}
             className="w-full bg-ink text-white text-[12px] font-bold uppercase tracking-widest py-3.5 rounded-sm hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {paying ? (
+            {submitting ? (
               <>
                 <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
-                Đang xử lý...
+                {t('processing')}
               </>
             ) : (
-              'Thanh toán qua VNPay'
+              paymentMethod === 'VNPAY' ? t('submitVnpay') : t('submitCod')
             )}
           </button>
 
-          <p className="text-[11px] text-muted text-center leading-relaxed">
-            Bạn sẽ được chuyển đến cổng thanh toán VNPay để hoàn tất giao dịch.
-          </p>
+          {paymentMethod === 'VNPAY' && (
+            <p className="text-[11px] text-muted text-center leading-relaxed">
+              {t('hintVnpay')}
+            </p>
+          )}
         </aside>
       </div>
     </div>
