@@ -1,7 +1,9 @@
 package com.fernirx.sneakerapi.customer.entity;
 
+import com.fernirx.sneakerapi.cart.entity.Cart;
 import com.fernirx.sneakerapi.common.entity.BaseAuditEntity;
 import com.fernirx.sneakerapi.customer.enums.MembershipTier;
+import com.fernirx.sneakerapi.order.entity.Order;
 import com.fernirx.sneakerapi.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -44,4 +46,9 @@ public class Customer extends BaseAuditEntity {
 
     @OneToMany(mappedBy = "customer")
     private Set<Address> addresses = new LinkedHashSet<>();
+    @OneToOne(mappedBy = "customer")
+    private Cart cart;
+
+    @OneToMany(mappedBy = "customer")
+    private Set<Order> orders = new LinkedHashSet<>();
 }

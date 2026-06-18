@@ -1,5 +1,8 @@
 package com.fernirx.sneakerapi.product.entity;
 
+import com.fernirx.sneakerapi.cart.entity.CartItem;
+import com.fernirx.sneakerapi.inventory.entity.InventoryTransaction;
+import com.fernirx.sneakerapi.order.entity.OrderItem;
 import com.fernirx.sneakerapi.product.enums.ShoeWidth;
 import com.fernirx.sneakerapi.common.entity.BaseAuditEntity;
 import jakarta.persistence.*;
@@ -12,6 +15,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -87,4 +92,13 @@ public class ProductVariant extends BaseAuditEntity {
     @ColumnDefault("1")
     @Column(name = "active", nullable = false)
     private Boolean active;
+
+    @OneToMany(mappedBy = "variant")
+    private Set<CartItem> cartItems = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "variant")
+    private Set<InventoryTransaction> inventoryTransactions = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "variant")
+    private Set<OrderItem> orderItems = new LinkedHashSet<>();
 }

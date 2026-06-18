@@ -1,6 +1,10 @@
 package com.fernirx.sneakerapi.user.entity;
 
 import com.fernirx.sneakerapi.common.entity.BaseAuditEntity;
+import com.fernirx.sneakerapi.customer.entity.Customer;
+import com.fernirx.sneakerapi.inventory.entity.InventoryTransaction;
+import com.fernirx.sneakerapi.order.entity.Order;
+import com.fernirx.sneakerapi.order.entity.OrderStatusHistory;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -50,6 +54,18 @@ public class User extends BaseAuditEntity {
 
     @OneToMany(mappedBy = "user")
     private Set<UserRole> userRoles = new LinkedHashSet<>();
+
+    @OneToOne(mappedBy = "user")
+    private Customer customer;
+
+    @OneToMany(mappedBy = "createdBy")
+    private Set<InventoryTransaction> inventoryTransactions = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "changedBy")
+    private Set<OrderStatusHistory> orderStatusHistories = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "assignedTo")
+    private Set<Order> orders = new LinkedHashSet<>();
 
     public static User createByAdmin(String email, String password) {
         User user = new User();

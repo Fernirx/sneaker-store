@@ -2,6 +2,7 @@ package com.fernirx.sneakerapi.payment.service.impl;
 
 import com.fernirx.sneakerapi.payment.dto.request.PaymentRequest;
 import com.fernirx.sneakerapi.payment.provider.PaymentProvider;
+import com.fernirx.sneakerapi.payment.repository.PaymentRepository;
 import com.fernirx.sneakerapi.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
     private final PaymentProvider paymentProvider;
+    private final PaymentRepository paymentRepository;
 
     @Override
     public String create(PaymentRequest paymentRequest, String ipAddress) {

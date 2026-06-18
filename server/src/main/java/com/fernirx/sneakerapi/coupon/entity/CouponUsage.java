@@ -1,6 +1,7 @@
 package com.fernirx.sneakerapi.coupon.entity;
 
 import com.fernirx.sneakerapi.common.entity.BaseEntity;
+import com.fernirx.sneakerapi.order.entity.Order;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -40,4 +41,9 @@ public class CouponUsage extends BaseEntity {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "used_at", nullable = false)
     private LocalDateTime usedAt;
+    @NotNull
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 }
