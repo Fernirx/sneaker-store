@@ -71,3 +71,8 @@ application:
 vnpay:
   payment-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
   expire-minutes: ${VNPAY_EXPIRE_MINUTES:15}
+
+order:
+  expire-minutes: ${ORDER_EXPIRE_MINUTES:15}
+  max-payment-attempts: ${ORDER_MAX_PAYMENT_ATTEMPTS:4}
+  shipping-fee: ${ORDER_SHIPPING_FEE:30000}
