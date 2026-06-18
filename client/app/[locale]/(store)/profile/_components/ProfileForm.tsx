@@ -93,8 +93,21 @@ export default function ProfileForm({
       {/* Phone */}
       <div>
         <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{t('phone')}</label>
-        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-          placeholder="0912345678" className={inputCls(fieldErrors['phone'])} />
+        <div className="flex relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-ink z-10 font-medium">
+            +84
+          </span>
+          <input
+            type="tel"
+            value={phone.startsWith('+84') ? phone.slice(3) : phone}
+            onChange={e => {
+              const val = e.target.value.replace(/\D/g, '');
+              setPhone(val ? `+84${val}` : '');
+            }}
+            placeholder="912345678"
+            className={`${inputCls(fieldErrors['phone'])} pl-10`}
+          />
+        </div>
         <FieldError msg={fieldErrors['phone']} />
       </div>
 

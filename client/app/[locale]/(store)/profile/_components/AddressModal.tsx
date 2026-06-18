@@ -114,8 +114,20 @@ export default function AddressModal({
               {errors.name && <p className="text-xs text-danger mt-1">{errors.name}</p>}
             </Field>
             <Field label={t('addrPhone')}>
-              <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)}
-                className={inputCls(errors.phone)} />
+              <div className="flex relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-ink z-10 font-medium">
+                  +84
+                </span>
+                <input
+                  type="tel"
+                  value={form.phone.startsWith('+84') ? form.phone.slice(3) : form.phone}
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    set('phone', val ? `+84${val}` : '');
+                  }}
+                  className={`${inputCls(errors.phone)} pl-10`}
+                />
+              </div>
               {errors.phone && <p className="text-xs text-danger mt-1">{errors.phone}</p>}
             </Field>
           </div>
