@@ -20,6 +20,9 @@ public interface ProductVariantMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "cartItems", ignore = true)
+    @Mapping(target = "inventoryTransactions", ignore = true)
+    @Mapping(target = "orderItems", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateVariant(UpdateVariantRequest request, @MappingTarget ProductVariant variant);

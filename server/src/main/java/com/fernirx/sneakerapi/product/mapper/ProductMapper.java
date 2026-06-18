@@ -26,6 +26,10 @@ public interface ProductMapper {
     @Mapping(target = "slug", ignore = true)
     @Mapping(target = "soldCount", ignore = true)
     @Mapping(target = "viewCount", ignore = true)
+    @Mapping(target = "productCategories", ignore = true)
+    @Mapping(target = "productCollections", ignore = true)
+    @Mapping(target = "productImages", ignore = true)
+    @Mapping(target = "productVariants", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateProduct(UpdateProductRequest request, @MappingTarget Product product);
