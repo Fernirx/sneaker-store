@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import { createServerAxios } from '@/lib/axios/serverAxios';
 
-export async function POST(req: NextRequest) {
+function guestHeader(req: NextRequest): Record<string, string> {
+  const t = req.headers.get('X-Guest-Token');
+  return t ? { 'X-Guest-Token': t } : {};
+}
+
+export async function GET(
+  req: NextRequest,
+  props: { params: Promise<{ id: string }> },
+) {
+  const { id } = await props.params;
   try {
-    const body = await req.json();
     const api = await createServerAxios();
-    const { data } = await api.post('/payment/create', { orderId: body.orderId });
+    const { data } = await api.get(`/orders/${id}/history`, { headers: guestHeader(req) });
     return NextResponse.json(data);
   } catch (err) {
     if (axios.isAxiosError(err))
