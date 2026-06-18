@@ -544,7 +544,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `guest_token`      VARCHAR(64)      NULL DEFAULT NULL,
   `code`             VARCHAR(50)      NOT NULL,
   `status`           ENUM('PENDING','CONFIRMED','SHIPPING','DELIVERED','CANCELLED') NOT NULL DEFAULT 'PENDING',
-  `payment_status`   ENUM('UNPAID','PAID','FAILED') NOT NULL DEFAULT 'UNPAID',
+  `payment_status`   ENUM('UNPAID','PAID') NOT NULL DEFAULT 'UNPAID',
   `payment_method`   ENUM('VNPAY','COD') NOT NULL,
   `recipient_name`   VARCHAR(200)     NOT NULL,
   `recipient_phone`  VARCHAR(20)      NOT NULL,
