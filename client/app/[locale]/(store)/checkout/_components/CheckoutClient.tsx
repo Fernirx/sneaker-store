@@ -337,13 +337,21 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                   <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
                     {t('recipientPhone')} <span className="text-danger">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    value={form.recipientPhone}
-                    onChange={handleField('recipientPhone')}
-                    placeholder="0901234567"
-                    className={fieldCls('recipientPhone')}
-                  />
+                  <div className="flex relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-ink z-10 font-medium">
+                      +84
+                    </span>
+                    <input
+                      type="tel"
+                      value={form.recipientPhone.startsWith('+84') ? form.recipientPhone.slice(3) : form.recipientPhone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setForm(prev => ({ ...prev, recipientPhone: val ? `+84${val}` : '' }));
+                      }}
+                      placeholder="901234567"
+                      className={`${fieldCls('recipientPhone')} pl-10`}
+                    />
+                  </div>
                   <FieldError msg={fieldErrors.recipientPhone} />
                 </div>
               </div>
