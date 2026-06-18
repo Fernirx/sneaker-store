@@ -13,6 +13,8 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -112,4 +114,16 @@ public class Product extends BaseAuditEntity {
     @ColumnDefault("'0'")
     @Column(name = "view_count", columnDefinition = "int UNSIGNED", nullable = false)
     private Integer viewCount;
+
+    @OneToMany(mappedBy = "product")
+    private Set<ProductCategory> productCategories = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "product")
+    private Set<ProductCollection> productCollections = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "product")
+    private Set<ProductImage> productImages = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "product")
+    private Set<ProductVariant> productVariants = new LinkedHashSet<>();
 }
