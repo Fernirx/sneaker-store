@@ -15,9 +15,11 @@ public record UpdateVariantRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String colorway,
 
+        @NullableNotBlank
         @Size(max = 50, message = "{validation.size.max}")
         String colorwayCode,
 
+        @NullableNotBlank
         @Size(max = 7, message = "{validation.size.max}")
         String colorHex,
 

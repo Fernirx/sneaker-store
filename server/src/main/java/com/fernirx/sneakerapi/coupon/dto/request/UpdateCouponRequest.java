@@ -1,11 +1,13 @@
 package com.fernirx.sneakerapi.coupon.dto.request;
 
+import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record UpdateCouponRequest(
+        @NullableNotBlank
         String description,
 
         @Positive

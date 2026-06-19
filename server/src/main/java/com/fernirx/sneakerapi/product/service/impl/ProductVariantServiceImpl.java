@@ -41,6 +41,13 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     @Override
     @Transactional(readOnly = true)
+    public ProductVariant findById(Long id) {
+        return productVariantRepository.findById(id)
+                .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ProductVariantGroupResponse> getVariants(Long productId) {
         findProduct(productId);
         List<ProductVariant> variants = productVariantRepository

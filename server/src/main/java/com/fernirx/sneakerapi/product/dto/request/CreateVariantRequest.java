@@ -1,5 +1,6 @@
 package com.fernirx.sneakerapi.product.dto.request;
 
+import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
 import com.fernirx.sneakerapi.product.enums.ShoeWidth;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,9 +19,11 @@ public record CreateVariantRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String colorway,
 
+        @NullableNotBlank
         @Size(max = 50, message = "{validation.size.max}")
         String colorwayCode,
 
+        @NullableNotBlank
         @Size(max = 7, message = "{validation.size.max}")
         String colorHex,
 

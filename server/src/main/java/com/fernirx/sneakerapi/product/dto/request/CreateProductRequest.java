@@ -1,5 +1,6 @@
 package com.fernirx.sneakerapi.product.dto.request;
 
+import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
 import com.fernirx.sneakerapi.product.enums.ClosureType;
 import com.fernirx.sneakerapi.product.enums.Gender;
 import com.fernirx.sneakerapi.product.enums.ShaftStyle;
@@ -17,6 +18,7 @@ public record CreateProductRequest(
         @Size(max = 50, message = "{validation.size.max}")
         String code,
 
+        @NullableNotBlank
         @Size(max = 50, message = "{validation.size.max}")
         String styleCode,
 
@@ -27,11 +29,14 @@ public record CreateProductRequest(
         @NotNull
         Gender gender,
 
+        @NullableNotBlank
         String description,
 
+        @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         String upperMaterial,
 
+        @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         String soleType,
 

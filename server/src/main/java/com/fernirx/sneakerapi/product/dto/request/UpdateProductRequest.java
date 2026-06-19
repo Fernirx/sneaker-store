@@ -15,6 +15,7 @@ public record UpdateProductRequest(
         @Size(max = 50, message = "{validation.size.max}")
         String code,
 
+        @NullableNotBlank
         @Size(max = 50, message = "{validation.size.max}")
         String styleCode,
 
@@ -27,9 +28,11 @@ public record UpdateProductRequest(
         @NullableNotBlank
         String description,
 
+        @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         String upperMaterial,
 
+        @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         String soleType,
 

@@ -1,5 +1,6 @@
 package com.fernirx.sneakerapi.coupon.dto.request;
 
+import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
 import com.fernirx.sneakerapi.coupon.enums.DiscountType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,6 +15,7 @@ public record CreateCouponRequest(
         @Size(max = 50, message = "{validation.size.max}")
         String code,
 
+        @NullableNotBlank
         String description,
 
         @NotNull(message = "{validation.field.not_blank}")

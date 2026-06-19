@@ -12,6 +12,8 @@ public interface ProductVariantService {
 
     ProductVariant findActiveById(Long id);
 
+    ProductVariant findById(Long id);
+
     List<ProductVariantGroupResponse> getVariants(Long productId);
 
     ProductVariantGroupResponse.VariantResponse addVariant(Long productId, CreateVariantRequest request);
