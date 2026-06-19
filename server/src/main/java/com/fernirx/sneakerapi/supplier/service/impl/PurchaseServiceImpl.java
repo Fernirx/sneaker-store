@@ -35,7 +35,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -204,8 +203,8 @@ public class PurchaseServiceImpl implements PurchaseService {
 
         purchase.setStatus(PurchaseStatus.CANCELLED);
         String reason = request != null ? request.reason() : null;
-        if (StringUtils.hasText(reason)) {
-            purchase.setNotes(StringUtils.hasText(purchase.getNotes())
+        if (reason != null) {
+            purchase.setNotes(purchase.getNotes() != null
                     ? purchase.getNotes() + " | Hủy: " + reason
                     : "Hủy: " + reason);
         }
