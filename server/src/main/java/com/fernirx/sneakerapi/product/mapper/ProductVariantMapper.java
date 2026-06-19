@@ -3,6 +3,7 @@ package com.fernirx.sneakerapi.product.mapper;
 import com.fernirx.sneakerapi.product.dto.request.UpdateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.response.ProductDetailResponse;
 import com.fernirx.sneakerapi.product.dto.response.ProductVariantGroupResponse;
+import com.fernirx.sneakerapi.product.dto.response.VariantSearchResponse;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import org.mapstruct.*;
 
@@ -16,6 +17,12 @@ public interface ProductVariantMapper {
     ProductDetailResponse.SizeResponse toSizeResponse(ProductVariant variant);
 
     ProductVariantGroupResponse.VariantResponse toVariantResponse(ProductVariant variant);
+
+    @Mapping(target = "productId", source = "product.id")
+    @Mapping(target = "productName", source = "product.name")
+    @Mapping(target = "productCode", source = "product.code")
+    @Mapping(target = "basePrice", source = "product.basePrice")
+    VariantSearchResponse toSearchResponse(ProductVariant variant);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)

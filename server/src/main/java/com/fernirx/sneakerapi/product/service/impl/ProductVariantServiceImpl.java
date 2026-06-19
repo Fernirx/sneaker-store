@@ -6,13 +6,17 @@ import com.fernirx.sneakerapi.product.dto.request.CreateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.request.UpdateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.response.ProductVariantGroupResponse;
 import com.fernirx.sneakerapi.product.dto.response.StockChangeResult;
+import com.fernirx.sneakerapi.product.dto.response.VariantSearchResponse;
 import com.fernirx.sneakerapi.product.entity.Product;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import com.fernirx.sneakerapi.product.mapper.ProductVariantMapper;
 import com.fernirx.sneakerapi.product.repository.ProductRepository;
 import com.fernirx.sneakerapi.product.repository.ProductVariantRepository;
+import com.fernirx.sneakerapi.product.repository.ProductVariantSpec;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +57,13 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         List<ProductVariant> variants = productVariantRepository
                 .findByProductIdOrderByColorwayAscSizeAsc(productId);
         return productAssembler.toVariantGroups(variants);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<VariantSearchResponse> searchVariants(String keyword, Pageable pageable) {
+        return productVariantRepository.findAll(ProductVariantSpec.build(keyword), pageable)
+                .map(productVariantMapper::toSearchResponse);
     }
 
     @Override
