@@ -71,7 +71,12 @@ public class AuthServiceImpl implements AuthService {
             throw SecurityCustomException.invalid("label.token");
         }
         String email = jwtProvider.extractEmail(oldRefreshToken);
-        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);
+        CustomUserDetails userDetails;
+        try {
+            userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);
+        } catch (UsernameNotFoundException e) {
+            throw SecurityCustomException.invalid("label.token");
+        }
         UserTokenPayload payload = UserTokenPayload.from(userDetails);
         String accessToken = jwtProvider.generateAccessToken(payload);
         String newRefreshToken = jwtProvider.generateRefreshToken(payload);
