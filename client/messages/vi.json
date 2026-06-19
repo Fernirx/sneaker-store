@@ -1,4 +1,8 @@
 {
+  "common": {
+    "required": "Bắt buộc",
+    "networkError": "Lỗi kết nối"
+  },
   "auth": {
     "loginTab": "Đăng nhập",
     "registerTab": "Đăng ký",
@@ -30,7 +34,14 @@
     "verifyBtn": "Xác minh",
     "verifying": "Đang xác minh...",
     "resend": "Gửi lại mã",
-    "resendIn": "Gửi lại sau"
+    "resendIn": "Gửi lại sau",
+    "oauth2Failed": "Đăng nhập bằng mạng xã hội thất bại.",
+    "accountUnavailable": "Tài khoản của bạn đã bị vô hiệu hóa.",
+    "unauthorized": "Không có quyền truy cập.",
+    "loginFailedGeneric": "Đăng nhập thất bại, vui lòng thử lại.",
+    "emailPlaceholder": "ban@email.com",
+    "firstNamePlaceholder": "Nguyễn",
+    "lastNamePlaceholder": "An"
   },
   "profile": {
     "title": "Tài khoản của tôi",
@@ -63,6 +74,10 @@
     "addrProvince": "Tỉnh / Thành phố",
     "addrPostal": "Mã bưu chính",
     "addrDefault": "Đặt làm địa chỉ mặc định",
+    "addrStreetPlaceholder": "123 Đường ABC",
+    "addrWardOptional": "Phường / Xã (tùy chọn)",
+    "addrPostalOptional": "Mã bưu chính (tùy chọn)",
+    "addressCount": "{count} địa chỉ",
     "cancel": "Hủy",
     "save": "Lưu",
     "confirmDelete": "Xóa địa chỉ này?",
@@ -70,7 +85,11 @@
     "newPwd": "Mật khẩu mới",
     "confirmPwd": "Xác nhận mật khẩu mới",
     "changePwdBtn": "Đổi mật khẩu",
+    "setPwdBtn": "Đặt mật khẩu",
     "changing": "Đang đổi...",
+    "changePwdSuccess": "Đổi mật khẩu thành công",
+    "setPwdSuccess": "Đặt mật khẩu thành công",
+    "noPasswordWarning": "Tài khoản của bạn chưa có mật khẩu. Đặt mật khẩu để có thể đăng nhập bằng email.",
     "uploadAvatar": "Đổi ảnh đại diện",
     "uploading": "Đang tải lên...",
     "uploadError": "Không thể tải ảnh lên"
@@ -127,7 +146,31 @@
     "sold": "Đã bán",
     "breadcrumbHome": "Trang chủ",
     "breadcrumbProducts": "Sản phẩm",
-    "addedToCart": "Đã thêm vào giỏ"
+    "addedToCart": "Đã thêm vào giỏ",
+    "closureValues": {
+      "LACE": "Buộc dây",
+      "SLIP_ON": "Xỏ chân",
+      "VELCRO": "Velcro",
+      "ZIPPER": "Khóa kéo"
+    },
+    "shaftValues": {
+      "LOW": "Cổ thấp",
+      "MID": "Cổ vừa",
+      "HIGH": "Cổ cao"
+    },
+    "unitPairs": "đôi",
+    "sizeGuide": "Hướng dẫn chọn size",
+    "lowStockWarning": "Chỉ còn {n} đôi size {size} — đặt nhanh!",
+    "authentic100": "Chính hãng 100%",
+    "returns30Days": "Đổi trả 30 ngày",
+    "tabReviews": "Đánh giá",
+    "tabDescription": "Mô tả",
+    "noReviewsYet": "Chưa có đánh giá",
+    "noReviewsYetFull": "Chưa có đánh giá nào.",
+    "writeReview": "Viết đánh giá",
+    "noDescription": "Chưa có mô tả.",
+    "addToWishlistAria": "Thêm vào yêu thích",
+    "addToCartError": "Không thể thêm vào giỏ hàng"
   },
   "cart": {
     "title": "Giỏ hàng",
@@ -151,7 +194,8 @@
     "size": "Size",
     "color": "Màu",
     "checkoutBlockedByOutOfStock": "Giỏ hàng có sản phẩm hết hàng, vui lòng bỏ chọn hoặc xóa để tiếp tục.",
-    "adjusted": "Số lượng {name} đã được điều chỉnh từ {from} xuống {to} do hàng có hạn."
+    "adjusted": "Số lượng {name} đã được điều chỉnh từ {from} xuống {to} do hàng có hạn.",
+    "updateError": "Lỗi cập nhật"
   },
   "checkout": {
     "title": "Thanh toán",
@@ -164,6 +208,12 @@
     "shippingWard": "Phường/Xã",
     "shippingDistrict": "Quận/Huyện",
     "shippingProvince": "Tỉnh/Thành phố",
+    "recipientNamePlaceholder": "Nguyễn Văn A",
+    "shippingStreetPlaceholder": "123 Lê Lợi",
+    "sizeLabel": "Size",
+    "savedAddressesTitle": "Địa chỉ đã lưu",
+    "defaultBadge": "Mặc định",
+    "orNewAddress": "Hoặc nhập địa chỉ mới",
     "note": "Ghi chú",
     "notePlaceholder": "Ghi chú cho đơn hàng (không bắt buộc)",
     "guestSectionTitle": "Thông tin liên hệ",
@@ -244,6 +294,22 @@
       "VNPAY": "VNPay",
       "COD": "Thanh toán khi nhận hàng"
     }
+  },
+  "payment": {
+    "successTitle": "Thanh toán thành công",
+    "successBody": "Đơn hàng {code} đã được thanh toán.",
+    "orderCodeLabel": "Mã đơn hàng:",
+    "amountLabel": "Số tiền:",
+    "viewOrder": "Xem đơn hàng",
+    "continueShopping": "Tiếp tục mua sắm",
+    "expiredTitle": "Phiên thanh toán hết hạn",
+    "expiredBody": "Link thanh toán đã hết hiệu lực. Vui lòng thử lại.",
+    "retryPayment": "Thanh toán lại",
+    "failedTitle": "Thanh toán chưa thành công",
+    "failedBody": "Giao dịch không được hoàn tất.",
+    "errorCodeLabel": "Mã lỗi:",
+    "retry": "Thử lại",
+    "backToCart": "Quay lại giỏ hàng"
   },
   "footer": {
     "tagline": "Giày chính hãng, phong cách đỉnh cao. Mua sắm trực tuyến an toàn và nhanh chóng.",

@@ -1,4 +1,8 @@
 {
+  "common": {
+    "required": "Required",
+    "networkError": "Connection error"
+  },
   "auth": {
     "loginTab": "Log in",
     "registerTab": "Sign up",
@@ -30,7 +34,14 @@
     "verifyBtn": "Verify",
     "verifying": "Verifying...",
     "resend": "Resend code",
-    "resendIn": "Resend in"
+    "resendIn": "Resend in",
+    "oauth2Failed": "Social login failed.",
+    "accountUnavailable": "Your account has been deactivated.",
+    "unauthorized": "Unauthorized access.",
+    "loginFailedGeneric": "Login failed, please try again.",
+    "emailPlaceholder": "you@email.com",
+    "firstNamePlaceholder": "John",
+    "lastNamePlaceholder": "Smith"
   },
   "profile": {
     "title": "My Account",
@@ -63,6 +74,10 @@
     "addrProvince": "Province / City",
     "addrPostal": "Postal code",
     "addrDefault": "Set as default address",
+    "addrStreetPlaceholder": "123 Main St",
+    "addrWardOptional": "Ward (optional)",
+    "addrPostalOptional": "Postal code (optional)",
+    "addressCount": "{count} addresses",
     "cancel": "Cancel",
     "save": "Save",
     "confirmDelete": "Delete this address?",
@@ -70,7 +85,11 @@
     "newPwd": "New password",
     "confirmPwd": "Confirm new password",
     "changePwdBtn": "Change password",
+    "setPwdBtn": "Set password",
     "changing": "Changing...",
+    "changePwdSuccess": "Password changed successfully",
+    "setPwdSuccess": "Password set successfully",
+    "noPasswordWarning": "Your account doesn't have a password yet. Set one to enable email login.",
     "uploadAvatar": "Change avatar",
     "uploading": "Uploading...",
     "uploadError": "Failed to upload image"
@@ -127,7 +146,31 @@
     "sold": "Sold",
     "breadcrumbHome": "Home",
     "breadcrumbProducts": "Products",
-    "addedToCart": "Added to cart"
+    "addedToCart": "Added to cart",
+    "closureValues": {
+      "LACE": "Lace-up",
+      "SLIP_ON": "Slip-on",
+      "VELCRO": "Velcro",
+      "ZIPPER": "Zipper"
+    },
+    "shaftValues": {
+      "LOW": "Low-top",
+      "MID": "Mid-top",
+      "HIGH": "High-top"
+    },
+    "unitPairs": "pairs",
+    "sizeGuide": "Size guide",
+    "lowStockWarning": "Only {n} pairs of size {size} left!",
+    "authentic100": "100% authentic",
+    "returns30Days": "30-day returns",
+    "tabReviews": "Reviews",
+    "tabDescription": "Description",
+    "noReviewsYet": "No reviews yet",
+    "noReviewsYetFull": "No reviews yet.",
+    "writeReview": "Write a review",
+    "noDescription": "No description.",
+    "addToWishlistAria": "Add to wishlist",
+    "addToCartError": "Unable to add to cart"
   },
   "cart": {
     "title": "Shopping Cart",
@@ -151,7 +194,8 @@
     "size": "Size",
     "color": "Color",
     "checkoutBlockedByOutOfStock": "Cart contains out-of-stock items. Unselect or remove them to continue.",
-    "adjusted": "Quantity of {name} adjusted from {from} to {to} due to limited stock."
+    "adjusted": "Quantity of {name} adjusted from {from} to {to} due to limited stock.",
+    "updateError": "Update error"
   },
   "checkout": {
     "title": "Checkout",
@@ -164,6 +208,12 @@
     "shippingWard": "Ward",
     "shippingDistrict": "District",
     "shippingProvince": "Province/City",
+    "recipientNamePlaceholder": "John Smith",
+    "shippingStreetPlaceholder": "123 Main St",
+    "sizeLabel": "Size",
+    "savedAddressesTitle": "Saved addresses",
+    "defaultBadge": "Default",
+    "orNewAddress": "Or enter a new address",
     "note": "Note",
     "notePlaceholder": "Order note (optional)",
     "guestSectionTitle": "Contact information",
@@ -244,6 +294,22 @@
       "VNPAY": "VNPay",
       "COD": "Cash on delivery"
     }
+  },
+  "payment": {
+    "successTitle": "Payment successful",
+    "successBody": "Order {code} has been paid.",
+    "orderCodeLabel": "Order code:",
+    "amountLabel": "Amount:",
+    "viewOrder": "View order",
+    "continueShopping": "Continue shopping",
+    "expiredTitle": "Payment session expired",
+    "expiredBody": "This payment link has expired. Please try again.",
+    "retryPayment": "Pay again",
+    "failedTitle": "Payment unsuccessful",
+    "failedBody": "The transaction was not completed.",
+    "errorCodeLabel": "Error code:",
+    "retry": "Try again",
+    "backToCart": "Back to cart"
   },
   "footer": {
     "tagline": "Authentic sneakers, premium style. Safe and fast online shopping.",

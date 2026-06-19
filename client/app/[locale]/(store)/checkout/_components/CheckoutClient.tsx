@@ -51,6 +51,7 @@ function FieldError({ msg }: { msg?: string }) {
 // ── Read-only item row ────────────────────────────────────────────────────────
 
 function CheckoutItem({ item }: { item: CartItemData }) {
+  const t = useTranslations('checkout');
   const unit = Number(item.unitPrice);
   const orig = item.originalPrice ? Number(item.originalPrice) : null;
   const pct  = orig ? Math.round((1 - unit / orig) * 100) : 0;
@@ -73,8 +74,8 @@ function CheckoutItem({ item }: { item: CartItemData }) {
         <p className="text-[13px] font-semibold text-ink leading-snug line-clamp-2">
           {item.productName}
         </p>
-        <p className="text-[12px] text-muted mt-0.5">{item.colorway} · Size {item.size}</p>
-        <p className="text-[12px] text-muted mt-0.5">Số lượng: {item.quantity}</p>
+        <p className="text-[12px] text-muted mt-0.5">{item.colorway} · {t('sizeLabel')} {item.size}</p>
+        <p className="text-[12px] text-muted mt-0.5">{t('quantity')}: {item.quantity}</p>
       </div>
 
       <div className="shrink-0 flex flex-col items-end gap-0.5 pt-0.5">
@@ -368,7 +369,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
             <section className="border border-line rounded-sm overflow-hidden mb-6">
               <div className="px-5 py-3.5 border-b border-line bg-line-2 flex items-center justify-between">
                 <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                  Địa chỉ đã lưu
+                  {t('savedAddressesTitle')}
                 </h2>
               </div>
               <div className="p-5">
@@ -397,7 +398,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                             {addr.name} <span className="text-muted font-normal mx-1">·</span> {addr.phone}
                             {addr.defaultAddress && (
                               <span className="ml-2 px-1.5 py-0.5 text-[9px] bg-accent text-white uppercase rounded-sm tracking-wider">
-                                Mặc định
+                                {t('defaultBadge')}
                               </span>
                             )}
                           </p>
@@ -412,7 +413,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                 
                 <div className="flex items-center gap-3 mt-5 mb-1">
                   <div className="flex-1 h-px bg-line" />
-                  <span className="text-[10px] uppercase tracking-widest text-faint">Hoặc nhập địa chỉ mới</span>
+                  <span className="text-[10px] uppercase tracking-widest text-faint">{t('orNewAddress')}</span>
                   <div className="flex-1 h-px bg-line" />
                 </div>
               </div>
@@ -436,7 +437,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                     type="text"
                     value={form.recipientName}
                     onChange={handleField('recipientName')}
-                    placeholder="Nguyễn Văn A"
+                    placeholder={t('recipientNamePlaceholder')}
                     className={fieldCls('recipientName')}
                   />
                   <FieldError msg={fieldErrors.recipientName} />
@@ -472,7 +473,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                   type="text"
                   value={form.shippingStreet}
                   onChange={handleField('shippingStreet')}
-                  placeholder="123 Lê Lợi"
+                  placeholder={t('shippingStreetPlaceholder')}
                   className={fieldCls('shippingStreet')}
                 />
                 <FieldError msg={fieldErrors.shippingStreet} />

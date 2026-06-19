@@ -26,7 +26,7 @@ function CartItemRow({ item }: { item: CartItemData }) {
       setQty(next);
       await updateItem(item.id, next);
     } catch (err) {
-      const { general } = parseApiError(err, 'Lỗi cập nhật');
+      const { general } = parseApiError(err, t('updateError'));
       setError(general);
       setQty(item.quantity);
     } finally {
