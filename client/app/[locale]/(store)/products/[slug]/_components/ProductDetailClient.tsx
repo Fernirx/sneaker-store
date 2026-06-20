@@ -1,46 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { productUrl, brandUrl } from '@/lib/cloudinaryUrl';
 import { type ProductDetailResponse, type SizeItem, formatPrice } from '../../_components/types';
 import { useCart } from '@/contexts/CartContext';
 import { parseApiError } from '@/lib/parseApiError';
 
-const GENDER_LABEL: Record<string, { vi: string; en: string }> = {
-  MEN:    { vi: 'Nam',     en: 'Men' },
-  WOMEN:  { vi: 'Nữ',     en: 'Women' },
-  UNISEX: { vi: 'Unisex', en: 'Unisex' },
-  KIDS:   { vi: 'Trẻ em', en: 'Kids' },
+const GENDER_KEY: Record<string, string> = {
+  MEN: 'genderMen', WOMEN: 'genderWomen', UNISEX: 'genderUnisex', KIDS: 'genderKids',
 };
-
-const CLOSURE_LABEL: Record<string, { vi: string; en: string }> = {
-  LACE:    { vi: 'Buộc dây', en: 'Lace-up' },
-  LACE_UP: { vi: 'Buộc dây', en: 'Lace-up' },
-  SLIP_ON: { vi: 'Xỏ chân',  en: 'Slip-on' },
-  VELCRO:  { vi: 'Velcro',   en: 'Velcro' },
-  ZIPPER:  { vi: 'Khóa kéo', en: 'Zipper' },
-};
-
-const SHAFT_LABEL: Record<string, { vi: string; en: string }> = {
-  LOW:      { vi: 'Cổ thấp', en: 'Low-top' },
-  LOW_TOP:  { vi: 'Cổ thấp', en: 'Low-top' },
-  MID:      { vi: 'Cổ vừa',  en: 'Mid-top' },
-  MID_TOP:  { vi: 'Cổ vừa',  en: 'Mid-top' },
-  HIGH:     { vi: 'Cổ cao',  en: 'High-top' },
-  HIGH_TOP: { vi: 'Cổ cao',  en: 'High-top' },
-};
-
-function xlat(map: Record<string, { vi: string; en: string }>, key: string | null | undefined, locale: string) {
-  if (!key) return null;
-  const e = map[key];
-  return e ? (locale === 'vi' ? e.vi : e.en) : key;
-}
 
 export default function ProductDetailClient({ product }: { product: ProductDetailResponse }) {
   const t = useTranslations('products');
-  const locale = useLocale();
   const { addItem } = useCart();
 
   const [colorIdx, setColorIdx]           = useState(0);
@@ -76,7 +49,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
     } catch (err) {
-      const { general } = parseApiError(err, 'Không thể thêm vào giỏ hàng');
+      const { general } = parseApiError(err, t('addToCartError'));
       setAddError(general);
     } finally {
       setAddLoading(false);
@@ -85,14 +58,14 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
 
   // Build spec rows — only fields that exist; pad to even for 2-col grid
   const specRows: Array<{ k: string; v: string; mono?: boolean }> = [
-    { k: t('gender'),  v: xlat(GENDER_LABEL, product.gender, locale) ?? product.gender },
+    { k: t('gender'),  v: GENDER_KEY[product.gender] ? t(GENDER_KEY[product.gender]) : product.gender },
     { k: t('brand'),   v: product.brand.name },
-    ...(product.upperMaterial ? [{ k: t('material'), v: product.upperMaterial }]                                              : []),
-    ...(product.soleType      ? [{ k: t('sole'),     v: product.soleType }]                                                   : []),
-    ...(product.closureType   ? [{ k: t('closure'),  v: xlat(CLOSURE_LABEL, product.closureType, locale) ?? product.closureType }] : []),
-    ...(product.shaftStyle    ? [{ k: t('shaft'),    v: xlat(SHAFT_LABEL, product.shaftStyle, locale) ?? product.shaftStyle }]      : []),
-    ...(product.styleCode     ? [{ k: t('styleCode'),v: product.styleCode, mono: true }]                                      : []),
-    { k: t('sold'), v: `${product.soldCount.toLocaleString('vi-VN')} ${locale === 'vi' ? 'đôi' : 'pairs'}` },
+    ...(product.upperMaterial ? [{ k: t('material'), v: product.upperMaterial }]                                  : []),
+    ...(product.soleType      ? [{ k: t('sole'),     v: product.soleType }]                                       : []),
+    ...(product.closureType   ? [{ k: t('closure'),  v: t(`closureValues.${product.closureType}`) }]              : []),
+    ...(product.shaftStyle    ? [{ k: t('shaft'),    v: t(`shaftValues.${product.shaftStyle}`) }]                 : []),
+    ...(product.styleCode     ? [{ k: t('styleCode'),v: product.styleCode, mono: true }]                          : []),
+    { k: t('sold'), v: `${product.soldCount.toLocaleString('vi-VN')} ${t('unitPairs')}` },
   ];
   if (specRows.length % 2 !== 0) specRows.push({ k: '', v: '' });
 
@@ -244,7 +217,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
                   )}
                 </p>
                 <span className="text-xs text-muted underline cursor-pointer">
-                  {locale === 'vi' ? 'Hướng dẫn chọn size' : 'Size guide'}
+                  {t('sizeGuide')}
                 </span>
               </div>
               <div className="grid grid-cols-4 gap-2">
@@ -271,9 +244,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
               </div>
               {selectedSize && selectedSize.stockQuantity > 0 && selectedSize.stockQuantity <= 5 && (
                 <p className="text-[11.5px] text-warn mt-2.5">
-                  ⚡ {locale === 'vi'
-                    ? `Chỉ còn ${selectedSize.stockQuantity} đôi size ${selectedSize.size} — đặt nhanh!`
-                    : `Only ${selectedSize.stockQuantity} pairs of size ${selectedSize.size} left!`}
+                  ⚡ {t('lowStockWarning', { n: selectedSize.stockQuantity, size: selectedSize.size })}
                 </p>
               )}
             </div>
@@ -324,7 +295,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
             {/* Wishlist */}
             <button
               className="inline-flex items-center justify-center w-10 h-10 border-[1.5px] border-line rounded-sm bg-white text-ink hover:border-accent hover:text-accent transition-colors shrink-0"
-              aria-label="Thêm vào yêu thích"
+              aria-label={t('addToWishlistAria')}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 21C12 21 4 16 2 10.5C0.5 6.5 3.5 3.5 7 3.5C9 3.5 10.5 4.7 12 6C13.5 4.7 15 3.5 17 3.5C20.5 3.5 23.5 6.5 22 10.5C20 16 12 21 12 21Z"/>
@@ -339,13 +310,13 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 6L9 17l-5-5"/>
               </svg>
-              {locale === 'vi' ? 'Chính hãng 100%' : '100% authentic'}
+              {t('authentic100')}
             </span>
             <span className="flex items-center gap-2 text-ok">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/>
               </svg>
-              {locale === 'vi' ? 'Đổi trả 30 ngày' : '30-day returns'}
+              {t('returns30Days')}
             </span>
           </div>
 
@@ -389,9 +360,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
                   : 'text-muted border-transparent hover:text-ink'
               }`}
             >
-              {tab === 'reviews'
-                ? (locale === 'vi' ? 'Đánh giá' : 'Reviews')
-                : (locale === 'vi' ? 'Mô tả' : 'Description')}
+              {tab === 'reviews' ? t('tabReviews') : t('tabDescription')}
             </button>
           ))}
         </div>
@@ -404,7 +373,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
               <div className="font-display font-black text-[64px] leading-none tracking-tight">—</div>
               <div className="text-[18px] text-faint mt-1.5 tracking-widest">★★★★★</div>
               <p className="text-[13px] text-muted mt-1">
-                {locale === 'vi' ? 'Chưa có đánh giá' : 'No reviews yet'}
+                {t('noReviewsYet')}
               </p>
 
               {/* Rating bars */}
@@ -421,13 +390,13 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
               </div>
 
               <button className="w-full mt-[18px] py-3 border-[1.5px] border-line rounded-sm bg-white text-sm font-bold hover:border-ink transition-colors">
-                {locale === 'vi' ? 'Viết đánh giá' : 'Write a review'}
+                {t('writeReview')}
               </button>
             </div>
 
             {/* Right: Empty state */}
             <div className="flex items-center justify-center py-16 text-sm text-muted border-[1.5px] border-line rounded-lg">
-              {locale === 'vi' ? 'Chưa có đánh giá nào.' : 'No reviews yet.'}
+              {t('noReviewsYetFull')}
             </div>
           </div>
         )}
@@ -436,7 +405,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
         {activeTab === 'description' && (
           product.description
             ? <p className="text-sm text-muted leading-relaxed whitespace-pre-line max-w-2xl">{product.description}</p>
-            : <p className="text-sm text-muted">{locale === 'vi' ? 'Chưa có mô tả.' : 'No description.'}</p>
+            : <p className="text-sm text-muted">{t('noDescription')}</p>
         )}
       </section>
 

@@ -52,6 +52,7 @@ function PasswordField({
 
 export default function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
   const t = useTranslations('profile');
+  const tc = useTranslations('common');
   const [pending, start] = useTransition();
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -86,10 +87,10 @@ export default function ChangePasswordForm({ hasPassword }: { hasPassword: boole
         } else {
           await clientAxios.post('/api/me/set-password', { password, confirmPassword });
         }
-        setSuccess(hasPassword ? 'Đổi mật khẩu thành công' : 'Đặt mật khẩu thành công');
+        setSuccess(hasPassword ? t('changePwdSuccess') : t('setPwdSuccess'));
         reset();
       } catch (err) {
-        const { general, fields } = parseApiError(err, 'Lỗi kết nối');
+        const { general, fields } = parseApiError(err, tc('networkError'));
         setFieldErrors(fields);
         setGeneralError(general);
       }
@@ -104,7 +105,7 @@ export default function ChangePasswordForm({ hasPassword }: { hasPassword: boole
     <div className="space-y-5 max-w-md">
       {!hasPassword && (
         <p className="text-sm text-ink-2 bg-warn-bg border border-warn/20 rounded px-3 py-2.5">
-          Tài khoản của bạn chưa có mật khẩu. Đặt mật khẩu để có thể đăng nhập bằng email.
+          {t('noPasswordWarning')}
         </p>
       )}
 
@@ -148,7 +149,7 @@ export default function ChangePasswordForm({ hasPassword }: { hasPassword: boole
         onClick={handleSubmit}
         disabled={pending || !canSubmit}
         className="bg-accent hover:bg-accent-700 disabled:opacity-40 text-white font-display font-bold text-sm uppercase tracking-wider px-6 py-2.5 rounded transition-colors">
-        {pending ? t('changing') : (hasPassword ? t('changePwdBtn') : 'Đặt mật khẩu')}
+        {pending ? t('changing') : (hasPassword ? t('changePwdBtn') : t('setPwdBtn'))}
       </button>
     </div>
   );

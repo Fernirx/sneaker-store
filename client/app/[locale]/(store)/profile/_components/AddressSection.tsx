@@ -86,7 +86,7 @@ export default function AddressSection() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted">{addresses.length} địa chỉ</p>
+        <p className="text-sm text-muted">{t('addressCount', { count: addresses.length })}</p>
         <button onClick={() => setModal({ open: true })}
           className="flex items-center gap-2 bg-accent hover:bg-accent-700 text-white font-display font-bold text-[13px] uppercase tracking-wider px-4 py-2 rounded transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -124,7 +124,7 @@ export default function AddressSection() {
                   </div>
                   <p className="text-sm text-muted leading-snug">{formatAddress(addr)}</p>
                   {addr.postalCode && (
-                    <p className="text-xs text-faint">Mã bưu chính: {addr.postalCode}</p>
+                    <p className="text-xs text-faint">{t('addrPostal')}: {addr.postalCode}</p>
                   )}
                 </div>
                 <div className="flex gap-2 shrink-0">

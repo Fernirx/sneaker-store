@@ -9,12 +9,6 @@ import { parseApiError } from '@/lib/parseApiError';
 import { isStaffRole } from '@/lib/constants';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const OAUTH2_ERROR_MESSAGES: Record<string, string> = {
-  oauth2_failed: 'Đăng nhập bằng mạng xã hội thất bại.',
-  ACCOUNT_UNAVAILABLE: 'Tài khoản của bạn đã bị vô hiệu hóa.',
-  UNAUTHORIZED: 'Không có quyền truy cập.',
-};
-
 type Tab = 'login' | 'register' | 'otp';
 type FieldErrors = Record<string, string>;
 
@@ -40,6 +34,7 @@ function EyeIcon({ open }: { open: boolean }) {
 
 export default function LoginForm() {
   const t = useTranslations('auth');
+  const tc = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>('login');
@@ -64,12 +59,15 @@ export default function LoginForm() {
   useEffect(() => {
     const error = searchParams.get('error');
     if (!error) return;
-    const msg = OAUTH2_ERROR_MESSAGES[error] ?? 'Đăng nhập thất bại, vui lòng thử lại.';
-    setGeneralError(msg);
+    const key = error === 'oauth2_failed' ? 'oauth2Failed'
+      : error === 'ACCOUNT_UNAVAILABLE' ? 'accountUnavailable'
+      : error === 'UNAUTHORIZED' ? 'unauthorized'
+      : 'loginFailedGeneric';
+    setGeneralError(t(key));
     const url = new URL(window.location.href);
     url.searchParams.delete('error');
     window.history.replaceState({}, '', url.toString());
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   const [showLoginPass, setShowLoginPass] = useState(false);
   const [showRegPass, setShowRegPass] = useState(false);
@@ -92,7 +90,7 @@ export default function LoginForm() {
         const roles: string[] = data.roles ?? [];
         router.replace(isStaffRole(roles) ? '/admin' : '/');
       } catch (err) {
-        const { general, fields } = parseApiError(err, 'Lỗi kết nối');
+        const { general, fields } = parseApiError(err, tc('networkError'));
         if (errCode(err) === 'EMAIL_NOT_VERIFIED') {
           setOtpEmail(loginEmail);
           await clientAxios.post('/api/auth/resend-otp', { email: loginEmail, purpose: 'REGISTER' }).catch(() => {});
@@ -121,7 +119,7 @@ export default function LoginForm() {
         startResendTimer();
         setTab('otp');
       } catch (err) {
-        const { general, fields } = parseApiError(err, 'Lỗi kết nối');
+        const { general, fields } = parseApiError(err, tc('networkError'));
         setGeneralError(general);
         setFieldErrors(fields);
       }
@@ -136,7 +134,7 @@ export default function LoginForm() {
         const roles: string[] = data.roles ?? [];
         router.replace(isStaffRole(roles) ? '/admin' : '/');
       } catch (err) {
-        const { general } = parseApiError(err, 'Lỗi kết nối');
+        const { general } = parseApiError(err, tc('networkError'));
         setGeneralError(general);
       }
     });
@@ -276,7 +274,7 @@ export default function LoginForm() {
                   <div>
                     <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{t('email')}</label>
                     <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
-                      placeholder="ban@email.com" className={inputCls('email')} />
+                      placeholder={t('emailPlaceholder')} className={inputCls('email')} />
                     <FieldError msg={fieldErrors['email']} />
                   </div>
                   <div>
@@ -308,20 +306,20 @@ export default function LoginForm() {
                     <div>
                       <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{t('firstName')}</label>
                       <input value={regFirst} onChange={e => setRegFirst(e.target.value)}
-                        placeholder="Nguyễn" className={inputCls('firstName')} />
+                        placeholder={t('firstNamePlaceholder')} className={inputCls('firstName')} />
                       <FieldError msg={fieldErrors['firstName']} />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{t('lastName')}</label>
                       <input value={regLast} onChange={e => setRegLast(e.target.value)}
-                        placeholder="An" className={inputCls('lastName')} />
+                        placeholder={t('lastNamePlaceholder')} className={inputCls('lastName')} />
                       <FieldError msg={fieldErrors['lastName']} />
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{t('email')}</label>
                     <input type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)}
-                      placeholder="ban@email.com" className={inputCls('email')} />
+                      placeholder={t('emailPlaceholder')} className={inputCls('email')} />
                     <FieldError msg={fieldErrors['email']} />
                   </div>
                   <div>

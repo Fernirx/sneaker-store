@@ -45,6 +45,7 @@ export default function AddressModal({
   onSave: (form: AddressForm) => Promise<void>;
 }) {
   const t = useTranslations('profile');
+  const tc = useTranslations('common');
   const [form, setForm] = useState<AddressForm>({ ...EMPTY, ...initial });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
@@ -61,11 +62,11 @@ export default function AddressModal({
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!form.name.trim()) e.name = 'Bắt buộc';
-    if (!form.phone.trim()) e.phone = 'Bắt buộc';
-    if (!form.street.trim()) e.street = 'Bắt buộc';
-    if (!form.district.trim()) e.district = 'Bắt buộc';
-    if (!form.province.trim()) e.province = 'Bắt buộc';
+    if (!form.name.trim()) e.name = tc('required');
+    if (!form.phone.trim()) e.phone = tc('required');
+    if (!form.street.trim()) e.street = tc('required');
+    if (!form.district.trim()) e.district = tc('required');
+    if (!form.province.trim()) e.province = tc('required');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -134,12 +135,12 @@ export default function AddressModal({
 
           <Field label={t('addrStreet')}>
             <input value={form.street} onChange={e => set('street', e.target.value)}
-              placeholder="123 Đường ABC" className={inputCls(errors.street)} />
+              placeholder={t('addrStreetPlaceholder')} className={inputCls(errors.street)} />
             {errors.street && <p className="text-xs text-danger mt-1">{errors.street}</p>}
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label={`${t('addrWard')} (tùy chọn)`}>
+            <Field label={t('addrWardOptional')}>
               <input value={form.ward} onChange={e => set('ward', e.target.value)}
                 className={inputCls()} />
             </Field>
@@ -156,7 +157,7 @@ export default function AddressModal({
                 className={inputCls(errors.province)} />
               {errors.province && <p className="text-xs text-danger mt-1">{errors.province}</p>}
             </Field>
-            <Field label={`${t('addrPostal')} (tùy chọn)`}>
+            <Field label={t('addrPostalOptional')}>
               <input value={form.postalCode} onChange={e => set('postalCode', e.target.value)}
                 className={inputCls()} />
             </Field>

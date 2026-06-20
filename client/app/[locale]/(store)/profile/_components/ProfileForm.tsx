@@ -24,6 +24,7 @@ export default function ProfileForm({
   onUpdated: (p: Profile) => void;
 }) {
   const t = useTranslations('profile');
+  const tc = useTranslations('common');
   const [pending, start] = useTransition();
 
   const [firstName, setFirstName] = useState(profile.firstName);
@@ -51,7 +52,7 @@ export default function ProfileForm({
         onUpdated(data.data as Profile);
         setSuccess(t('saveSuccess'));
       } catch (err) {
-        const { general, fields } = parseApiError(err, 'Lỗi kết nối');
+        const { general, fields } = parseApiError(err, tc('networkError'));
         setFieldErrors(fields);
         setGeneralError(general);
       }

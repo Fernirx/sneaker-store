@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import clientAxios from '@/lib/axios/clientAxios';
 import { guestHeaders } from '@/lib/guestToken';
@@ -27,6 +28,7 @@ export default function PaymentCallbackClient({
   txnRef: string;
   amount: number;
 }) {
+  const t = useTranslations('payment');
   const [status, setStatus]   = useState<Status>('loading');
   const [orderId, setOrderId] = useState<number | null>(null);
   const [orderCode, setOrderCode] = useState(txnRef);
@@ -92,20 +94,20 @@ export default function PaymentCallbackClient({
 
           <div>
             <h1 className="font-display font-black text-2xl uppercase tracking-tight text-ink mb-2">
-              Thanh toán thành công
+              {t('successTitle')}
             </h1>
             <p className="text-[13px] text-muted">
-              Đơn hàng <span className="font-semibold text-ink">{orderCode}</span> đã được thanh toán.
+              {t('successBody', { code: orderCode })}
             </p>
           </div>
 
           <div className="border border-line rounded-sm px-6 py-4 bg-line-2 w-full text-left space-y-2.5">
             <div className="flex justify-between text-[13px]">
-              <span className="text-muted">Mã đơn hàng:</span>
+              <span className="text-muted">{t('orderCodeLabel')}</span>
               <span className="font-semibold text-ink font-mono text-[12px]">{orderCode}</span>
             </div>
             <div className="flex justify-between text-[13px]">
-              <span className="text-muted">Số tiền:</span>
+              <span className="text-muted">{t('amountLabel')}</span>
               <span className="font-semibold text-ink tabular-nums">
                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(displayAmount)}
               </span>
@@ -117,13 +119,13 @@ export default function PaymentCallbackClient({
               href={orderDetailHref}
               className="flex-1 text-[12px] font-bold uppercase tracking-widest bg-ink text-white py-3 rounded-sm hover:bg-accent transition-colors text-center"
             >
-              Xem đơn hàng
+              {t('viewOrder')}
             </Link>
             <Link
               href="/products"
               className="flex-1 text-[12px] font-bold uppercase tracking-widest border border-line text-ink py-3 rounded-sm hover:bg-paper transition-colors text-center"
             >
-              Tiếp tục mua sắm
+              {t('continueShopping')}
             </Link>
           </div>
         </>
@@ -141,10 +143,10 @@ export default function PaymentCallbackClient({
 
           <div>
             <h1 className="font-display font-black text-2xl uppercase tracking-tight text-ink mb-2">
-              Phiên thanh toán hết hạn
+              {t('expiredTitle')}
             </h1>
             <p className="text-[13px] text-muted">
-              Link thanh toán đã hết hiệu lực. Vui lòng thử lại.
+              {t('expiredBody')}
             </p>
           </div>
 
@@ -152,7 +154,7 @@ export default function PaymentCallbackClient({
             href="/checkout"
             className="w-full text-[12px] font-bold uppercase tracking-widest bg-ink text-white py-3.5 rounded-sm hover:bg-accent transition-colors text-center block"
           >
-            Thanh toán lại
+            {t('retryPayment')}
           </Link>
         </>
       )}
@@ -170,12 +172,12 @@ export default function PaymentCallbackClient({
 
           <div>
             <h1 className="font-display font-black text-2xl uppercase tracking-tight text-ink mb-2">
-              Thanh toán chưa thành công
+              {t('failedTitle')}
             </h1>
             <p className="text-[13px] text-muted">
-              Giao dịch không được hoàn tất.{' '}
+              {t('failedBody')}{' '}
               {responseCode && (
-                <>Mã lỗi: <span className="font-mono text-ink">{responseCode}</span></>
+                <>{t('errorCodeLabel')} <span className="font-mono text-ink">{responseCode}</span></>
               )}
             </p>
           </div>
@@ -185,13 +187,13 @@ export default function PaymentCallbackClient({
               href="/checkout"
               className="flex-1 text-[12px] font-bold uppercase tracking-widest bg-ink text-white py-3 rounded-sm hover:bg-accent transition-colors text-center"
             >
-              Thử lại
+              {t('retry')}
             </Link>
             <Link
               href="/cart"
               className="flex-1 text-[12px] font-bold uppercase tracking-widest border border-line text-ink py-3 rounded-sm hover:bg-paper transition-colors text-center"
             >
-              Quay lại giỏ hàng
+              {t('backToCart')}
             </Link>
           </div>
         </>
