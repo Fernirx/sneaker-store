@@ -119,27 +119,27 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     @Override
     public StockChangeResult decreaseStock(Long variantId, int quantity) {
-        ProductVariant variant = productVariantRepository.findById(variantId)
-                .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
-        int oldStock = variant.getStockQuantity();
-        if (oldStock < quantity) {
+        int updatedRows = productVariantRepository.decreaseStockAtomic(variantId, quantity);
+        if (updatedRows == 0) {
+            if (!productVariantRepository.existsById(variantId)) {
+                throw BusinessException.notFound("label.product.variant");
+            }
             throw BusinessException.bad("label.product.stock");
         }
-        int newStock = oldStock - quantity;
-        variant.setStockQuantity(newStock);
-        productVariantRepository.save(variant);
-        return new StockChangeResult(variantId, oldStock, newStock);
+        int newStock = productVariantRepository.findStockQuantityById(variantId)
+                .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
+        return new StockChangeResult(variantId, newStock + quantity, newStock);
     }
 
     @Override
     public StockChangeResult increaseStock(Long variantId, int quantity) {
-        ProductVariant variant = productVariantRepository.findById(variantId)
+        int updatedRows = productVariantRepository.increaseStockAtomic(variantId, quantity);
+        if (updatedRows == 0) {
+            throw BusinessException.notFound("label.product.variant");
+        }
+        int newStock = productVariantRepository.findStockQuantityById(variantId)
                 .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
-        int oldStock = variant.getStockQuantity();
-        int newStock = oldStock + quantity;
-        variant.setStockQuantity(newStock);
-        productVariantRepository.save(variant);
-        return new StockChangeResult(variantId, oldStock, newStock);
+        return new StockChangeResult(variantId, newStock - quantity, newStock);
     }
 
     private Product findProduct(Long productId) {
