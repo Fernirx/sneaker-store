@@ -311,6 +311,17 @@
     "retry": "Try again",
     "backToCart": "Back to cart"
   },
+  "home": {
+    "heroTitle": "READY TO\nSPRINT.",
+    "heroSub": "Discover the latest sneakers, 100% authentic, fast shipping nationwide.",
+    "heroCta": "Shop now",
+    "heroCtaSecondary": "See new arrivals",
+    "newArrivalsTitle": "New Arrivals",
+    "onSaleTitle": "On Sale",
+    "collectionsTitle": "Featured Collections",
+    "brandsTitle": "Shop by Brand",
+    "viewAll": "View all"
+  },
   "footer": {
     "tagline": "Authentic sneakers, premium style. Safe and fast online shopping.",
     "colBrand": "Brand",

@@ -311,6 +311,17 @@
     "retry": "Thử lại",
     "backToCart": "Quay lại giỏ hàng"
   },
+  "home": {
+    "heroTitle": "SẴN SÀNG\nBỨT TỐC.",
+    "heroSub": "Khám phá những đôi sneaker mới nhất, chính hãng 100%, giao nhanh toàn quốc.",
+    "heroCta": "Mua ngay",
+    "heroCtaSecondary": "Xem hàng mới về",
+    "newArrivalsTitle": "Hàng mới về",
+    "onSaleTitle": "Đang giảm giá",
+    "collectionsTitle": "Bộ sưu tập nổi bật",
+    "brandsTitle": "Thương hiệu",
+    "viewAll": "Xem tất cả"
+  },
   "footer": {
     "tagline": "Giày chính hãng, phong cách đỉnh cao. Mua sắm trực tuyến an toàn và nhanh chóng.",
     "colBrand": "Thương hiệu",
