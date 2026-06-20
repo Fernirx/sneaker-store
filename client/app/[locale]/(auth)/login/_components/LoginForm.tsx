@@ -8,6 +8,8 @@ import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
 import { isStaffRole } from '@/lib/constants';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Link from "next/link";
+import { Home } from 'lucide-react';
 
 type Tab = 'login' | 'register' | 'otp';
 type FieldErrors = Record<string, string>;
@@ -179,6 +181,12 @@ export default function LoginForm() {
 
       {/* Form side */}
       <div className="relative flex items-center justify-center min-h-screen md:min-h-0 p-8 bg-white">
+        <Link
+            href="/"
+            className="absolute top-6 left-6 w-10 h-10 rounded-full border border-line flex items-center justify-center hover:bg-gray-50 transition-colors"
+        >
+          <Home size={18} />
+        </Link>
         <div className="absolute top-6 right-6">
           <LanguageSwitcher />
         </div>
