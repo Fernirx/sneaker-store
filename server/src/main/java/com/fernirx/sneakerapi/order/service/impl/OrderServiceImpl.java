@@ -258,6 +258,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Order findOwnedEntityById(Long orderId, Long userId, String guestToken) {
+        return findOwnedOrder(orderId, userId, guestToken);
+    }
+
+    @Override
     public void changeStatus(Long orderId, OrderStatus newStatus, Long changedByUserId, String note) {
         Order order = findById(orderId);
         OrderStatus oldStatus = order.getStatus();
@@ -283,7 +289,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void cancelOrder(Long orderId, String reason) {
-        Order order = findById(orderId);
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> BusinessException.notFound("label.order"));
         if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.DELIVERED) {
             return;
         }

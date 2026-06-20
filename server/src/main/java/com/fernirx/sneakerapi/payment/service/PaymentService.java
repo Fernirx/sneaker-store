@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.Map;
 
 public interface PaymentService {
-    String create(Long orderId, String ipAddress);
+    String create(Long orderId, Long userId, String guestToken, String ipAddress);
     Map<String, String> handleIpn(Map<String, String> params);
     Page<PaymentInternalResponse> getAll(PaymentFilterRequest filter, Pageable pageable);
     PaymentInternalResponse getById(Long id);

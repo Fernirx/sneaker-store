@@ -4,10 +4,14 @@ import com.fernirx.sneakerapi.order.entity.Order;
 import com.fernirx.sneakerapi.order.enums.OrderPaymentStatus;
 import com.fernirx.sneakerapi.order.enums.OrderStatus;
 import com.fernirx.sneakerapi.order.enums.PaymentMethod;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,4 +29,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     List<Order> findByPaymentMethodAndPaymentStatusAndStatusAndExpiredAtBefore(
             PaymentMethod paymentMethod, OrderPaymentStatus paymentStatus, OrderStatus status, LocalDateTime expiredBefore);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT o FROM Order o WHERE o.id = :id")
+    Optional<Order> findByIdForUpdate(@Param("id") Long id);
 }

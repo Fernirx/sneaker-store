@@ -38,8 +38,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderProperties orderProperties;
 
     @Override
-    public String create(Long orderId, String ipAddress) {
-        Order order = orderService.findEntityById(orderId);
+    public String create(Long orderId, Long userId, String guestToken, String ipAddress) {
+        Order order = orderService.findOwnedEntityById(orderId, userId, guestToken);
 
         if (order.getPaymentMethod() != PaymentMethod.VNPAY
                 || order.getStatus() != OrderStatus.PENDING
