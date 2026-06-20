@@ -87,7 +87,7 @@ export default function VariantPicker({
                 className="w-full text-left px-3 py-2 hover:bg-paper transition-colors border-b border-line-2 last:border-0"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-xs font-bold">{v.sku}</span>
+                  <span className="font-body text-xs font-bold">{v.sku}</span>
                   <span className={`text-[10px] font-bold ${v.stockQuantity <= 0 ? 'text-danger' : 'text-muted'}`}>
                     Tồn: {v.stockQuantity}
                   </span>

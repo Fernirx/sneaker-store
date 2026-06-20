@@ -156,7 +156,7 @@ export default function OrdersClient({ initialData }: { initialData: PageResult 
             ) : (
               orders.map(order => (
                 <tr key={order.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-mono font-bold text-sm">{order.code}</td>
+                  <td className="px-4 py-3 font-body font-bold text-sm">{order.code}</td>
                   <td className="px-4 py-3 text-xs text-muted">{order.customerEmail ?? 'Khách vãng lai'}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${STATUS_COLORS[order.status]}`}>

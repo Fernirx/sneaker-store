@@ -71,7 +71,7 @@ export default function CreateCouponModal({
             onChange={e => setCode(e.target.value.toUpperCase())}
             required
             placeholder="VD: SUMMER30"
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink"
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink"
           />
           {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
         </div>

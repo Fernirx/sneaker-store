@@ -41,7 +41,7 @@ export default function Sidebar() {
       <div className="h-14 flex items-center gap-2 px-5 border-b border-line">
         <span className="w-2.5 h-2.5 bg-accent rounded-xs rotate-45 shrink-0" />
         <span className="font-display font-black text-lg uppercase tracking-tight">STRIDE</span>
-        <span className="ml-auto font-mono text-[9px] tracking-widest uppercase text-muted">Admin</span>
+        <span className="ml-auto font-display text-[9px] tracking-widest uppercase text-muted">Admin</span>
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5">
@@ -49,7 +49,7 @@ export default function Sidebar() {
         <NavItem href="/admin/profile"   label="Trang cá nhân" icon={ICONS.profile} active={isActive('/admin/profile')} />
 
         <div className="pt-4">
-          <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+          <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
             Tài khoản
           </p>
           <div className="space-y-0.5">
@@ -59,7 +59,7 @@ export default function Sidebar() {
         </div>
 
         <div className="pt-4">
-          <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+          <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
             Catalog
           </p>
           <div className="space-y-0.5">
@@ -71,7 +71,7 @@ export default function Sidebar() {
         </div>
 
         <div className="pt-4">
-          <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+          <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
             Bán hàng
           </p>
           <div className="space-y-0.5">
@@ -80,7 +80,7 @@ export default function Sidebar() {
         </div>
 
         <div className="pt-4">
-          <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+          <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
             Kho
           </p>
           <div className="space-y-0.5">
@@ -91,7 +91,7 @@ export default function Sidebar() {
         </div>
 
         <div className="pt-4">
-          <p className="font-mono text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+          <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
             Marketing
           </p>
           <div className="space-y-0.5">

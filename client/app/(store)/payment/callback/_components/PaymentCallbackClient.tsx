@@ -102,7 +102,7 @@ export default function PaymentCallbackClient({
           <div className="border border-line rounded-sm px-6 py-4 bg-line-2 w-full text-left space-y-2.5">
             <div className="flex justify-between text-[13px]">
               <span className="text-muted">{"Mã đơn hàng:"}</span>
-              <span className="font-semibold text-ink font-mono text-[12px]">{orderCode}</span>
+              <span className="font-semibold text-ink font-body text-[12px]">{orderCode}</span>
             </div>
             <div className="flex justify-between text-[13px]">
               <span className="text-muted">{"Số tiền:"}</span>
@@ -175,7 +175,7 @@ export default function PaymentCallbackClient({
             <p className="text-[13px] text-muted">
               {"Giao dịch không được hoàn tất."}{' '}
               {responseCode && (
-                <>{"Mã lỗi:"} <span className="font-mono text-ink">{responseCode}</span></>
+                <>{"Mã lỗi:"} <span className="font-body text-ink">{responseCode}</span></>
               )}
             </p>
           </div>

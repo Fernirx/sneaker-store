@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Archivo, Roboto, JetBrains_Mono } from 'next/font/google';
+import { Archivo, Roboto } from 'next/font/google';
 import './globals.css';
 
 const archivo = Archivo({
@@ -16,13 +16,6 @@ const roboto = Roboto({
   display: 'swap',
 });
 
-const jetbrains = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-jetbrains',
-  display: 'swap',
-});
-
 export const metadata: Metadata = {
   title: 'STRIDE — Sneaker Store',
   description: 'Cửa hàng sneaker hiệu năng & lifestyle chính hãng',
@@ -30,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html className={`${archivo.variable} ${roboto.variable} ${jetbrains.variable}`}>
+    <html className={`${archivo.variable} ${roboto.variable}`}>
       <body className="min-h-screen bg-white font-body text-ink antialiased">
         {children}
       </body>

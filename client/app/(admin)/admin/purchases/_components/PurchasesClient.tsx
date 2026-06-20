@@ -164,7 +164,7 @@ export default function PurchasesClient({
             ) : (
               purchases.map(p => (
                 <tr key={p.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-mono font-bold text-sm">{p.purchaseCode}</td>
+                  <td className="px-4 py-3 font-body font-bold text-sm">{p.purchaseCode}</td>
                   <td className="px-4 py-3 text-sm">{p.supplierName}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${STATUS_COLORS[p.status]}`}>

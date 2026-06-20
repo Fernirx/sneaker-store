@@ -104,7 +104,7 @@ export default function ReceivePurchaseModal({
                 {rows.map(r => (
                   <tr key={r.purchaseItemId} className="border-b border-line-2 last:border-0">
                     <td className="px-3 py-2">
-                      <div className="font-mono text-xs font-bold">{r.sku}</div>
+                      <div className="font-body text-xs font-bold">{r.sku}</div>
                       <div className="text-xs text-muted truncate max-w-[160px]">{r.productName}</div>
                     </td>
                     <td className="px-3 py-2 text-xs text-muted whitespace-nowrap">{r.colorway} · {r.size}</td>

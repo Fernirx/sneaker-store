@@ -18,7 +18,7 @@ export default function ItemsTab({ order }: { order: OrderInternalResponse }) {
           {order.items.map(item => (
             <tr key={item.id} className="border-b border-line-2 last:border-0">
               <td className="px-4 py-3 font-medium">{item.productName}</td>
-              <td className="px-4 py-3 font-mono text-xs text-muted">{item.variantSku}</td>
+              <td className="px-4 py-3 font-body text-xs text-muted">{item.variantSku}</td>
               <td className="px-4 py-3 text-xs text-muted">{item.variantColor} · {item.variantSize}</td>
               <td className="px-4 py-3 text-right tabular-nums">{item.quantity}</td>
               <td className="px-4 py-3 text-right tabular-nums">{formatPrice(item.unitPrice)}</td>

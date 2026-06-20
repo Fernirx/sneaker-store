@@ -353,7 +353,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                       value={otpCode}
                       onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="000000"
-                      className={`${fieldCls('otpCode')} font-mono text-center tracking-[0.3em]`}
+                      className={`${fieldCls('otpCode')} font-body text-center tracking-[0.3em]`}
                     />
                     <FieldError msg={fieldErrors.otpCode} />
                   </div>

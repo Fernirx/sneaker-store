@@ -62,7 +62,7 @@ export default function EditCouponModal({
         {error && <p className="text-danger text-sm">{error}</p>}
 
         <div className="flex items-center gap-3 py-1 px-3 bg-paper rounded-sm border border-line">
-          <span className="font-mono font-bold text-sm">{coupon.code}</span>
+          <span className="font-body font-bold text-sm">{coupon.code}</span>
           <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded ${
             coupon.discountType === 'PERCENTAGE' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
           }`}>

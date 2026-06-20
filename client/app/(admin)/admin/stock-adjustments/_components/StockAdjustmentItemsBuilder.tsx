@@ -76,7 +76,7 @@ export default function StockAdjustmentItemsBuilder({
               {items.map(it => (
                 <tr key={it.key} className="border-b border-line-2 last:border-0">
                   <td className="px-3 py-2">
-                    <div className="font-mono text-xs font-bold">{it.sku}</div>
+                    <div className="font-body text-xs font-bold">{it.sku}</div>
                     <div className="text-xs text-muted truncate max-w-[160px]">{it.productName}</div>
                   </td>
                   <td className="px-3 py-2 text-xs text-muted whitespace-nowrap">{it.colorway} · {it.size}</td>

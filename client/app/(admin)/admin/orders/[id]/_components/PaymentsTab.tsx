@@ -35,8 +35,8 @@ export default function PaymentsTab({ orderId }: { orderId: number }) {
           <tbody>
             {payments.map(p => (
               <tr key={p.id} className="border-b border-line-2 last:border-0">
-                <td className="px-4 py-3 font-mono text-xs">{p.transactionId ?? '—'}</td>
-                <td className="px-4 py-3 font-mono text-xs text-muted">{p.responseCode ?? '—'}</td>
+                <td className="px-4 py-3 font-body text-xs">{p.transactionId ?? '—'}</td>
+                <td className="px-4 py-3 font-body text-xs text-muted">{p.responseCode ?? '—'}</td>
                 <td className="px-4 py-3 text-right tabular-nums">{formatPrice(p.amount)}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${

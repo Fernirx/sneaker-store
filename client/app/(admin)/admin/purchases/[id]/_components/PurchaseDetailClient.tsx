@@ -17,7 +17,7 @@ function Row({ label, value, mono }: { label: string; value: React.ReactNode; mo
   return (
     <div className="flex justify-between gap-3 text-sm">
       <span className="text-muted shrink-0">{label}:</span>
-      <span className={`text-ink text-right ${mono ? 'font-mono text-xs break-all' : ''}`}>{value}</span>
+      <span className={`text-ink text-right ${mono ? 'font-body text-xs break-all' : ''}`}>{value}</span>
     </div>
   );
 }
@@ -69,7 +69,7 @@ export default function PurchaseDetailClient({
         <div className="flex items-center gap-2 text-sm">
           <Link href="/admin/purchases" className="text-muted hover:text-ink transition-colors">Phiếu nhập hàng</Link>
           <span className="text-muted">/</span>
-          <span className="font-mono font-bold">{purchase.purchaseCode}</span>
+          <span className="font-body font-bold">{purchase.purchaseCode}</span>
           <span className="text-xs text-muted ml-1">— Chỉnh sửa</span>
         </div>
         <EditPurchaseForm
@@ -87,7 +87,7 @@ export default function PurchaseDetailClient({
       <div className="flex items-center gap-2 text-sm">
         <Link href="/admin/purchases" className="text-muted hover:text-ink transition-colors">Phiếu nhập hàng</Link>
         <span className="text-muted">/</span>
-        <span className="font-mono font-bold">{purchase.purchaseCode}</span>
+        <span className="font-body font-bold">{purchase.purchaseCode}</span>
         <span className="text-xs text-muted ml-1">#{purchase.id}</span>
       </div>
 
@@ -181,7 +181,7 @@ export default function PurchaseDetailClient({
             {purchase.items.map(item => (
               <tr key={item.id} className="border-b border-line-2 last:border-0">
                 <td className="px-4 py-3">
-                  <div className="font-mono text-xs font-bold">{item.sku}</div>
+                  <div className="font-body text-xs font-bold">{item.sku}</div>
                   <div className="text-xs text-muted">{item.productName}</div>
                 </td>
                 <td className="px-4 py-3 text-xs text-muted">{item.colorway} · {item.size}</td>

@@ -66,7 +66,7 @@ export default function StockAdjustmentDetailClient({
         <div className="flex items-center gap-2 text-sm">
           <Link href="/admin/stock-adjustments" className="text-muted hover:text-ink transition-colors">Điều chỉnh kho</Link>
           <span className="text-muted">/</span>
-          <span className="font-mono font-bold">{adjustment.code}</span>
+          <span className="font-body font-bold">{adjustment.code}</span>
           <span className="text-xs text-muted ml-1">— Chỉnh sửa</span>
         </div>
         <EditStockAdjustmentForm
@@ -85,7 +85,7 @@ export default function StockAdjustmentDetailClient({
       <div className="flex items-center gap-2 text-sm">
         <Link href="/admin/stock-adjustments" className="text-muted hover:text-ink transition-colors">Điều chỉnh kho</Link>
         <span className="text-muted">/</span>
-        <span className="font-mono font-bold">{adjustment.code}</span>
+        <span className="font-body font-bold">{adjustment.code}</span>
         <span className="text-xs text-muted ml-1">#{adjustment.id}</span>
       </div>
 
@@ -172,7 +172,7 @@ export default function StockAdjustmentDetailClient({
             {adjustment.items.map(item => (
               <tr key={item.id} className="border-b border-line-2 last:border-0">
                 <td className="px-4 py-3">
-                  <div className="font-mono text-xs font-bold">{item.sku}</div>
+                  <div className="font-body text-xs font-bold">{item.sku}</div>
                   <div className="text-xs text-muted">{item.productName}</div>
                 </td>
                 <td className="px-4 py-3 text-xs text-muted">{item.colorway} · {item.size}</td>

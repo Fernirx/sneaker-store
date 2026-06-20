@@ -65,7 +65,7 @@ export default function ImageUpload({
           {uploading ? 'Đang tải...' : value ? 'Đổi ảnh' : 'Chọn ảnh'}
         </button>
         {value && (
-          <span className="font-mono text-[10px] text-muted truncate max-w-[180px]">{value}</span>
+          <span className="font-body text-[10px] text-muted truncate max-w-[180px]">{value}</span>
         )}
       </div>
       {error && <p className="text-danger text-xs">{error}</p>}

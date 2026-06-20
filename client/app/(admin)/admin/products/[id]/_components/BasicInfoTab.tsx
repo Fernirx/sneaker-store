@@ -105,13 +105,13 @@ export default function BasicInfoTab({
             Mã sản phẩm <span className="text-danger">*</span>
           </label>
           <input value={form.code} onChange={e => set('code', e.target.value)} disabled={ro}
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink disabled:bg-paper" />
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink disabled:bg-paper" />
           {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
         </div>
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Mã style</label>
           <input value={form.styleCode} onChange={e => set('styleCode', e.target.value)} disabled={ro}
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink disabled:bg-paper" />
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink disabled:bg-paper" />
         </div>
       </div>
 

@@ -134,7 +134,7 @@ export default function CouponsClient({
             ) : (
               pageData.data.map(coupon => (
                 <tr key={coupon.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-mono font-bold text-sm">{coupon.code}</td>
+                  <td className="px-4 py-3 font-body font-bold text-sm">{coupon.code}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       coupon.discountType === 'PERCENTAGE'

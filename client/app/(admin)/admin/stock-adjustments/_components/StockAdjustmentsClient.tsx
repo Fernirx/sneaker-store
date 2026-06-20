@@ -148,7 +148,7 @@ export default function StockAdjustmentsClient({ initialData }: { initialData: P
             ) : (
               adjustments.map(a => (
                 <tr key={a.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-mono font-bold text-sm">{a.code}</td>
+                  <td className="px-4 py-3 font-body font-bold text-sm">{a.code}</td>
                   <td className="px-4 py-3 text-sm">{TYPE_LABELS[a.type]}</td>
                   <td className="px-4 py-3 text-xs text-muted truncate max-w-[240px]">{a.reason}</td>
                   <td className="px-4 py-3">

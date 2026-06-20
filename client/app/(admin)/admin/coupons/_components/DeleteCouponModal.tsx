@@ -35,7 +35,7 @@ export default function DeleteCouponModal({
       <div className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
         <p className="text-sm">
-          Bạn có chắc muốn xóa coupon <span className="font-bold font-mono">{coupon.code}</span>?
+          Bạn có chắc muốn xóa coupon <span className="font-bold font-body">{coupon.code}</span>?
         </p>
         <p className="text-xs text-muted">
           Thao tác này không thể hoàn tác. Lịch sử sử dụng liên quan cũng sẽ bị xóa.

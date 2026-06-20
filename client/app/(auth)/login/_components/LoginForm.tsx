@@ -198,7 +198,7 @@ export default function LoginForm() {
                   value={otp}
                   onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
-                  className="w-full border border-line rounded px-3 py-2.5 font-mono text-center text-xl tracking-[0.4em] focus:outline-none focus:border-ink transition-colors"
+                  className="w-full border border-line rounded px-3 py-2.5 font-body text-center text-xl tracking-[0.4em] focus:outline-none focus:border-ink transition-colors"
                 />
               </div>
               {generalError && <p className="text-sm text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2">{generalError}</p>}

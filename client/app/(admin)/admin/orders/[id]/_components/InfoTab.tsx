@@ -12,7 +12,7 @@ function Row({ label, value, mono }: { label: string; value: React.ReactNode; mo
   return (
     <div className="flex justify-between gap-3 text-sm">
       <span className="text-muted shrink-0">{label}:</span>
-      <span className={`text-ink text-right ${mono ? 'font-mono text-xs break-all' : ''}`}>{value}</span>
+      <span className={`text-ink text-right ${mono ? 'font-body text-xs break-all' : ''}`}>{value}</span>
     </div>
   );
 }

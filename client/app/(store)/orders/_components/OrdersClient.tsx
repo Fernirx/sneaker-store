@@ -90,7 +90,7 @@ export default function OrdersClient({ isLoggedIn }: { isLoggedIn: boolean }) {
             className="block border border-line rounded-sm p-4 hover:border-ink transition-colors"
           >
             <div className="flex items-center justify-between gap-3 mb-2">
-              <span className="font-mono font-bold text-[13px] text-ink">{order.code}</span>
+              <span className="font-body font-bold text-[13px] text-ink">{order.code}</span>
               <StatusBadge status={order.status} />
             </div>
             <div className="flex items-center justify-between text-[12px] text-muted">

@@ -29,7 +29,7 @@ export default function OrderDetailClient({ order: initialOrder }: { order: Orde
           Đơn hàng
         </Link>
         <span className="text-muted">/</span>
-        <span className="font-mono font-bold">{order.code}</span>
+        <span className="font-body font-bold">{order.code}</span>
         <span className="text-xs text-muted ml-1">#{order.id}</span>
       </div>
 

@@ -127,7 +127,7 @@ export default function SuppliersClient({
             ) : (
               pageData.data.map(supplier => (
                 <tr key={supplier.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-mono font-bold text-sm">{supplier.code}</td>
+                  <td className="px-4 py-3 font-body font-bold text-sm">{supplier.code}</td>
                   <td className="px-4 py-3 font-semibold">{supplier.name}</td>
                   <td className="px-4 py-3 text-xs text-muted">
                     {supplier.contactPerson ?? '—'}

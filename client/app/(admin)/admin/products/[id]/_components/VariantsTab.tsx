@@ -80,7 +80,7 @@ function VariantForm({
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Mã colorway</label>
           <input value={form.colorwayCode} onChange={e => s('colorwayCode', e.target.value)}
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink" />
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
         </div>
       </div>
 
@@ -91,7 +91,7 @@ function VariantForm({
             <input type="color" value={form.colorHex} onChange={e => s('colorHex', e.target.value)}
               className="w-10 h-9 border border-line rounded-sm cursor-pointer p-0.5" />
             <input value={form.colorHex} onChange={e => s('colorHex', e.target.value)} maxLength={7}
-              className="flex-1 border border-line rounded-sm px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink" />
+              className="flex-1 border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
           </div>
         </div>
         <div>
@@ -113,7 +113,7 @@ function VariantForm({
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">SKU <span className="text-danger">*</span></label>
           <input value={form.sku} onChange={e => s('sku', e.target.value)} required
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink" />
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
           {fieldErrors.sku && <p className="text-danger text-xs mt-1">{fieldErrors.sku}</p>}
         </div>
       </div>
