@@ -51,7 +51,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   const initialData: PageData =
     productsRes.status === 'fulfilled'
       ? productsRes.value.data
-      : { data: [], page: 0, size: 20, totalElements: 0, totalPages: 0 };
+      : { data: [], meta: { page: 0, size: 20, totalElements: 0, totalPages: 0, last: true } };
 
   const brands = brandsRes.status === 'fulfilled' ? (brandsRes.value.data.data ?? []) : [];
   const categories: CategoryBrief[] =

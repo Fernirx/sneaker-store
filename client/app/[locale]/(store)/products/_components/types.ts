@@ -26,12 +26,17 @@ export interface ProductResponse {
   colors: ColorSwatch[];
 }
 
-export interface PageData {
-  data: ProductResponse[];
+export interface PageMeta {
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
+  last: boolean;
+}
+
+export interface PageData {
+  data: ProductResponse[];
+  meta: PageMeta;
 }
 
 export interface CategoryBrief {

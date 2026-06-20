@@ -200,7 +200,7 @@ export default function SlugProductsClient({
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <p className="text-xs text-muted">{t('totalItems', { count: pageData.totalElements })}</p>
+        <p className="text-xs text-muted">{t('totalItems', { count: pageData.meta.totalElements })}</p>
         <div className="flex items-center gap-3">
           <input type="text" value={pendingSearch} onChange={e => handleSearchChange(e.target.value)}
             placeholder="Search..."
@@ -249,14 +249,14 @@ export default function SlugProductsClient({
             </div>
           )}
 
-          {pageData.totalPages > 1 && (
+          {pageData.meta.totalPages > 1 && (
             <div className="mt-10 flex items-center justify-center gap-3">
               <button disabled={currentPage === 0} onClick={() => setCurrentPage(p => p - 1)}
                 className="px-4 py-2 border border-line rounded-sm text-sm font-bold disabled:opacity-40 hover:bg-paper transition-colors">
                 {t('prev')}
               </button>
-              <span className="text-sm text-muted">{currentPage + 1} / {pageData.totalPages}</span>
-              <button disabled={currentPage >= pageData.totalPages - 1} onClick={() => setCurrentPage(p => p + 1)}
+              <span className="text-sm text-muted">{currentPage + 1} / {pageData.meta.totalPages}</span>
+              <button disabled={pageData.meta.last} onClick={() => setCurrentPage(p => p + 1)}
                 className="px-4 py-2 border border-line rounded-sm text-sm font-bold disabled:opacity-40 hover:bg-paper transition-colors">
                 {t('next')}
               </button>

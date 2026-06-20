@@ -308,7 +308,7 @@ export default function ProductsClient({
         {/* Main */}
         <div className="flex-1 min-w-0">
           <p className="text-xs text-muted mb-4">
-            {t('totalItems', { count: pageData.totalElements })}
+            {t('totalItems', { count: pageData.meta.totalElements })}
           </p>
 
           {pageData.data.length === 0 ? (
@@ -326,7 +326,7 @@ export default function ProductsClient({
           )}
 
           {/* Pagination */}
-          {pageData.totalPages > 1 && (
+          {pageData.meta.totalPages > 1 && (
             <div className="mt-10 flex items-center justify-center gap-3">
               <button
                 disabled={currentPage === 0}
@@ -336,10 +336,10 @@ export default function ProductsClient({
                 {t('prev')}
               </button>
               <span className="text-sm text-muted">
-                {currentPage + 1} / {pageData.totalPages}
+                {currentPage + 1} / {pageData.meta.totalPages}
               </span>
               <button
-                disabled={currentPage >= pageData.totalPages - 1}
+                disabled={pageData.meta.last}
                 onClick={() => setCurrentPage(p => p + 1)}
                 className="px-4 py-2 border border-line rounded-sm text-sm font-bold disabled:opacity-40 hover:bg-paper transition-colors"
               >
