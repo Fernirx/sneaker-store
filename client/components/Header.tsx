@@ -71,7 +71,7 @@ export default async function Header() {
 
         {/* Search bar — desktop */}
         <Link href="/search"
-          className="flex-1 max-w-sm hidden md:flex items-center gap-2 border border-line rounded px-3 py-2 text-sm text-muted hover:border-ink transition-colors">
+          className="flex max-w-sm hidden md:flex items-center gap-2 border border-line rounded px-3 py-2 text-sm text-muted hover:border-ink transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
