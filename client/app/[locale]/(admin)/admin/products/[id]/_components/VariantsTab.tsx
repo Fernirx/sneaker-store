@@ -349,7 +349,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
                     </td>
                     <td className="px-4 py-2.5 text-xs">{v.sku}</td>
                     <td className="px-4 py-2.5 text-muted">
-                      {v.price != null ? new Intl.NumberFormat('vi-VN').format(v.price) : '—'}
+                      {v.price != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.price) : '—'}
                     </td>
                     <td className="px-4 py-2.5">
                       <span className={v.stockQuantity <= v.minStockLevel ? 'text-danger font-bold' : ''}>
