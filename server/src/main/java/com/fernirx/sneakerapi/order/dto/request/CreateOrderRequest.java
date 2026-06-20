@@ -1,6 +1,7 @@
 package com.fernirx.sneakerapi.order.dto.request;
 
 import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
+import com.fernirx.sneakerapi.common.annotation.ValidName;
 import com.fernirx.sneakerapi.common.annotation.ValidPhone;
 import com.fernirx.sneakerapi.order.enums.PaymentMethod;
 import jakarta.validation.constraints.Email;
@@ -11,6 +12,7 @@ import jakarta.validation.constraints.Size;
 public record CreateOrderRequest(
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 200, message = "{validation.size.max}")
+        @ValidName
         String recipientName,
 
         @NotBlank(message = "{validation.field.not_blank}")

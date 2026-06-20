@@ -1,6 +1,8 @@
 package com.fernirx.sneakerapi.user.dto.request;
 
 import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
+import com.fernirx.sneakerapi.common.annotation.ValidName;
+import com.fernirx.sneakerapi.common.annotation.ValidPhone;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 
@@ -9,14 +11,15 @@ import java.time.LocalDate;
 public record UpdateProfileRequest(
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
+        @ValidName(allowNull = true)
         String firstName,
 
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
+        @ValidName(allowNull = true)
         String lastName,
 
-        @NullableNotBlank
-        @Size(max = 20, message = "{validation.size.max}")
+        @ValidPhone(allowNull = true)
         String phone,
 
         @Past(message = "{validation.date.past}")

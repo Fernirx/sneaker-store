@@ -1,6 +1,8 @@
 package com.fernirx.sneakerapi.customer.dto.request;
 
 import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
+import com.fernirx.sneakerapi.common.annotation.ValidName;
+import com.fernirx.sneakerapi.common.annotation.ValidPhone;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -8,10 +10,10 @@ import jakarta.validation.constraints.Size;
 public record CreateAddressRequest(
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 200, message = "{validation.size.max}")
+        @ValidName
         String name,
 
-        @NotBlank(message = "{validation.field.not_blank}")
-        @Size(max = 20, message = "{validation.size.max}")
+        @ValidPhone
         String phone,
 
         @NotBlank(message = "{validation.field.not_blank}")

@@ -4,6 +4,7 @@ import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
 import com.fernirx.sneakerapi.common.annotation.PasswordConfirmable;
 import com.fernirx.sneakerapi.common.annotation.PasswordMatches;
 import com.fernirx.sneakerapi.common.annotation.StrongPassword;
+import com.fernirx.sneakerapi.common.annotation.ValidName;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -27,9 +28,11 @@ public record RegisterRequest(
 
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
+        @ValidName(allowNull = true)
         String firstName,
 
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
+        @ValidName(allowNull = true)
         String lastName
 ) implements PasswordConfirmable {}
