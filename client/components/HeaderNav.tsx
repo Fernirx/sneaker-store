@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import Link from 'next/link';
 
 interface BrandItem {
   id: number;
@@ -26,7 +25,6 @@ function ChevronDown() {
 }
 
 export default function HeaderNav({ brands, categories }: { brands: BrandItem[]; categories: CategoryItem[] }) {
-  const t = useTranslations('header');
   const [open, setOpen] = useState<'brands' | 'categories' | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -49,14 +47,14 @@ export default function HeaderNav({ brands, categories }: { brands: BrandItem[];
         href="/products"
         className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted hover:text-ink transition-colors rounded"
       >
-        {t('navProducts')}
+        {"Sản phẩm"}
       </Link>
 
       {/* Brands dropdown */}
       {brands.length > 0 && (
         <div className="relative" onMouseEnter={() => enter('brands')} onMouseLeave={leave}>
           <button className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted hover:text-ink transition-colors rounded">
-            {t('navBrands')}
+            {"Thương hiệu"}
             <ChevronDown />
           </button>
 
@@ -65,7 +63,7 @@ export default function HeaderNav({ brands, categories }: { brands: BrandItem[];
               {brands.map(b => (
                 <Link
                   key={b.id}
-                  href={`/brands/${b.slug}/products` as never}
+                  href={`/brands/${b.slug}/products`}
                   className="block px-4 py-2 text-sm font-medium text-muted hover:text-ink hover:bg-paper transition-colors"
                   onClick={() => setOpen(null)}
                 >
@@ -81,7 +79,7 @@ export default function HeaderNav({ brands, categories }: { brands: BrandItem[];
       {categories.length > 0 && (
         <div className="relative" onMouseEnter={() => enter('categories')} onMouseLeave={leave}>
           <button className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted hover:text-ink transition-colors rounded">
-            {t('navCategories')}
+            {"Danh mục"}
             <ChevronDown />
           </button>
 
@@ -93,7 +91,7 @@ export default function HeaderNav({ brands, categories }: { brands: BrandItem[];
                   <div key={parent.id}>
                     {i > 0 && <div className="my-1 mx-3 border-t border-line" />}
                     <Link
-                      href={`/categories/${parent.slug}/products` as never}
+                      href={`/categories/${parent.slug}/products`}
                       className="block px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-ink hover:text-accent transition-colors"
                       onClick={() => setOpen(null)}
                     >
@@ -102,7 +100,7 @@ export default function HeaderNav({ brands, categories }: { brands: BrandItem[];
                     {children.map(child => (
                       <Link
                         key={child.id}
-                        href={`/categories/${child.slug}/products` as never}
+                        href={`/categories/${child.slug}/products`}
                         className="block pl-7 pr-4 py-1.5 text-sm text-muted hover:text-ink hover:bg-paper transition-colors"
                         onClick={() => setOpen(null)}
                       >

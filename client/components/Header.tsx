@@ -1,11 +1,8 @@
-import { getTranslations } from 'next-intl/server';
-import { cookies } from 'next/headers';
-import { Link } from '@/i18n/routing';
+import Link from 'next/link';
 import { getSession } from '@/lib/session';
 import { createServerAxios, publicAxios } from '@/lib/axios/serverAxios';
 import HeaderActions from './HeaderActions';
 import HeaderNav from './HeaderNav';
-import LanguageSwitcher from './LanguageSwitcher';
 
 interface ProfileResponse {
   firstName: string;
@@ -28,10 +25,9 @@ interface RawCategory {
   name: string;
   slug: string;
   parentId: number | null;
-  translations?: { locale: string; name: string }[];
 }
 
-async function getNavData(locale: string) {
+async function getNavData() {
   const [brandsRes, catsRes] = await Promise.allSettled([
     publicAxios.get('/brands?page=0&size=50&sort=name,asc'),
     publicAxios.get('/categories?page=0&size=50&sort=displayOrder,asc'),
@@ -46,15 +42,13 @@ async function getNavData(locale: string) {
       id: c.id,
       slug: c.slug,
       parentId: c.parentId,
-      name: c.translations?.find(t => t.locale === locale)?.name ?? c.name,
+      name: c.name,
     })),
   };
 }
 
 export default async function Header() {
-  const store = await cookies();
-  const locale = store.get('NEXT_LOCALE')?.value ?? 'vi';
-  const [session, t, nav] = await Promise.all([getSession(), getTranslations('header'), getNavData(locale)]);
+  const [session, nav] = await Promise.all([getSession(), getNavData()]);
   const profile = session ? await getProfile() : null;
 
   return (
@@ -75,7 +69,7 @@ export default async function Header() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <span className="text-xs">{t('searchPlaceholder')}</span>
+          <span className="text-xs">{"Tìm kiếm sản phẩm..."}</span>
         </Link>
 
         <div className="flex-1" />
@@ -92,9 +86,6 @@ export default async function Header() {
           firstName={profile?.firstName}
           avatarPublicId={profile?.avatarPublicId}
         />
-
-        <div className="hidden sm:block w-px h-4 bg-line mx-1" />
-        <LanguageSwitcher />
       </div>
     </header>
   );

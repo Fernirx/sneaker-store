@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useTranslations } from 'next-intl';
 import clientAxios from '@/lib/axios/clientAxios';
 import { getGuestToken, saveGuestToken, clearGuestToken, guestHeaders } from '@/lib/guestToken';
 
@@ -115,7 +114,6 @@ export function CartProvider({
   children: React.ReactNode;
   isLoggedIn: boolean;
 }) {
-  const t = useTranslations('cart');
   const [cart, setCart] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [adjustments, setAdjustments] = useState<CartAdjustment[]>([]);
@@ -228,7 +226,7 @@ export function CartProvider({
         <AdjustmentToast
           adjustments={adjustments}
           onDismiss={dismissOne}
-          getMsg={(adj) => t('adjusted', { name: adj.productName, from: adj.from, to: adj.to })}
+          getMsg={(adj) => `Số lượng ${adj.productName} đã được điều chỉnh từ ${adj.from} xuống ${adj.to} do hàng có hạn.`}
         />,
         document.body,
       )}

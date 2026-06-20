@@ -1,9 +1,6 @@
-import createIntlMiddleware from 'next-intl/middleware';
 import { type NextRequest, NextResponse } from 'next/server';
-import { routing } from './i18n/routing';
 import { isStaffRole } from './lib/constants';
 
-const intl = createIntlMiddleware(routing);
 const isProd = process.env.NODE_ENV === 'production';
 
 function decodeJwt(token: string) {
@@ -49,8 +46,8 @@ async function tryRefresh(refreshToken: string) {
   }
 }
 
-const ADMIN_RE = /^(?:\/en)?\/admin(?:\/|$)/;
-const AUTH_RE  = /^(?:\/en)?\/(?:login|register)(?:\/|$)/;
+const ADMIN_RE = /^\/admin(?:\/|$)/;
+const AUTH_RE  = /^\/(?:login|register)(?:\/|$)/;
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -60,8 +57,8 @@ export default async function middleware(req: NextRequest) {
   const accessCookie = req.cookies.get('access_token')?.value;
   const refreshCookie = req.cookies.get('refresh_token')?.value;
 
-  let payload = accessCookie ? decodeJwt(accessCookie) : null;
-  let isLoggedIn = !!payload && Date.now() / 1000 < (payload.exp ?? 0);
+  const payload = accessCookie ? decodeJwt(accessCookie) : null;
+  const isLoggedIn = !!payload && Date.now() / 1000 < (payload.exp ?? 0);
 
   // Access token hết hạn → refresh → redirect cùng URL để browser gửi lại request với cookie mới
   if (!isLoggedIn && refreshCookie) {
@@ -77,20 +74,18 @@ export default async function middleware(req: NextRequest) {
   const isAdmin = isStaffRole(roles);
 
   if (AUTH_RE.test(pathname) && isLoggedIn) {
-    const base = pathname.startsWith('/en') ? '/en' : '';
-    return NextResponse.redirect(new URL(isAdmin ? `${base}/admin` : `${base}/`, req.url));
+    return NextResponse.redirect(new URL(isAdmin ? '/admin' : '/', req.url));
   }
 
   if (ADMIN_RE.test(pathname) && !isLoggedIn) {
-    const base = pathname.startsWith('/en') ? '/en' : '';
-    return NextResponse.redirect(new URL(`${base}/login`, req.url));
+    return NextResponse.redirect(new URL('/login', req.url));
   }
 
   if (ADMIN_RE.test(pathname) && isLoggedIn && !isAdmin) {
     return NextResponse.redirect(new URL('/', req.url));
   }
 
-  return intl(req) as NextResponse;
+  return NextResponse.next();
 }
 
 export const config = {

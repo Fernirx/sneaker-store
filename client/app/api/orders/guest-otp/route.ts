@@ -4,9 +4,8 @@ import { publicAxios } from '@/lib/axios/serverAxios';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const locale = req.cookies.get('NEXT_LOCALE')?.value ?? 'vi';
   try {
-    const { data } = await publicAxios.post('/orders/guest/otp', body, { headers: { 'Accept-Language': locale } });
+    const { data } = await publicAxios.post('/orders/guest/otp', body);
     return NextResponse.json(data);
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {

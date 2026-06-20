@@ -1,5 +1,4 @@
-import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/routing';
+import Link from 'next/link';
 
 const SOCIALS = [
   {
@@ -20,32 +19,30 @@ const SOCIALS = [
 ];
 
 export default async function Footer() {
-  const t = await getTranslations('footer');
-
   const LINKS = [
     {
-      title: t('colBrand'),
+      title: "Về STRIDE",
       items: [
-        { label: t('about'), href: '/about' },
-        { label: t('careers'), href: '/careers' },
-        { label: t('news'), href: '/news' },
+        { label: "Giới thiệu", href: '/about' },
+        { label: "Tuyển dụng", href: '/careers' },
+        { label: "Tin tức", href: '/news' },
       ],
     },
     {
-      title: t('colSupport'),
+      title: "Hỗ trợ",
       items: [
-        { label: t('buyingGuide'), href: '/help/buying' },
-        { label: t('returns'), href: '/help/returns' },
-        { label: t('tracking'), href: '/help/tracking' },
-        { label: t('contact'), href: '/contact' },
+        { label: "Hướng dẫn mua hàng", href: '/help/buying' },
+        { label: "Đổi trả & Bảo hành", href: '/help/returns' },
+        { label: "Tra cứu đơn hàng", href: '/help/tracking' },
+        { label: "Liên hệ", href: '/contact' },
       ],
     },
     {
-      title: t('colLegal'),
+      title: "Chính sách",
       items: [
-        { label: t('terms'), href: '/legal/terms' },
-        { label: t('privacy'), href: '/legal/privacy' },
-        { label: t('cookies'), href: '/legal/cookies' },
+        { label: "Điều khoản dịch vụ", href: '/legal/terms' },
+        { label: "Bảo mật thông tin", href: '/legal/privacy' },
+        { label: "Chính sách Cookie", href: '/legal/cookies' },
       ],
     },
   ];
@@ -64,7 +61,7 @@ export default async function Footer() {
                 <span className="font-display font-black text-xl uppercase tracking-tight">STRIDE</span>
               </div>
               <p className="text-white/50 text-sm leading-relaxed max-w-xs">
-                {t('tagline')}
+                {"Tiên phong trong văn hóa sneaker đường phố. Khám phá những đôi giày độc quyền và giới hạn."}
               </p>
               <div className="flex items-center gap-3">
                 {SOCIALS.map(s => (
