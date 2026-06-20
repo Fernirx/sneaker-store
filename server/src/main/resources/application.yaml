@@ -46,6 +46,10 @@ spring:
       enabled: true
       force: true
 
+  mvc:
+    locale: vi
+    locale-resolver: fixed
+
 server:
   port: ${SERVER_PORT:8080}
   servlet:

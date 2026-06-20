@@ -2,16 +2,13 @@ package com.fernirx.sneakerapi.collection.service.impl;
 
 import com.fernirx.sneakerapi.collection.dto.request.CollectionFilterRequest;
 import com.fernirx.sneakerapi.collection.dto.request.CreateCollectionRequest;
-import com.fernirx.sneakerapi.collection.dto.request.TranslationRequest;
 import com.fernirx.sneakerapi.collection.dto.request.UpdateCollectionRequest;
 import com.fernirx.sneakerapi.collection.dto.response.CollectionInternalResponse;
 import com.fernirx.sneakerapi.collection.dto.response.CollectionResponse;
 import com.fernirx.sneakerapi.collection.entity.Collection;
-import com.fernirx.sneakerapi.collection.entity.CollectionTranslation;
 import com.fernirx.sneakerapi.collection.mapper.CollectionMapper;
 import com.fernirx.sneakerapi.collection.repository.CollectionRepository;
 import com.fernirx.sneakerapi.collection.repository.CollectionSpec;
-import com.fernirx.sneakerapi.collection.repository.CollectionTranslationRepository;
 import com.fernirx.sneakerapi.collection.service.CollectionService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.github.slugify.Slugify;
@@ -21,14 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class CollectionServiceImpl implements CollectionService {
     private final CollectionRepository collectionRepository;
-    private final CollectionTranslationRepository collectionTranslationRepository;
     private final CollectionMapper collectionMapper;
     private final Slugify slugify;
 
@@ -78,10 +72,6 @@ public class CollectionServiceImpl implements CollectionService {
         collection.setEndDate(request.endDate());
         collection.setActive(true);
         Collection saved = collectionRepository.save(collection);
-
-        if (request.translations() != null) {
-            saveTranslations(saved, request.translations());
-        }
         return collectionMapper.toInternalResponse(collectionRepository.findById(saved.getId()).orElseThrow());
     }
 
@@ -95,10 +85,6 @@ public class CollectionServiceImpl implements CollectionService {
         }
         collectionMapper.updateCollection(request, collection);
         collectionRepository.save(collection);
-        if (request.translations() != null) {
-            collectionTranslationRepository.deleteByCollectionId(id);
-            saveTranslations(collection, request.translations());
-        }
         return collectionMapper.toInternalResponse(collectionRepository.findById(id).orElseThrow());
     }
 
@@ -115,24 +101,6 @@ public class CollectionServiceImpl implements CollectionService {
     @Override
     public void deleteCollection(Long id) {
         collectionRepository.delete(findById(id));
-    }
-
-    private void saveTranslations(Collection collection, List<TranslationRequest> translations) {
-        long distinctCount = translations.stream()
-                .map(TranslationRequest::locale)
-                .distinct()
-                .count();
-        if (distinctCount < translations.size()) {
-            throw BusinessException.bad("label.locale");
-        }
-        translations.forEach(t -> {
-            CollectionTranslation translation = new CollectionTranslation();
-            translation.setCollection(collection);
-            translation.setLocale(t.locale());
-            translation.setName(t.name());
-            translation.setDescription(t.description());
-            collectionTranslationRepository.save(translation);
-        });
     }
 
     private String generateUniqueSlug(String name) {

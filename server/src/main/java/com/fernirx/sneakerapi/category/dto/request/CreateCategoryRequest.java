@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.util.List;
-
 public record CreateCategoryRequest(
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
@@ -22,7 +20,5 @@ public record CreateCategoryRequest(
         @NotNull(message = "{validation.field.not_blank}")
         Integer displayOrder,
 
-        Long parentId,
-
-        List<TranslationRequest> translations
+        Long parentId
 ) {}

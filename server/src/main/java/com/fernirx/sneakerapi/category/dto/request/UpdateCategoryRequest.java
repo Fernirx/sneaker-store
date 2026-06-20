@@ -3,8 +3,6 @@ package com.fernirx.sneakerapi.category.dto.request;
 import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.List;
-
 public record UpdateCategoryRequest(
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
@@ -19,7 +17,5 @@ public record UpdateCategoryRequest(
 
         Integer displayOrder,
 
-        Boolean active,
-
-        List<TranslationRequest> translations
+        Boolean active
 ) {}

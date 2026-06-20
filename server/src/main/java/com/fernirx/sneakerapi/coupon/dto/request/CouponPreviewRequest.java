@@ -11,6 +11,6 @@ public record CouponPreviewRequest(
         String code,
 
         @NotNull(message = "{validation.field.not_blank}")
-        @Positive
+        @Positive(message = "{validation.number.positive}")
         BigDecimal orderAmount
 ) {}

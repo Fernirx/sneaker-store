@@ -10,19 +10,19 @@ public record UpdateCouponRequest(
         @NullableNotBlank
         String description,
 
-        @Positive
+        @Positive(message = "{validation.number.positive}")
         BigDecimal discountValue,
 
-        @Positive
+        @Positive(message = "{validation.number.positive}")
         BigDecimal minOrderAmount,
 
-        @Positive
+        @Positive(message = "{validation.number.positive}")
         BigDecimal maxDiscountAmount,
 
-        @Positive
+        @Positive(message = "{validation.number.positive}")
         Integer usageLimit,
 
-        @Positive
+        @Positive(message = "{validation.number.positive}")
         Integer userUsageLimit,
 
         LocalDateTime startDate,

@@ -52,8 +52,5 @@ public class Collection extends BaseAuditEntity {
     private Boolean active;
 
     @OneToMany(mappedBy = "collection")
-    private Set<CollectionTranslation> collectionTranslations = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "collection")
     private Set<ProductCollection> productCollections = new LinkedHashSet<>();
 }

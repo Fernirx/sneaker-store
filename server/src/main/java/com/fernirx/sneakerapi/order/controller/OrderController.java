@@ -32,7 +32,7 @@ public class OrderController {
     @Operation(summary = "Gửi OTP xác minh email cho guest đặt hàng")
     public ResponseEntity<SuccessResponse<Void>> sendGuestOtp(@Valid @RequestBody GuestOtpRequest request) {
         orderService.sendGuestOtp(request.email());
-        return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.auth.resend_otp")));
+        return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.order.guest_otp_sent")));
     }
 
     @PostMapping

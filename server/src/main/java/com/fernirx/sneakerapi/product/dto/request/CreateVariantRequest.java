@@ -9,10 +9,10 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
 public record CreateVariantRequest(
-        @NotNull
+        @NotNull(message = "{validation.field.not_blank}")
         Short size,
 
-        @NotNull
+        @NotNull(message = "{validation.field.not_blank}")
         ShoeWidth shoeWidth,
 
         @NotBlank(message = "{validation.field.not_blank}")
@@ -33,7 +33,7 @@ public record CreateVariantRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String sku,
 
-        @NotNull
+        @NotNull(message = "{validation.field.not_blank}")
         Integer stockQuantity,
 
         Integer minStockLevel,

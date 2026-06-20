@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
 public record CreateProductRequest(
-        @NotNull
+        @NotNull(message = "{validation.field.not_blank}")
         Long brandId,
 
         @NotBlank(message = "{validation.field.not_blank}")
@@ -26,7 +26,7 @@ public record CreateProductRequest(
         @Size(max = 255, message = "{validation.size.max}")
         String name,
 
-        @NotNull
+        @NotNull(message = "{validation.field.not_blank}")
         Gender gender,
 
         @NullableNotBlank
@@ -44,7 +44,7 @@ public record CreateProductRequest(
 
         ShaftStyle shaftStyle,
 
-        @NotNull
+        @NotNull(message = "{validation.field.not_blank}")
         BigDecimal basePrice,
 
         BigDecimal originalPrice,
