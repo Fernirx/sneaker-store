@@ -264,7 +264,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       const order = orderRes.data;
 
       if (paymentMethod === 'VNPAY') {
-        const { data: payRes } = await clientAxios.post('/api/payment', { orderId: order.id });
+        const { data: payRes } = await clientAxios.post('/api/payment', { orderId: order.id }, { headers: guestHeaders() });
         window.location.href = payRes.data;
       } else {
         router.push(`/orders/${order.id}`);
