@@ -9,6 +9,8 @@ import com.fernirx.sneakerapi.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+
 public interface CustomerService {
     void initCustomer(User user);
     Customer getOrCreateByUserId(Long userId);
@@ -17,4 +19,5 @@ public interface CustomerService {
     CustomerInternalResponse getCustomerById(Long id);
     CustomerInternalResponse updateCustomer(Long id, UpdateCustomerRequest request);
     void deleteCustomer(Long id);
+    void earnFromOrder(Long customerId, BigDecimal earnedAmount);
 }

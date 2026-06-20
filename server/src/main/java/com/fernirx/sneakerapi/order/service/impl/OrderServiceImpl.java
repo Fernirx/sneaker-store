@@ -277,6 +277,11 @@ public class OrderServiceImpl implements OrderService {
         history.setNewStatus(newStatus);
         history.setNote(note);
         orderStatusHistoryRepository.save(history);
+
+        if (newStatus == OrderStatus.DELIVERED && oldStatus != OrderStatus.DELIVERED && order.getCustomer() != null) {
+            BigDecimal earnedAmount = order.getSubtotal().subtract(order.getDiscountAmount());
+            customerService.earnFromOrder(order.getCustomer().getId(), earnedAmount);
+        }
     }
 
     @Override

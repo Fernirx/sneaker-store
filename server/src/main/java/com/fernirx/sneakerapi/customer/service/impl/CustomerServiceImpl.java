@@ -1,6 +1,7 @@
 package com.fernirx.sneakerapi.customer.service.impl;
 
 import com.fernirx.sneakerapi.common.exception.BusinessException;
+import com.fernirx.sneakerapi.customer.config.CustomerProperties;
 import com.fernirx.sneakerapi.customer.dto.request.UpdateCustomerRequest;
 import com.fernirx.sneakerapi.customer.dto.request.CustomerFilterRequest;
 import com.fernirx.sneakerapi.customer.dto.response.CustomerInternalResponse;
@@ -28,6 +29,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final UserRepository userRepository;
+    private final CustomerProperties customerProperties;
 
     @Override
     public Customer getOrCreateByUserId(Long userId) {
@@ -88,5 +90,31 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
         customerRepository.delete(customer);
+    }
+
+    @Override
+    public void earnFromOrder(Long customerId, BigDecimal earnedAmount) {
+        if (earnedAmount == null || earnedAmount.signum() <= 0) return;
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> BusinessException.notFound("label.customer"));
+
+        long earnedPoints = earnedAmount.divideToIntegralValue(customerProperties.getPointsPerAmount()).longValue();
+        customer.setLoyaltyPoints(customer.getLoyaltyPoints() + earnedPoints);
+        customer.setTotalSpent(customer.getTotalSpent().add(earnedAmount));
+
+        MembershipTier naturalTier = resolveTier(customer.getTotalSpent());
+        if (naturalTier.ordinal() > customer.getMembershipTier().ordinal()) {
+            customer.setMembershipTier(naturalTier);
+        }
+
+        customerRepository.save(customer);
+    }
+
+    private MembershipTier resolveTier(BigDecimal totalSpent) {
+        if (totalSpent.compareTo(customerProperties.getPlatinumThreshold()) >= 0) return MembershipTier.PLATINUM;
+        if (totalSpent.compareTo(customerProperties.getGoldThreshold()) >= 0) return MembershipTier.GOLD;
+        if (totalSpent.compareTo(customerProperties.getSilverThreshold()) >= 0) return MembershipTier.SILVER;
+        return MembershipTier.BRONZE;
     }
 }

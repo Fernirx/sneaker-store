@@ -88,3 +88,9 @@ order:
   expire-minutes: ${ORDER_EXPIRE_MINUTES:15}
   max-payment-attempts: ${ORDER_MAX_PAYMENT_ATTEMPTS:4}
   shipping-fee: ${ORDER_SHIPPING_FEE:30000}
+
+customer:
+  points-per-amount: ${CUSTOMER_POINTS_PER_AMOUNT:10000}
+  silver-threshold: ${CUSTOMER_SILVER_THRESHOLD:5000000}
+  gold-threshold: ${CUSTOMER_GOLD_THRESHOLD:15000000}
+  platinum-threshold: ${CUSTOMER_PLATINUM_THRESHOLD:30000000}
