@@ -115,9 +115,11 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     public void recordUsage(Long couponId, Order order, String email, String phone) {
+        int updatedRows = couponRepository.incrementUsedCount(couponId);
+        if (updatedRows == 0) {
+            throw BusinessException.of(ErrorCode.COUPON_EXHAUSTED);
+        }
         Coupon coupon = findById(couponId);
-        coupon.setUsedCount(coupon.getUsedCount() + 1);
-        couponRepository.save(coupon);
 
         CouponUsage usage = new CouponUsage();
         usage.setCoupon(coupon);
@@ -130,9 +132,7 @@ public class CouponServiceImpl implements CouponService {
     @Override
     public void releaseUsage(Long orderId) {
         couponUsageRepository.findByOrder_Id(orderId).ifPresent(usage -> {
-            Coupon coupon = usage.getCoupon();
-            coupon.setUsedCount(Math.max(0, coupon.getUsedCount() - 1));
-            couponRepository.save(coupon);
+            couponRepository.decrementUsedCount(usage.getCoupon().getId());
             couponUsageRepository.delete(usage);
         });
     }
