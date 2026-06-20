@@ -3,6 +3,7 @@ package com.fernirx.sneakerapi.product.repository;
 import com.fernirx.sneakerapi.product.dto.request.ProductFilterRequest;
 import com.fernirx.sneakerapi.product.entity.Product;
 import com.fernirx.sneakerapi.product.entity.ProductCategory;
+import com.fernirx.sneakerapi.product.entity.ProductCollection;
 import com.fernirx.sneakerapi.product.enums.Gender;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -27,7 +28,8 @@ public class ProductSpec {
                 .and(hasMaxPrice(filter.maxPrice()))
                 .and(isNewArrival(filter.newArrival()))
                 .and(isOnSale(filter.onSale()))
-                .and(hasCategories(filter.categorySlugs()));
+                .and(hasCategories(filter.categorySlugs()))
+                .and(hasCollections(filter.collectionSlugs()));
     }
 
     private static Specification<Product> isActive() {
@@ -82,6 +84,17 @@ public class ProductSpec {
             Root<ProductCategory> pc = sub.from(ProductCategory.class);
             sub.select(pc.get("product").get("id"))
                .where(pc.get("category").get("slug").in(categorySlugs));
+            return root.get("id").in(sub);
+        };
+    }
+
+    private static Specification<Product> hasCollections(List<String> collectionSlugs) {
+        return (root, query, cb) -> {
+            if (CollectionUtils.isEmpty(collectionSlugs)) return null;
+            Subquery<Long> sub = query.subquery(Long.class);
+            Root<ProductCollection> pc = sub.from(ProductCollection.class);
+            sub.select(pc.get("product").get("id"))
+               .where(pc.get("collection").get("slug").in(collectionSlugs));
             return root.get("id").in(sub);
         };
     }

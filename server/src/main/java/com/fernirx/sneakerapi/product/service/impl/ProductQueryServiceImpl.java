@@ -23,7 +23,7 @@ public class ProductQueryServiceImpl implements ProductQueryService {
         ProductFilterRequest full = new ProductFilterRequest(
                 filter.search(), filter.gender(), List.of(brandSlug),
                 filter.minPrice(), filter.maxPrice(), filter.newArrival(), filter.onSale(),
-                null
+                null, null
         );
         return productService.getProducts(full, pageable);
     }
@@ -33,7 +33,17 @@ public class ProductQueryServiceImpl implements ProductQueryService {
         ProductFilterRequest full = new ProductFilterRequest(
                 filter.search(), filter.gender(), filter.brandSlugs(),
                 filter.minPrice(), filter.maxPrice(), filter.newArrival(), filter.onSale(),
-                List.of(categorySlug)
+                List.of(categorySlug), null
+        );
+        return productService.getProducts(full, pageable);
+    }
+
+    @Override
+    public Page<ProductResponse> getProductsByCollectionSlug(String collectionSlug, BySlugProductFilterRequest filter, Pageable pageable) {
+        ProductFilterRequest full = new ProductFilterRequest(
+                filter.search(), filter.gender(), filter.brandSlugs(),
+                filter.minPrice(), filter.maxPrice(), filter.newArrival(), filter.onSale(),
+                null, List.of(collectionSlug)
         );
         return productService.getProducts(full, pageable);
     }
