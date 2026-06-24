@@ -33,7 +33,10 @@ public enum ErrorCode {
     /* ================== COUPON ================== */
     COUPON_EXHAUSTED("COUPON_EXHAUSTED", "error.coupon.exhausted", HttpStatus.BAD_REQUEST),
     COUPON_MIN_AMOUNT("COUPON_MIN_AMOUNT", "error.coupon.min_amount", HttpStatus.BAD_REQUEST),
-    COUPON_USAGE_LIMIT("COUPON_USAGE_LIMIT", "error.coupon.usage_limit", HttpStatus.BAD_REQUEST);
+    COUPON_USAGE_LIMIT("COUPON_USAGE_LIMIT", "error.coupon.usage_limit", HttpStatus.BAD_REQUEST),
+
+    /* ================== REVIEW ================== */
+    REVIEW_NOT_ELIGIBLE("REVIEW_NOT_ELIGIBLE", "error.review.not_eligible", HttpStatus.FORBIDDEN);
 
     private final String code;
     private final String messageKey;
