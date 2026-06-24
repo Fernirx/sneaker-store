@@ -6,6 +6,8 @@ import { productUrl, brandUrl } from '@/lib/cloudinaryUrl';
 import { type ProductDetailResponse, type SizeItem, formatPrice } from '../../_components/types';
 import { useCart } from '@/contexts/CartContext';
 import { parseApiError } from '@/lib/parseApiError';
+import ReviewsPanel from './ReviewsPanel';
+import CommentsPanel from './CommentsPanel';
 
 const GENDER_LABEL: Record<string, string> = {
   MEN: 'Nam', WOMEN: 'Nữ', UNISEX: 'Unisex', KIDS: 'Trẻ em',
@@ -19,7 +21,15 @@ const SHAFT_LABEL: Record<string, string> = {
   LOW: 'Cổ thấp', MID: 'Cổ vừa', HIGH: 'Cổ cao',
 };
 
-export default function ProductDetailClient({ product }: { product: ProductDetailResponse }) {
+export default function ProductDetailClient({
+  product,
+  isLoggedIn,
+  currentUserId,
+}: {
+  product: ProductDetailResponse;
+  isLoggedIn: boolean;
+  currentUserId: number | null;
+}) {
   const { addItem } = useCart();
 
   const [colorIdx, setColorIdx]           = useState(0);
@@ -29,7 +39,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
   const [addedToCart, setAddedToCart]     = useState(false);
   const [addLoading, setAddLoading]       = useState(false);
   const [addError, setAddError]           = useState('');
-  const [activeTab, setActiveTab]         = useState<'reviews' | 'description'>('reviews');
+  const [activeTab, setActiveTab]         = useState<'reviews' | 'qa' | 'description'>('reviews');
 
   const color         = product.colors[colorIdx];
   const currentImg    = color?.images[mainImgIdx] ?? color?.images[0];
@@ -356,7 +366,7 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
       <section className="py-16">
         {/* Tab bar */}
         <div className="flex gap-1 border-b-[1.5px] border-line mb-7">
-          {(['reviews', 'description'] as const).map(tab => (
+          {(['reviews', 'qa', 'description'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -366,45 +376,29 @@ export default function ProductDetailClient({ product }: { product: ProductDetai
                   : 'text-muted border-transparent hover:text-ink'
               }`}
             >
-              {tab === 'reviews' ? "Đánh giá" : "Mô tả"}
+              {tab === 'reviews' ? "Đánh giá" : tab === 'qa' ? "Hỏi & đáp" : "Mô tả"}
             </button>
           ))}
         </div>
 
         {/* Reviews panel */}
         {activeTab === 'reviews' && (
-          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 items-start">
-            {/* Left: Rating summary */}
-            <div>
-              <div className="font-display font-black text-[64px] leading-none tracking-tight">—</div>
-              <div className="text-[18px] text-faint mt-1.5 tracking-widest">★★★★★</div>
-              <p className="text-[13px] text-muted mt-1">
-                {"Chưa có đánh giá"}
-              </p>
+          <ReviewsPanel
+            slug={product.slug}
+            productId={product.id}
+            isLoggedIn={isLoggedIn}
+            currentUserId={currentUserId}
+          />
+        )}
 
-              {/* Rating bars */}
-              <div className="space-y-2 mt-[18px]">
-                {[5, 4, 3, 2, 1].map(star => (
-                  <div key={star} className="flex items-center gap-2.5">
-                    <span className="text-[12px] w-3.5 text-right shrink-0">{star}</span>
-                    <div className="flex-1 h-[7px] bg-line-2 rounded-full overflow-hidden">
-                      <div className="h-full bg-accent" style={{ width: '0%' }} />
-                    </div>
-                    <span className="text-[11px] text-muted w-7 shrink-0">0%</span>
-                  </div>
-                ))}
-              </div>
-
-              <button className="w-full mt-[18px] py-3 border-[1.5px] border-line rounded-sm bg-white text-sm font-bold hover:border-ink transition-colors">
-                {"Viết đánh giá"}
-              </button>
-            </div>
-
-            {/* Right: Empty state */}
-            <div className="flex items-center justify-center py-16 text-sm text-muted border-[1.5px] border-line rounded-lg">
-              {"Chưa có đánh giá nào."}
-            </div>
-          </div>
+        {/* Q&A panel */}
+        {activeTab === 'qa' && (
+          <CommentsPanel
+            slug={product.slug}
+            productId={product.id}
+            isLoggedIn={isLoggedIn}
+            currentUserId={currentUserId}
+          />
         )}
 
         {/* Description panel */}
