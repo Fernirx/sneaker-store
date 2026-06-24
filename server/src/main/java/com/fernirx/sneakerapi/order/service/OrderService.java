@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderService {
 
@@ -31,10 +32,11 @@ public interface OrderService {
     List<OrderStatusHistoryResponse> getHistory(Long id);
     OrderInternalResponse updateStatus(Long id, UpdateOrderStatusRequest request, Long changedByUserId);
 
-    // Cross-module (Payment, Scheduler)
+    // Cross-module (Payment, Scheduler, Review)
     Order findEntityById(Long id);
     Order findOwnedEntityById(Long orderId, Long userId, String guestToken);
     void changeStatus(Long orderId, OrderStatus newStatus, Long changedByUserId, String note);
     void cancelOrder(Long orderId, String reason);
     void markAsPaid(Long orderId);
+    Optional<Order> findDeliveredOrderForProduct(Long userId, Long productId);
 }

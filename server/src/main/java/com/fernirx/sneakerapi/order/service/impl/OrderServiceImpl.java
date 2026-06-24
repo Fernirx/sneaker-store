@@ -40,6 +40,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -290,6 +291,14 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentStatus(OrderPaymentStatus.PAID);
         orderRepository.save(order);
         changeStatus(orderId, OrderStatus.CONFIRMED, null, "Thanh toán VNPay thành công");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Order> findDeliveredOrderForProduct(Long userId, Long productId) {
+        List<Order> orders = orderItemRepository.findOrdersForProductByStatus(
+                userId, productId, OrderStatus.DELIVERED, PageRequest.of(0, 1));
+        return orders.isEmpty() ? Optional.empty() : Optional.of(orders.getFirst());
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.fernirx.sneakerapi.product.dto.request.UpdateProductRequest;
 import com.fernirx.sneakerapi.product.dto.response.ProductDetailResponse;
 import com.fernirx.sneakerapi.product.dto.response.ProductInternalResponse;
 import com.fernirx.sneakerapi.product.dto.response.ProductResponse;
+import com.fernirx.sneakerapi.product.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -22,4 +23,8 @@ public interface ProductService {
     ProductInternalResponse createProduct(CreateProductRequest request);
     ProductInternalResponse updateProduct(Long id, UpdateProductRequest request);
     void deleteProduct(Long id);
+
+    // Cross-module (Review)
+    Product findEntityById(Long id);
+    Product findActiveBySlug(String slug);
 }

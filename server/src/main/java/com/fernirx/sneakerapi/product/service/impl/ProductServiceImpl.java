@@ -193,6 +193,22 @@ public class ProductServiceImpl implements ProductService {
         productRepository.delete(product);
     }
 
+    // ─── Cross-module ────────────────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public Product findEntityById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> BusinessException.notFound("label.product"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Product findActiveBySlug(String slug) {
+        return productRepository.findActiveBySlugWithBrand(slug)
+                .orElseThrow(() -> BusinessException.notFound("label.product"));
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private Product findByIdWithBrand(Long id) {
