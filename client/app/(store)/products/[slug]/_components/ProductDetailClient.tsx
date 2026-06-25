@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { productUrl, brandUrl } from '@/lib/cloudinaryUrl';
 import { type ProductDetailResponse, type SizeItem, formatPrice } from '../../_components/types';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 import { parseApiError } from '@/lib/parseApiError';
 import ReviewsPanel from './ReviewsPanel';
 import CommentsPanel from './CommentsPanel';
@@ -31,6 +33,8 @@ export default function ProductDetailClient({
   currentUserId: number | null;
 }) {
   const { addItem } = useCart();
+  const { isWishlisted, add: addWishlist, remove: removeWishlist } = useWishlist();
+  const router = useRouter();
 
   const [colorIdx, setColorIdx]           = useState(0);
   const [selectedSize, setSelectedSize]   = useState<SizeItem | null>(null);
@@ -39,11 +43,15 @@ export default function ProductDetailClient({
   const [addedToCart, setAddedToCart]     = useState(false);
   const [addLoading, setAddLoading]       = useState(false);
   const [addError, setAddError]           = useState('');
+  const [wishlistPending, setWishlistPending] = useState(false);
   const [activeTab, setActiveTab]         = useState<'reviews' | 'qa' | 'description'>('reviews');
 
   const color         = product.colors[colorIdx];
   const currentImg    = color?.images[mainImgIdx] ?? color?.images[0];
   const hasMultiImgs  = (color?.images?.length ?? 0) > 1;
+
+  const currentVariantId = selectedSize?.variantId ?? null;
+  const wishlistEntry    = isWishlisted(product.id, currentVariantId);
 
   const displayPrice  = product.basePrice;
   const hasDiscount   = product.originalPrice != null && product.originalPrice > displayPrice;
@@ -69,6 +77,20 @@ export default function ProductDetailClient({
       setAddError(general);
     } finally {
       setAddLoading(false);
+    }
+  }
+
+  async function handleToggleWishlist() {
+    if (!isLoggedIn) { router.push('/login'); return; }
+    if (wishlistPending) return;
+    setWishlistPending(true);
+    try {
+      if (wishlistEntry) await removeWishlist(wishlistEntry.id);
+      else await addWishlist(product.id, currentVariantId);
+    } catch {
+      // ignore — heart state simply won't change
+    } finally {
+      setWishlistPending(false);
     }
   }
 
@@ -310,10 +332,16 @@ export default function ProductDetailClient({
 
             {/* Wishlist */}
             <button
-              className="inline-flex items-center justify-center w-10 h-10 border-[1.5px] border-line rounded-sm bg-white text-ink hover:border-accent hover:text-accent transition-colors shrink-0"
-              aria-label={"Thêm vào yêu thích"}
+              onClick={handleToggleWishlist}
+              disabled={wishlistPending}
+              className={`inline-flex items-center justify-center w-10 h-10 border-[1.5px] rounded-sm transition-colors shrink-0 disabled:opacity-50 ${
+                wishlistEntry
+                  ? 'border-accent bg-accent text-white hover:bg-accent-700'
+                  : 'border-line bg-white text-ink hover:border-accent hover:text-accent'
+              }`}
+              aria-label={wishlistEntry ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={wishlistEntry ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 21C12 21 4 16 2 10.5C0.5 6.5 3.5 3.5 7 3.5C9 3.5 10.5 4.7 12 6C13.5 4.7 15 3.5 17 3.5C20.5 3.5 23.5 6.5 22 10.5C20 16 12 21 12 21Z"/>
               </svg>
             </button>
