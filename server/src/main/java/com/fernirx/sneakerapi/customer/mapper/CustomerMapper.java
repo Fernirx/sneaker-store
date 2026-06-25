@@ -26,6 +26,7 @@ public interface CustomerMapper {
     @Mapping(target = "addresses", ignore = true)
     @Mapping(target = "cart", ignore = true)
     @Mapping(target = "orders", ignore = true)
+    @Mapping(target = "wishlists", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateCustomer(UpdateCustomerRequest request, @MappingTarget Customer customer);

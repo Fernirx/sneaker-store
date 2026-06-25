@@ -51,4 +51,7 @@ public class Customer extends BaseAuditEntity {
 
     @OneToMany(mappedBy = "customer")
     private Set<Order> orders = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "customer")
+    private Set<Wishlist> wishlists = new LinkedHashSet<>();
 }
