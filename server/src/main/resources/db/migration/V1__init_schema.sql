@@ -776,16 +776,16 @@ CREATE TABLE IF NOT EXISTS `product_comments` (
 
 CREATE TABLE IF NOT EXISTS `wishlists` (
   `id`          BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `user_id`     BIGINT UNSIGNED  NOT NULL,
+  `customer_id` BIGINT UNSIGNED  NOT NULL,
   `product_id`  BIGINT UNSIGNED  NOT NULL,
   `variant_id`  BIGINT UNSIGNED  NULL DEFAULT NULL,
   `created_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `user_product_UNIQUE` (`user_id`, `product_id`, `variant_id`),
-  INDEX `idx_wishlists_user` (`user_id`),
+  UNIQUE INDEX `customer_product_UNIQUE` (`customer_id`, `product_id`, `variant_id`),
+  INDEX `idx_wishlists_customer` (`customer_id`),
   INDEX `idx_wishlists_variant` (`variant_id`),
-  CONSTRAINT `fk_wishlists_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+  CONSTRAINT `fk_wishlists_customer`
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_wishlists_product`
     FOREIGN KEY (`product_id`) REFERENCES `products`(`id`)
