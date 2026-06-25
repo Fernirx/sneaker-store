@@ -843,3 +843,22 @@ CREATE TABLE IF NOT EXISTS `notification_recipients` (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
   COMMENT = 'Trạng thái đọc thông báo của người nhận';
+
+
+CREATE TABLE IF NOT EXISTS `point_transactions` (
+  `id`           BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `customer_id`  BIGINT UNSIGNED  NOT NULL,
+  `amount`       BIGINT           NOT NULL,
+  `type`         ENUM('EARN', 'REDEEM', 'REVOKE') NOT NULL,
+  `reference_id` BIGINT UNSIGNED  NULL COMMENT 'ID của order liên quan',
+  `note`         TEXT             NULL,
+  `created_at`   DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`   DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_point_transactions_customer` (`customer_id`),
+  INDEX `idx_point_transactions_reference` (`reference_id`),
+  CONSTRAINT `fk_point_transactions_customer`
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
+  COMMENT = 'Lịch sử giao dịch điểm tích lũy của khách hàng';
