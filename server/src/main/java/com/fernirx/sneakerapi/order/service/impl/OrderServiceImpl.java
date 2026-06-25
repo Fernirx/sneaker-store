@@ -281,7 +281,10 @@ public class OrderServiceImpl implements OrderService {
 
         if (newStatus == OrderStatus.DELIVERED && oldStatus != OrderStatus.DELIVERED && order.getCustomer() != null) {
             BigDecimal earnedAmount = order.getSubtotal().subtract(order.getDiscountAmount());
-            customerService.earnFromOrder(order.getCustomer().getId(), earnedAmount);
+            customerService.earnFromOrder(order.getCustomer().getId(), orderId, earnedAmount);
+        } else if (newStatus == OrderStatus.CANCELLED && oldStatus != OrderStatus.CANCELLED && order.getCustomer() != null) {
+            BigDecimal revokedAmount = order.getSubtotal().subtract(order.getDiscountAmount());
+            customerService.revokeFromOrder(order.getCustomer().getId(), orderId, revokedAmount);
         }
     }
 

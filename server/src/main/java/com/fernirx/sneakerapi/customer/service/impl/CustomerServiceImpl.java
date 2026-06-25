@@ -7,10 +7,13 @@ import com.fernirx.sneakerapi.customer.dto.request.CustomerFilterRequest;
 import com.fernirx.sneakerapi.customer.dto.response.CustomerInternalResponse;
 import com.fernirx.sneakerapi.customer.dto.response.CustomerResponse;
 import com.fernirx.sneakerapi.customer.entity.Customer;
+import com.fernirx.sneakerapi.customer.entity.PointTransaction;
 import com.fernirx.sneakerapi.customer.enums.MembershipTier;
+import com.fernirx.sneakerapi.customer.enums.PointTransactionType;
 import com.fernirx.sneakerapi.customer.mapper.CustomerMapper;
 import com.fernirx.sneakerapi.customer.repository.CustomerRepository;
 import com.fernirx.sneakerapi.customer.repository.CustomerSpec;
+import com.fernirx.sneakerapi.customer.repository.PointTransactionRepository;
 import com.fernirx.sneakerapi.customer.service.CustomerService;
 import com.fernirx.sneakerapi.user.entity.User;
 import com.fernirx.sneakerapi.user.repository.UserRepository;
@@ -27,6 +30,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
+    private final PointTransactionRepository pointTransactionRepository;
     private final CustomerMapper customerMapper;
     private final UserRepository userRepository;
     private final CustomerProperties customerProperties;
@@ -93,18 +97,67 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public void earnFromOrder(Long customerId, BigDecimal earnedAmount) {
+    public void earnFromOrder(Long customerId, Long orderId, BigDecimal earnedAmount) {
         if (earnedAmount == null || earnedAmount.signum() <= 0) return;
 
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
 
+        if (pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, orderId, PointTransactionType.EARN)) {
+            return;
+        }
+
         long earnedPoints = earnedAmount.divideToIntegralValue(customerProperties.getPointsPerAmount()).longValue();
+        
+        PointTransaction tx = new PointTransaction();
+        tx.setCustomer(customer);
+        tx.setAmount(earnedPoints);
+        tx.setType(PointTransactionType.EARN);
+        tx.setReferenceId(orderId);
+        tx.setNote("Tích điểm từ đơn hàng #" + orderId);
+        pointTransactionRepository.save(tx);
+
         customer.setLoyaltyPoints(customer.getLoyaltyPoints() + earnedPoints);
         customer.setTotalSpent(customer.getTotalSpent().add(earnedAmount));
 
         MembershipTier naturalTier = resolveTier(customer.getTotalSpent());
         if (naturalTier.ordinal() > customer.getMembershipTier().ordinal()) {
+            customer.setMembershipTier(naturalTier);
+        }
+
+        customerRepository.save(customer);
+    }
+
+    @Override
+    public void revokeFromOrder(Long customerId, Long orderId, BigDecimal revokedAmount) {
+        if (revokedAmount == null || revokedAmount.signum() <= 0) return;
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> BusinessException.notFound("label.customer"));
+
+        if (pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, orderId, PointTransactionType.REVOKE)) {
+            return;
+        }
+
+        if (!pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, orderId, PointTransactionType.EARN)) {
+            return;
+        }
+
+        long revokedPoints = revokedAmount.divideToIntegralValue(customerProperties.getPointsPerAmount()).longValue();
+
+        PointTransaction tx = new PointTransaction();
+        tx.setCustomer(customer);
+        tx.setAmount(revokedPoints);
+        tx.setType(PointTransactionType.REVOKE);
+        tx.setReferenceId(orderId);
+        tx.setNote("Thu hồi điểm do hủy/trả đơn hàng #" + orderId);
+        pointTransactionRepository.save(tx);
+
+        customer.setLoyaltyPoints(Math.max(0, customer.getLoyaltyPoints() - revokedPoints));
+        customer.setTotalSpent(customer.getTotalSpent().subtract(revokedAmount).max(BigDecimal.ZERO));
+
+        MembershipTier naturalTier = resolveTier(customer.getTotalSpent());
+        if (naturalTier.ordinal() < customer.getMembershipTier().ordinal()) {
             customer.setMembershipTier(naturalTier);
         }
 
