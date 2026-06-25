@@ -49,7 +49,7 @@ public class ProductReview extends BaseAuditEntity {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(name = "rating", columnDefinition = "tinyint UNSIGNED not null")
+    @Column(name = "rating", columnDefinition = "tinyint UNSIGNED", nullable = false)
     private Short rating;
 
     @Size(max = 255)
