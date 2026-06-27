@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse refreshToken(RefreshTokenRequest request) {
         String oldRefreshToken = request.refreshToken();
         jwtProvider.validateRefreshToken(oldRefreshToken);
-        if (tokenBlacklistService.isRefreshTokenBlacklisted(oldRefreshToken)) {
+        if (tokenBlacklistService.isRefreshTokenBlacklistedWithGracePeriod(oldRefreshToken, 30_000)) {
             throw SecurityCustomException.invalid("label.token");
         }
         String email = jwtProvider.extractEmail(oldRefreshToken);
