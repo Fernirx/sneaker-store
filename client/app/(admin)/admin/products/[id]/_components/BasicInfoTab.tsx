@@ -6,7 +6,7 @@ import { parseApiError } from '@/lib/parseApiError';
 import {
   type ProductRow,
   GENDER_OPTIONS, CLOSURE_OPTIONS, SHAFT_OPTIONS,
-  formatDate,
+  formatDate, formatPrice
 } from '../../_components/types';
 
 export default function BasicInfoTab({
@@ -19,16 +19,12 @@ export default function BasicInfoTab({
   const [form, setForm] = useState({
     name:          product.name,
     code:          product.code,
-    styleCode:     product.styleCode ?? '',
     gender:        product.gender,
     description:   product.description ?? '',
     upperMaterial: product.upperMaterial ?? '',
     soleType:      product.soleType ?? '',
     closureType:   product.closureType ?? '',
     shaftStyle:    product.shaftStyle ?? '',
-    basePrice:     String(product.basePrice),
-    originalPrice: product.originalPrice != null ? String(product.originalPrice) : '',
-    costPrice:     product.costPrice     != null ? String(product.costPrice)     : '',
     newArrival:    product.newArrival ?? false,
     onSale:        product.onSale    ?? false,
     active:        product.active    ?? true,
@@ -53,16 +49,13 @@ export default function BasicInfoTab({
       await clientAxios.patch(`/api/admin/products/${product.id}`, {
         name:          form.name          || null,
         code:          form.code          || null,
-        styleCode:     form.styleCode     || null,
         gender:        form.gender        || null,
         description:   form.description   || null,
         upperMaterial: form.upperMaterial || null,
         soleType:      form.soleType      || null,
         closureType:   form.closureType   || null,
         shaftStyle:    form.shaftStyle    || null,
-        basePrice:     form.basePrice     ? Number(form.basePrice)     : null,
-        originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
-        costPrice:     form.costPrice     ? Number(form.costPrice)     : null,
+
         newArrival:    form.newArrival,
         onSale:        form.onSale,
         active:        form.active,
@@ -98,21 +91,14 @@ export default function BasicInfoTab({
         {fieldErrors.name && <p className="text-danger text-xs mt-1">{fieldErrors.name}</p>}
       </div>
 
-      {/* Code + Style code */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-            Mã sản phẩm <span className="text-danger">*</span>
-          </label>
-          <input value={form.code} onChange={e => set('code', e.target.value)} disabled={ro}
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink disabled:bg-paper" />
-          {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
-        </div>
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Mã style</label>
-          <input value={form.styleCode} onChange={e => set('styleCode', e.target.value)} disabled={ro}
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink disabled:bg-paper" />
-        </div>
+      {/* Code */}
+      <div>
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+          Mã sản phẩm <span className="text-danger">*</span>
+        </label>
+        <input value={form.code} onChange={e => set('code', e.target.value)} disabled={ro}
+          className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink disabled:bg-paper" />
+        {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
       </div>
 
       {/* Gender */}
@@ -169,27 +155,6 @@ export default function BasicInfoTab({
         </div>
       </div>
 
-      {/* Prices */}
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-            Giá bán <span className="text-danger">*</span>
-          </label>
-          <input type="number" value={form.basePrice} onChange={e => set('basePrice', e.target.value)} disabled={ro} min="0"
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink disabled:bg-paper" />
-          {fieldErrors.basePrice && <p className="text-danger text-xs mt-1">{fieldErrors.basePrice}</p>}
-        </div>
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Giá niêm yết</label>
-          <input type="number" value={form.originalPrice} onChange={e => set('originalPrice', e.target.value)} disabled={ro} min="0"
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink disabled:bg-paper" />
-        </div>
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Giá vốn</label>
-          <input type="number" value={form.costPrice} onChange={e => set('costPrice', e.target.value)} disabled={ro} min="0"
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink disabled:bg-paper" />
-        </div>
-      </div>
 
       {/* Flags + Active */}
       <div className="flex gap-6">
@@ -207,10 +172,12 @@ export default function BasicInfoTab({
         </label>
       </div>
 
-      {/* Stats */}
       <div className="flex gap-6 text-xs text-muted border-t border-line pt-4">
         <span>Đã bán: {product.soldCount}</span>
         <span>Lượt xem: {product.viewCount}</span>
+        <span>Khoảng giá: {product.minPrice != null ? formatPrice(product.minPrice) : 'Chưa có giá'} {product.maxPrice != null && product.maxPrice !== product.minPrice ? ` - ${formatPrice(product.maxPrice)}` : ''}</span>
+      </div>
+      <div className="flex gap-6 text-xs text-muted">
         <span>Tạo: {formatDate(product.createdAt)}</span>
         <span>Cập nhật: {formatDate(product.updatedAt)}</span>
       </div>

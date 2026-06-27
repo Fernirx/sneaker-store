@@ -23,7 +23,7 @@ export function draftItemFromVariant(v: VariantSearchResult): DraftPurchaseItem 
     colorway: v.colorway,
     size: v.size,
     quantityOrdered: 1,
-    unitCost: v.price ?? v.basePrice,
+    unitCost: v.price ?? 0,
   };
 }
 

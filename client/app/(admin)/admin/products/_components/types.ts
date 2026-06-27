@@ -9,7 +9,6 @@ export interface ProductRow {
   id: number;
   slug: string;
   code: string;
-  styleCode: string | null;
   name: string;
   gender: string;
   description: string | null;
@@ -17,9 +16,8 @@ export interface ProductRow {
   soleType: string | null;
   closureType: string | null;
   shaftStyle: string | null;
-  basePrice: number;
-  originalPrice: number | null;
-  costPrice: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
   newArrival: boolean;
   onSale: boolean;
   active: boolean;

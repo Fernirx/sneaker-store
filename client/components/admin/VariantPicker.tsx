@@ -15,7 +15,7 @@ export interface VariantSearchResult {
   size: number;
   shoeWidth: string;
   price: number | null;
-  basePrice: number;
+
   stockQuantity: number;
   active: boolean;
 }

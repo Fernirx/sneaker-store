@@ -139,7 +139,7 @@ export default function ProductsClient({
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tên / Mã</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thương hiệu</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Giới tính</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Giá bán</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Khoảng giá</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
               {isAdmin && <th className="px-4 py-3 w-28" />}
             </tr>
@@ -183,7 +183,11 @@ export default function ProductsClient({
                   <td className="px-4 py-3 text-sm text-muted">
                     {GENDER_OPTIONS.find(o => o.value === p.gender)?.label ?? p.gender}
                   </td>
-                  <td className="px-4 py-3 text-sm font-medium">{formatPrice(p.basePrice)}</td>
+                  <td className="px-4 py-3 text-sm font-medium">
+                    {p.minPrice != null 
+                      ? (p.maxPrice != null && p.maxPrice !== p.minPrice ? `${formatPrice(p.minPrice)} - ${formatPrice(p.maxPrice)}` : formatPrice(p.minPrice))
+                      : <span className="text-muted font-normal text-xs">Chưa có giá</span>}
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p.active ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'}`}>
                       {p.active ? 'Hoạt động' : 'Ẩn'}

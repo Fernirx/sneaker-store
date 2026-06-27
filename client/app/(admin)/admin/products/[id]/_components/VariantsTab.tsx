@@ -11,6 +11,8 @@ interface VariantRow {
   shoeWidth: string;
   sku: string;
   price: number | null;
+  originalPrice?: number | null;
+  costPrice?: number | null;
   stockQuantity: number;
   minStockLevel: number;
   displayOrder: number;
@@ -27,14 +29,16 @@ interface ColorGroup {
 type VForm = {
   colorway: string; colorwayCode: string; colorHex: string;
   size: string; shoeWidth: string; sku: string;
-  price: string; stockQuantity: string; minStockLevel: string; displayOrder: string;
+  price: string; originalPrice: string; costPrice: string;
+  stockQuantity: string; minStockLevel: string; displayOrder: string;
   active: boolean;
 };
 
 const EMPTY: VForm = {
   colorway: '', colorwayCode: '', colorHex: '#000000',
   size: '', shoeWidth: 'REGULAR', sku: '',
-  price: '', stockQuantity: '0', minStockLevel: '5', displayOrder: '0',
+  price: '', originalPrice: '', costPrice: '',
+  stockQuantity: '0', minStockLevel: '5', displayOrder: '0',
   active: true,
 };
 
@@ -136,18 +140,28 @@ function VariantForm({
         </div>
       </div>
 
-      <div>
-        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Giá riêng <span className="text-xs font-normal normal-case">(để trống = dùng giá sản phẩm)</span></label>
-        <input type="number" value={form.price} onChange={e => s('price', e.target.value)} min="0"
-          className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Giá bán <span className="text-danger">*</span></label>
+          <input type="number" value={form.price} onChange={e => s('price', e.target.value)} required min="0"
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Giá niêm yết</label>
+          <input type="number" value={form.originalPrice} onChange={e => s('originalPrice', e.target.value)} min="0"
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Giá vốn</label>
+          <input type="number" value={form.costPrice} onChange={e => s('costPrice', e.target.value)} min="0"
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
+        </div>
       </div>
 
-      {isEdit && (
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input type="checkbox" checked={form.active} onChange={e => s('active', e.target.checked)} className="accent-accent" />
-          <span className="text-sm font-medium">Hoạt động</span>
-        </label>
-      )}
+      <label className="flex items-center gap-2 cursor-pointer select-none">
+        <input type="checkbox" checked={form.active} onChange={e => s('active', e.target.checked)} className="accent-accent" />
+        <span className="text-sm font-medium">Hoạt động</span>
+      </label>
 
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" onClick={onClose}
@@ -205,9 +219,12 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
         shoeWidth:     addForm.shoeWidth,
         sku:           addForm.sku,
         price:         addForm.price ? Number(addForm.price) : null,
+        originalPrice: addForm.originalPrice ? Number(addForm.originalPrice) : null,
+        costPrice:     addForm.costPrice ? Number(addForm.costPrice) : null,
         stockQuantity: Number(addForm.stockQuantity),
         minStockLevel: Number(addForm.minStockLevel),
         displayOrder:  Number(addForm.displayOrder),
+        active:        addForm.active,
       });
       setAddOpen(false);
       setAddForm({ ...EMPTY });
@@ -231,6 +248,8 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
       shoeWidth:     v.shoeWidth,
       sku:           v.sku,
       price:         v.price != null ? String(v.price) : '',
+      originalPrice: v.originalPrice != null ? String(v.originalPrice) : '',
+      costPrice:     v.costPrice != null ? String(v.costPrice) : '',
       stockQuantity: String(v.stockQuantity),
       minStockLevel: String(v.minStockLevel),
       displayOrder:  String(v.displayOrder),
@@ -252,6 +271,8 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
         shoeWidth:     editForm.shoeWidth     || null,
         sku:           editForm.sku           || null,
         price:         editForm.price         ? Number(editForm.price)         : null,
+        originalPrice: editForm.originalPrice ? Number(editForm.originalPrice) : null,
+        costPrice:     editForm.costPrice     ? Number(editForm.costPrice)     : null,
         stockQuantity: editForm.stockQuantity ? Number(editForm.stockQuantity) : null,
         minStockLevel: editForm.minStockLevel ? Number(editForm.minStockLevel) : null,
         displayOrder:  editForm.displayOrder  ? Number(editForm.displayOrder)  : null,
@@ -334,7 +355,9 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
                   <th className="px-4 py-2 text-left">Size</th>
                   <th className="px-4 py-2 text-left">Rộng</th>
                   <th className="px-4 py-2 text-left">SKU</th>
-                  <th className="px-4 py-2 text-left">Giá riêng</th>
+                  <th className="px-4 py-2 text-left">Giá bán</th>
+                  <th className="px-4 py-2 text-left">Giá niêm yết</th>
+                  <th className="px-4 py-2 text-left">Giá vốn</th>
                   <th className="px-4 py-2 text-left">Tồn</th>
                   <th className="px-4 py-2 text-left">Trạng thái</th>
                   {isAdmin && <th className="px-4 py-2 w-24" />}
@@ -348,8 +371,14 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
                       {SHOE_WIDTH_OPTIONS.find(o => o.value === v.shoeWidth)?.label ?? v.shoeWidth}
                     </td>
                     <td className="px-4 py-2.5 text-xs">{v.sku}</td>
-                    <td className="px-4 py-2.5 text-muted">
+                    <td className="px-4 py-2.5 font-bold text-ink">
                       {v.price != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.price) : '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted">
+                      {v.originalPrice != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.originalPrice) : '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted">
+                      {v.costPrice != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.costPrice) : '—'}
                     </td>
                     <td className="px-4 py-2.5">
                       <span className={v.stockQuantity <= v.minStockLevel ? 'text-danger font-bold' : ''}>

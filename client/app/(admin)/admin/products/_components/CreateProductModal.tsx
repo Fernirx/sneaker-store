@@ -17,11 +17,10 @@ export default function CreateProductModal({
 }) {
   const [brands, setBrands] = useState<BrandOption[]>([]);
   const [form, setForm] = useState({
-    name: '', code: '', styleCode: '', brandId: '',
+    name: '', code: '', brandId: '',
     gender: 'UNISEX', description: '',
     upperMaterial: '', soleType: '',
     closureType: '', shaftStyle: '',
-    basePrice: '', originalPrice: '', costPrice: '',
     newArrival: false, onSale: false,
   });
   const [saving, setSaving] = useState(false);
@@ -47,7 +46,6 @@ export default function CreateProductModal({
       const { data } = await clientAxios.post('/api/admin/products', {
         name: form.name,
         code: form.code,
-        styleCode: form.styleCode || null,
         brandId: Number(form.brandId),
         gender: form.gender,
         description: form.description || null,
@@ -55,9 +53,6 @@ export default function CreateProductModal({
         soleType: form.soleType || null,
         closureType: form.closureType || null,
         shaftStyle: form.shaftStyle || null,
-        basePrice: Number(form.basePrice),
-        originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
-        costPrice: form.costPrice ? Number(form.costPrice) : null,
         newArrival: form.newArrival,
         onSale: form.onSale,
       });
@@ -86,21 +81,14 @@ export default function CreateProductModal({
           {fieldErrors.name && <p className="text-danger text-xs mt-1">{fieldErrors.name}</p>}
         </div>
 
-        {/* Code + Style code */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-              Mã SP <span className="text-danger">*</span>
-            </label>
-            <input value={form.code} onChange={e => set('code', e.target.value)} required
-              className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
-            {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Mã style</label>
-            <input value={form.styleCode} onChange={e => set('styleCode', e.target.value)}
-              className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
-          </div>
+        {/* Code */}
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+            Mã SP <span className="text-danger">*</span>
+          </label>
+          <input value={form.code} onChange={e => set('code', e.target.value)} required
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
+          {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
         </div>
 
         {/* Brand + Gender */}
@@ -127,27 +115,6 @@ export default function CreateProductModal({
           </div>
         </div>
 
-        {/* Prices */}
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-              Giá bán <span className="text-danger">*</span>
-            </label>
-            <input type="number" value={form.basePrice} onChange={e => set('basePrice', e.target.value)} required min="0"
-              className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
-            {fieldErrors.basePrice && <p className="text-danger text-xs mt-1">{fieldErrors.basePrice}</p>}
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Giá niêm yết</label>
-            <input type="number" value={form.originalPrice} onChange={e => set('originalPrice', e.target.value)} min="0"
-              className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Giá vốn</label>
-            <input type="number" value={form.costPrice} onChange={e => set('costPrice', e.target.value)} min="0"
-              className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
-          </div>
-        </div>
 
         {/* Closure + Shaft */}
         <div className="grid grid-cols-2 gap-3">
