@@ -34,6 +34,7 @@ public interface OrderService {
 
     // Cross-module (Payment, Scheduler, Review)
     Order findEntityById(Long id);
+    Order findEntityByIdForUpdate(Long id);
     Order findOwnedEntityById(Long orderId, Long userId, String guestToken);
     void changeStatus(Long orderId, OrderStatus newStatus, Long changedByUserId, String note);
     void cancelOrder(Long orderId, String reason);

@@ -259,6 +259,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Order findEntityByIdForUpdate(Long id) {
+        return orderRepository.findByIdForUpdate(id).orElseThrow(() -> BusinessException.notFound("label.order"));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Order findOwnedEntityById(Long orderId, Long userId, String guestToken) {
         return findOwnedOrder(orderId, userId, guestToken);
@@ -329,14 +334,11 @@ public class OrderServiceImpl implements OrderService {
     private record ResolvedItem(ProductVariant variant, int quantity, BigDecimal unitPrice, BigDecimal originalPrice) {}
 
     private BigDecimal resolveUnitPrice(ProductVariant variant) {
-        BigDecimal variantPrice = variant.getPrice();
-        return variantPrice != null ? variantPrice : variant.getProduct().getBasePrice();
+        return variant.getPrice();
     }
 
     private BigDecimal resolveOriginalPrice(ProductVariant variant, BigDecimal unitPrice) {
-        BigDecimal originalPrice = variant.getProduct().getOriginalPrice();
-        if (originalPrice == null) return null;
-        return originalPrice.compareTo(unitPrice) > 0 ? originalPrice : null;
+        return variant.getOriginalPrice();
     }
 
     private String generateOrderCode() {

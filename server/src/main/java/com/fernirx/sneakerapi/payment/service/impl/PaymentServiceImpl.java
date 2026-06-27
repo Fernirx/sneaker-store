@@ -70,7 +70,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         Order order;
         try {
-            order = orderService.findEntityById(orderId);
+            order = orderService.findEntityByIdForUpdate(orderId);
         } catch (BusinessException e) {
             return ipnResponse("01", "Order Not Found");
         }

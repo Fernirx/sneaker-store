@@ -122,6 +122,7 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewResponse updateReview(Long userId, Long reviewId, UpdateReviewRequest request) {
         ProductReview review = findOwnedReview(userId, reviewId);
         reviewMapper.updateReview(request, review);
+        review.setApproved(false);
         review = productReviewRepository.save(review);
 
         List<ReviewImageResponse> images;
