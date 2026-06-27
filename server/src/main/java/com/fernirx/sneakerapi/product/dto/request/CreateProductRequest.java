@@ -17,11 +17,6 @@ public record CreateProductRequest(
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 50, message = "{validation.size.max}")
         String code,
-
-        @NullableNotBlank
-        @Size(max = 50, message = "{validation.size.max}")
-        String styleCode,
-
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 255, message = "{validation.size.max}")
         String name,
@@ -44,12 +39,7 @@ public record CreateProductRequest(
 
         ShaftStyle shaftStyle,
 
-        @NotNull(message = "{validation.field.not_blank}")
-        BigDecimal basePrice,
 
-        BigDecimal originalPrice,
-
-        BigDecimal costPrice,
 
         Boolean newArrival,
 

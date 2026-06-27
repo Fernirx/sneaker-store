@@ -14,11 +14,6 @@ public record UpdateProductRequest(
         @NullableNotBlank
         @Size(max = 50, message = "{validation.size.max}")
         String code,
-
-        @NullableNotBlank
-        @Size(max = 50, message = "{validation.size.max}")
-        String styleCode,
-
         @NullableNotBlank
         @Size(max = 255, message = "{validation.size.max}")
         String name,
@@ -40,11 +35,7 @@ public record UpdateProductRequest(
 
         ShaftStyle shaftStyle,
 
-        BigDecimal basePrice,
 
-        BigDecimal originalPrice,
-
-        BigDecimal costPrice,
 
         Boolean newArrival,
 

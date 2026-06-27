@@ -29,6 +29,10 @@ public record CreateVariantRequest(
 
         BigDecimal price,
 
+        BigDecimal originalPrice,
+
+        BigDecimal costPrice,
+
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
         String sku,
@@ -38,5 +42,7 @@ public record CreateVariantRequest(
 
         Integer minStockLevel,
 
-        Integer displayOrder
+        Integer displayOrder,
+
+        Boolean active
 ) {}

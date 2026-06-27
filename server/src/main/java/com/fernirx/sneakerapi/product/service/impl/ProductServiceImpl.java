@@ -145,7 +145,6 @@ public class ProductServiceImpl implements ProductService {
         Product product = new Product();
         product.setBrand(brand);
         product.setCode(request.code());
-        product.setStyleCode(request.styleCode());
         product.setName(request.name());
         product.setSlug(generateUniqueSlug(request.name()));
         product.setDescription(request.description());
@@ -154,12 +153,9 @@ public class ProductServiceImpl implements ProductService {
         product.setSoleType(request.soleType());
         product.setClosureType(request.closureType());
         product.setShaftStyle(request.shaftStyle());
-        product.setBasePrice(request.basePrice());
-        product.setOriginalPrice(request.originalPrice());
-        product.setCostPrice(request.costPrice());
         product.setNewArrival(request.newArrival() != null ? request.newArrival() : false);
         product.setOnSale(request.onSale() != null ? request.onSale() : false);
-        product.setActive(true);
+        product.setActive(false);
         product.setSoldCount(0);
         product.setViewCount(0);
 
@@ -174,6 +170,12 @@ public class ProductServiceImpl implements ProductService {
             Brand brand = brandRepository.findById(request.brandId())
                     .orElseThrow(() -> BusinessException.notFound("label.brand"));
             product.setBrand(brand);
+        }
+
+        if (Boolean.TRUE.equals(request.active()) && !Boolean.TRUE.equals(product.getActive())) {
+            if (!productVariantRepository.existsByProductIdAndActiveTrue(id)) {
+                throw BusinessException.bad("label.product.publish_no_variants");
+            }
         }
 
         if (request.code() != null && !request.code().equals(product.getCode())) {

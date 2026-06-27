@@ -11,7 +11,6 @@ import java.util.List;
 public record ProductDetailResponse(
         Long id,
         String slug,
-        String styleCode,
         String name,
         String description,
         Gender gender,
@@ -19,8 +18,8 @@ public record ProductDetailResponse(
         String soleType,
         ClosureType closureType,
         ShaftStyle shaftStyle,
-        BigDecimal basePrice,
-        BigDecimal originalPrice,
+        BigDecimal minPrice,
+        BigDecimal maxPrice,
         Boolean newArrival,
         Boolean onSale,
         Integer soldCount,
@@ -51,6 +50,7 @@ public record ProductDetailResponse(
 
     public record SizeResponse(
             Long variantId,
+            String sku,
             Short size,
             ShoeWidth shoeWidth,
             BigDecimal price,

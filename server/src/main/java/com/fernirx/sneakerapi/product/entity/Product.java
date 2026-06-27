@@ -22,8 +22,6 @@ import java.util.Set;
 @Table(name = "products", indexes = {
         @Index(name = "idx_products_brand_active",
                 columnList = "brand_id, active"),
-        @Index(name = "idx_products_style_code",
-                columnList = "style_code"),
         @Index(name = "idx_products_gender",
                 columnList = "gender"),
         @Index(name = "idx_products_badges",
@@ -42,10 +40,6 @@ public class Product extends BaseAuditEntity {
     @NotNull
     @Column(name = "code", nullable = false, length = 50)
     private String code;
-
-    @Size(max = 50)
-    @Column(name = "style_code", length = 50)
-    private String styleCode;
 
     @Size(max = 255)
     @NotNull
@@ -82,15 +76,11 @@ public class Product extends BaseAuditEntity {
     @Column(name = "shaft_style")
     private ShaftStyle shaftStyle;
 
-    @NotNull
-    @Column(name = "base_price", nullable = false, precision = 15, scale = 2)
-    private BigDecimal basePrice;
+    @Column(name = "min_price", precision = 15, scale = 2)
+    private BigDecimal minPrice;
 
-    @Column(name = "original_price", precision = 15, scale = 2)
-    private BigDecimal originalPrice;
-
-    @Column(name = "cost_price", precision = 15, scale = 2)
-    private BigDecimal costPrice;
+    @Column(name = "max_price", precision = 15, scale = 2)
+    private BigDecimal maxPrice;
 
     @NotNull
     @ColumnDefault("0")

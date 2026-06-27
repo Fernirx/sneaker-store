@@ -25,6 +25,10 @@ public record UpdateVariantRequest(
 
         BigDecimal price,
 
+        BigDecimal originalPrice,
+
+        BigDecimal costPrice,
+
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         String sku,

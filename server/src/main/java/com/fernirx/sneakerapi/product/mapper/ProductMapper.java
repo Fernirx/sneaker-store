@@ -32,5 +32,7 @@ public interface ProductMapper {
     @Mapping(target = "productVariants", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "minPrice", ignore = true)
+    @Mapping(target = "maxPrice", ignore = true)
     void updateProduct(UpdateProductRequest request, @MappingTarget Product product);
 }

@@ -24,6 +24,8 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     boolean existsBySkuAndIdNot(String sku, Long id);
 
+    boolean existsByProductIdAndActiveTrue(Long productId);
+
     boolean existsByProductIdAndSizeAndColorwayAndShoeWidth(Long productId, Short size, String colorway, Object shoeWidth);
 
     @Query("SELECT v.stockQuantity FROM ProductVariant v WHERE v.id = :id")

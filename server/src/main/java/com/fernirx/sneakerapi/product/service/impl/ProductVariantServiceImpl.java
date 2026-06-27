@@ -90,9 +90,17 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         variant.setStockQuantity(request.stockQuantity());
         variant.setMinStockLevel(request.minStockLevel() != null ? request.minStockLevel() : 5);
         variant.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
-        variant.setActive(true);
+        variant.setOriginalPrice(request.originalPrice());
+        variant.setCostPrice(request.costPrice());
+        
+        boolean isValidPrice = variant.getPrice() != null && variant.getPrice().compareTo(java.math.BigDecimal.ZERO) > 0;
+        boolean isValidOriginal = variant.getOriginalPrice() == null || (variant.getPrice() != null && variant.getOriginalPrice().compareTo(variant.getPrice()) >= 0);
+        boolean requestedActive = request.active() != null ? request.active() : true;
+        variant.setActive(requestedActive && isValidPrice && isValidOriginal);
 
-        return productVariantMapper.toVariantResponse(productVariantRepository.save(variant));
+        ProductVariant saved = productVariantRepository.save(variant);
+        syncProductPrices(product);
+        return productVariantMapper.toVariantResponse(saved);
     }
 
     @Override
@@ -107,7 +115,16 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         }
 
         productVariantMapper.updateVariant(request, variant);
-        return productVariantMapper.toVariantResponse(productVariantRepository.save(variant));
+
+        boolean isValidPrice = variant.getPrice() != null && variant.getPrice().compareTo(java.math.BigDecimal.ZERO) > 0;
+        boolean isValidOriginal = variant.getOriginalPrice() == null || (variant.getPrice() != null && variant.getOriginalPrice().compareTo(variant.getPrice()) >= 0);
+        if (Boolean.TRUE.equals(variant.getActive()) && (!isValidPrice || !isValidOriginal)) {
+            variant.setActive(false);
+        }
+
+        ProductVariant saved = productVariantRepository.save(variant);
+        syncProductPrices(variant.getProduct());
+        return productVariantMapper.toVariantResponse(saved);
     }
 
     @Override
@@ -115,6 +132,8 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         findProduct(productId);
         ProductVariant variant = findVariant(productId, variantId);
         productVariantRepository.delete(variant);
+        productVariantRepository.flush();
+        syncProductPrices(variant.getProduct());
     }
 
     @Override
@@ -150,5 +169,20 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private ProductVariant findVariant(Long productId, Long variantId) {
         return productVariantRepository.findByIdAndProductId(variantId, productId)
                 .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
+    }
+
+    private void syncProductPrices(Product product) {
+        List<ProductVariant> activeVariants = productVariantRepository.findByProductIdAndActiveTrueOrderByDisplayOrderAsc(product.getId());
+        if (activeVariants.isEmpty()) {
+            product.setMinPrice(null);
+            product.setMaxPrice(null);
+            product.setActive(false);
+        } else {
+            java.math.BigDecimal min = activeVariants.stream().map(ProductVariant::getPrice).min(java.math.BigDecimal::compareTo).orElse(null);
+            java.math.BigDecimal max = activeVariants.stream().map(ProductVariant::getPrice).max(java.math.BigDecimal::compareTo).orElse(null);
+            product.setMinPrice(min);
+            product.setMaxPrice(max);
+        }
+        productRepository.save(product);
     }
 }

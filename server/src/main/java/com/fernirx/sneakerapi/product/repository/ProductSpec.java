@@ -59,12 +59,12 @@ public class ProductSpec {
 
     private static Specification<Product> hasMinPrice(BigDecimal minPrice) {
         return (root, query, cb) -> minPrice == null ? null
-                : cb.greaterThanOrEqualTo(root.get("basePrice"), minPrice);
+                : cb.greaterThanOrEqualTo(root.get("maxPrice"), minPrice);
     }
 
     private static Specification<Product> hasMaxPrice(BigDecimal maxPrice) {
         return (root, query, cb) -> maxPrice == null ? null
-                : cb.lessThanOrEqualTo(root.get("basePrice"), maxPrice);
+                : cb.lessThanOrEqualTo(root.get("minPrice"), maxPrice);
     }
 
     private static Specification<Product> isNewArrival(Boolean newArrival) {

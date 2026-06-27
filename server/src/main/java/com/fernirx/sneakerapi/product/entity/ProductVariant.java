@@ -68,6 +68,12 @@ public class ProductVariant extends BaseAuditEntity {
     @Column(name = "price", precision = 15, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "original_price", precision = 15, scale = 2)
+    private BigDecimal originalPrice;
+
+    @Column(name = "cost_price", precision = 15, scale = 2)
+    private BigDecimal costPrice;
+
     @Size(max = 100)
     @NotNull
     @Column(name = "sku", nullable = false, length = 100)

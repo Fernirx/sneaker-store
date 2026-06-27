@@ -18,7 +18,7 @@ public record VariantSearchResponse(
         Short size,
         ShoeWidth shoeWidth,
         BigDecimal price,
-        BigDecimal basePrice,
+
         Integer stockQuantity,
         Boolean active
 ) {}

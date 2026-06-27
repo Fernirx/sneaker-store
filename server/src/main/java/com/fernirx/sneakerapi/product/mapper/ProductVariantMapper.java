@@ -21,7 +21,6 @@ public interface ProductVariantMapper {
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productName", source = "product.name")
     @Mapping(target = "productCode", source = "product.code")
-    @Mapping(target = "basePrice", source = "product.basePrice")
     VariantSearchResponse toSearchResponse(ProductVariant variant);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

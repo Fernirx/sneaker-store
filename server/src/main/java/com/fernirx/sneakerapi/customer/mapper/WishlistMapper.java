@@ -35,15 +35,12 @@ public interface WishlistMapper {
 
     default BigDecimal resolvePrice(Wishlist wishlist) {
         ProductVariant variant = wishlist.getVariant();
-        Product product = wishlist.getProduct();
-        return variant != null && variant.getPrice() != null ? variant.getPrice() : product.getBasePrice();
+        return variant != null ? variant.getPrice() : wishlist.getProduct().getMinPrice();
     }
 
     default BigDecimal resolveOriginalPrice(Wishlist wishlist) {
-        BigDecimal originalPrice = wishlist.getProduct().getOriginalPrice();
-        if (originalPrice == null) return null;
-        BigDecimal price = resolvePrice(wishlist);
-        return originalPrice.compareTo(price) > 0 ? originalPrice : null;
+        ProductVariant variant = wishlist.getVariant();
+        return variant != null ? variant.getOriginalPrice() : null;
     }
 
     default boolean resolveOutOfStock(Wishlist wishlist) {
