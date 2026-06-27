@@ -37,14 +37,17 @@ export default function ProductDetailClient({
   const router = useRouter();
 
   const [colorIdx, setColorIdx]           = useState(0);
-  const [selectedSize, setSelectedSize]   = useState<SizeItem | null>(null);
+  const [selectedSize, setSelectedSize]   = useState<SizeItem | null>(() => {
+    const initColor = product.colors[0];
+    return initColor?.sizes?.find(s => s.stockQuantity > 0) ?? initColor?.sizes?.[0] ?? null;
+  });
   const [mainImgIdx, setMainImgIdx]       = useState(0);
   const [qty, setQty]                     = useState(1);
   const [addedToCart, setAddedToCart]     = useState(false);
   const [addLoading, setAddLoading]       = useState(false);
   const [addError, setAddError]           = useState('');
   const [wishlistPending, setWishlistPending] = useState(false);
-  const [activeTab, setActiveTab]         = useState<'reviews' | 'qa' | 'description'>('reviews');
+  const [activeTab, setActiveTab]         = useState<'reviews' | 'qa'>('reviews');
 
   const color         = product.colors[colorIdx];
   const currentImg    = color?.images[mainImgIdx] ?? color?.images[0];
@@ -53,13 +56,15 @@ export default function ProductDetailClient({
   const currentVariantId = selectedSize?.variantId ?? null;
   const wishlistEntry    = isWishlisted(product.id, currentVariantId);
 
-  const displayPrice  = product.basePrice;
-  const hasDiscount   = product.originalPrice != null && product.originalPrice > displayPrice;
-  const discountPct   = hasDiscount ? Math.round((1 - displayPrice / product.originalPrice!) * 100) : 0;
+  const displayPrice  = selectedSize?.price ?? color?.price ?? product.minPrice;
+  const hasDiscount   = false; // originalPrice is removed from product level
+  const discountPct   = 0;
 
   function handleColorChange(idx: number) {
     setColorIdx(idx);
-    setSelectedSize(null);
+    const targetColor = product.colors[idx];
+    const targetSize  = targetColor?.sizes?.find(s => s.stockQuantity > 0) ?? targetColor?.sizes?.[0] ?? null;
+    setSelectedSize(targetSize);
     setMainImgIdx(0);
     setQty(1);
   }
@@ -102,7 +107,6 @@ export default function ProductDetailClient({
     ...(product.soleType      ? [{ k: "Loại đế",     v: product.soleType }]                                       : []),
     ...(product.closureType   ? [{ k: "Kiểu khóa",  v: CLOSURE_LABEL[product.closureType] ?? product.closureType }] : []),
     ...(product.shaftStyle    ? [{ k: "Kiểu cổ",    v: SHAFT_LABEL[product.shaftStyle] ?? product.shaftStyle }]     : []),
-    ...(product.styleCode     ? [{ k: "Mã style",v: product.styleCode, mono: true }]                          : []),
     { k: "Đã bán", v: `${product.soldCount.toLocaleString('vi-VN')} ${"đôi"}` },
   ];
   if (specRows.length % 2 !== 0) specRows.push({ k: '', v: '' });
@@ -135,14 +139,14 @@ export default function ProductDetailClient({
                 <button
                   key={img.publicId}
                   onClick={() => setMainImgIdx(i)}
-                  className={`aspect-square border-[1.5px] rounded-sm overflow-hidden transition-all ${
-                    i === mainImgIdx ? 'border-ink' : 'border-line hover:border-muted'
+                  className={`aspect-square rounded-sm overflow-hidden transition-all ${
+                    i === mainImgIdx ? 'border-[1.5px] border-ink bg-white' : 'border-[1.5px] border-transparent hover:opacity-80'
                   }`}
                 >
                   <img
                     src={productUrl(img.publicId, 120, 120)}
                     alt=""
-                    className="w-full h-full object-contain bg-paper p-1"
+                    className="w-full h-full object-contain bg-transparent p-1"
                   />
                 </button>
               ))}
@@ -150,7 +154,7 @@ export default function ProductDetailClient({
           )}
 
           {/* Main image */}
-          <div className="aspect-square bg-paper border-[1.5px] border-line rounded-lg overflow-hidden relative">
+          <div className="aspect-square bg-transparent rounded-lg overflow-hidden relative">
             {currentImg ? (
               <img
                 src={productUrl(currentImg.publicId, 700, 700)}
@@ -178,37 +182,50 @@ export default function ProductDetailClient({
         </div>
 
         {/* ── RIGHT: Info ── */}
-        <div className="space-y-5">
+        <div className="flex flex-col">
 
-          {/* Brand */}
-          <div>
-            {product.brand.logoPublicId ? (
-              <img
-                src={brandUrl(product.brand.logoPublicId, 80, 40)}
-                alt={product.brand.name}
-                className="h-6 object-contain"
-              />
-            ) : (
-              <span className="text-[11px] font-bold uppercase tracking-widest text-muted">
-                {product.brand.name}
+          {/* Name */}
+          <h1 className="font-display font-black text-3xl leading-tight tracking-tight text-ink">
+            {product.name}
+          </h1>
+
+          {/* Brand & SKU */}
+          <div className="flex flex-col gap-0.5 -mt-1.5">
+            <div>
+              {product.brand.logoPublicId ? (
+                <img
+                  src={brandUrl(product.brand.logoPublicId, 80, 40)}
+                  alt={product.brand.name}
+                  className="h-4 object-contain"
+                />
+              ) : (
+                <span className="text-xs font-normal uppercase tracking-widest text-muted">
+                  {product.brand.name}
+                </span>
+              )}
+            </div>
+            {selectedSize?.sku && (
+              <span className="text-xs font-normal uppercase tracking-widest text-muted">
+                SKU: {selectedSize.sku}
               </span>
             )}
           </div>
 
-          {/* Name */}
-          <h1 className="font-display font-black text-4xl leading-none tracking-tight">
-            {product.name}
-          </h1>
-
           {/* Price */}
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <span className="font-display font-black text-[36px] leading-none tabular-nums">
-              {formatPrice(displayPrice)}
-            </span>
+          <div className="flex items-baseline gap-3 flex-wrap mt-5">
+            {displayPrice != null ? (
+              <span className="font-display font-normal text-2xl leading-none tabular-nums text-ink">
+                {(!selectedSize && product.maxPrice != null && product.maxPrice !== product.minPrice) 
+                  ? `${formatPrice(product.minPrice!)} - ${formatPrice(product.maxPrice)}`
+                  : formatPrice(displayPrice)}
+              </span>
+            ) : (
+              <span className="text-lg text-muted font-normal">Chưa có giá</span>
+            )}
             {hasDiscount && (
               <>
                 <span className="text-base text-faint line-through tabular-nums">
-                  {formatPrice(product.originalPrice!)}
+                  {/* formatPrice(product.originalPrice!) */}
                 </span>
                 <span className="text-[10px] font-black text-white bg-accent px-2 py-1 rounded-sm tabular-nums">
                   -{discountPct}%
@@ -217,13 +234,29 @@ export default function ProductDetailClient({
             )}
           </div>
 
+          {/* Trust strip */}
+          <div className="flex flex-wrap gap-6 py-4 border-t border-b border-line text-sm mt-4">
+            <span className="flex items-center gap-2 text-ok">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+              {"Chính hãng 100%"}
+            </span>
+            <span className="flex items-center gap-2 text-ok">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/>
+              </svg>
+              {"Đổi trả 30 ngày"}
+            </span>
+          </div>
+
           {/* Color selector */}
           {product.colors.length > 0 && (
-            <div>
+            <div className="mt-6">
               <p className="text-[13px] text-muted mb-2.5">
-                {"Màu sắc"}
+                {"Màu Sắc:"}
                 {color && (
-                  <span className="font-semibold text-ink"> / {color.colorway.toUpperCase()}</span>
+                  <span className="font-semibold text-ink"> {color.colorway.toUpperCase()}</span>
                 )}
               </p>
               <div className="flex gap-2.5 flex-wrap">
@@ -232,10 +265,10 @@ export default function ProductDetailClient({
                     key={c.colorway}
                     title={c.colorway}
                     onClick={() => handleColorChange(i)}
-                    className={`w-8 h-8 rounded-full transition-all ${
+                    className={`w-8 h-8 rounded-full border border-black/25 transition-all duration-200 cursor-pointer ${
                       i === colorIdx
-                        ? 'ring-[0.5px] ring-ink ring-offset-[4px]'
-                        : 'ring-[0.5px] ring-transparent ring-offset-[2px] hover:ring-line'
+                        ? 'ring-2 ring-ink ring-offset-2 scale-110 shadow-md border-black/40'
+                        : 'hover:scale-105 hover:border-black/50'
                     }`}
                     style={{ backgroundColor: c.colorHex ?? '#ccc' }}
                   />
@@ -246,12 +279,12 @@ export default function ProductDetailClient({
 
           {/* Size selector */}
           {color && color.sizes.length > 0 && (
-            <div>
+            <div className="mt-4">
               <div className="flex justify-between items-center mb-2.5">
                 <p className="text-[13px] text-muted">
-                  {"Kích thước"} (EU)
+                  {"Kích thước(Size):"}
                   {selectedSize && (
-                    <span className="font-semibold text-ink"> / {selectedSize.size}</span>
+                    <span className="font-semibold text-ink"> {selectedSize.size}</span>
                   )}
                 </p>
                 <span className="text-xs text-muted underline cursor-pointer">
@@ -280,88 +313,85 @@ export default function ProductDetailClient({
                   );
                 })}
               </div>
-              {selectedSize && selectedSize.stockQuantity > 0 && selectedSize.stockQuantity <= 5 && (
-                <p className="text-[11.5px] text-warn mt-2.5">
-                  ⚡ {`Chỉ còn ${selectedSize.stockQuantity} đôi size ${selectedSize.size} — đặt nhanh!`}
-                </p>
-              )}
             </div>
           )}
 
-          {/* Qty stepper + CTA */}
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center border-[1.5px] border-line rounded-sm overflow-hidden shrink-0">
-              <button
-                onClick={() => setQty(q => Math.max(1, q - 1))}
-                disabled={qty <= 1}
-                className="w-9 h-[38px] bg-white text-base text-ink hover:bg-line-2 disabled:opacity-25 disabled:cursor-not-allowed transition-colors select-none"
-              >
-                −
-              </button>
-              <span className="w-[42px] text-center font-semibold tabular-nums text-ink border-x border-[1.5px] border-line h-[38px] flex items-center justify-center">
-                {qty}
-              </span>
-              <button
-                onClick={() => setQty(q => selectedSize ? Math.min(q + 1, selectedSize.stockQuantity) : q + 1)}
-                disabled={!selectedSize || qty >= selectedSize.stockQuantity}
-                className="w-9 h-[38px] bg-white text-base text-ink hover:bg-line-2 disabled:opacity-25 disabled:cursor-not-allowed transition-colors select-none"
-              >
-                +
-              </button>
+          {/* Qty label, Stepper, Remaining Stock */}
+          <div className="mt-5">
+            <p className="text-[13px] text-muted mb-2">{"Số lượng:"}</p>
+            <div>
+              <div className="inline-flex items-center border-[1.5px] border-line rounded-sm overflow-hidden shrink-0">
+                <button
+                  onClick={() => setQty(q => Math.max(1, q - 1))}
+                  disabled={qty <= 1}
+                  className="w-9 h-[38px] bg-white text-base text-ink hover:bg-line-2 disabled:opacity-25 disabled:cursor-not-allowed transition-colors select-none"
+                >
+                  −
+                </button>
+                <span className="w-[42px] text-center font-semibold tabular-nums text-ink border-x border-[1.5px] border-line h-[38px] flex items-center justify-center">
+                  {qty}
+                </span>
+                <button
+                  onClick={() => setQty(q => selectedSize ? Math.min(q + 1, selectedSize.stockQuantity) : q + 1)}
+                  disabled={!selectedSize || qty >= selectedSize.stockQuantity}
+                  className="w-9 h-[38px] bg-white text-base text-ink hover:bg-line-2 disabled:opacity-25 disabled:cursor-not-allowed transition-colors select-none"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
-            <button
-              onClick={handleAddToCart}
-              disabled={!selectedSize || addLoading}
-              className={`flex-1 py-4 font-display font-black text-sm uppercase tracking-wider rounded-sm transition-all ${
-                addedToCart
-                  ? 'bg-ok text-white'
-                  : selectedSize && !addLoading
-                  ? 'bg-ink text-white hover:bg-accent'
-                  : 'bg-paper text-muted border border-line cursor-not-allowed'
-              }`}
-            >
-              {addedToCart
-                ? `✓ ${"Đã thêm vào giỏ"}`
-                : addLoading
-                ? '...'
-                : !selectedSize
-                ? "Chọn size"
-                : "Thêm vào giỏ hàng"}
-            </button>
-
-            {/* Wishlist */}
-            <button
-              onClick={handleToggleWishlist}
-              disabled={wishlistPending}
-              className={`inline-flex items-center justify-center w-10 h-10 border-[1.5px] rounded-sm transition-colors shrink-0 disabled:opacity-50 ${
-                wishlistEntry
-                  ? 'border-accent bg-accent text-white hover:bg-accent-700'
-                  : 'border-line bg-white text-ink hover:border-accent hover:text-accent'
-              }`}
-              aria-label={wishlistEntry ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill={wishlistEntry ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 21C12 21 4 16 2 10.5C0.5 6.5 3.5 3.5 7 3.5C9 3.5 10.5 4.7 12 6C13.5 4.7 15 3.5 17 3.5C20.5 3.5 23.5 6.5 22 10.5C20 16 12 21 12 21Z"/>
-              </svg>
-            </button>
+            {selectedSize && (
+              <p className={`text-xs mt-2.5 ${selectedSize.stockQuantity < 5 ? 'text-danger font-semibold' : 'text-muted'}`}>
+                {`Còn ${selectedSize.stockQuantity} sản phẩm`}
+              </p>
+            )}
           </div>
-          {addError && <p className="text-xs text-danger -mt-3">{addError}</p>}
 
-          {/* Trust strip */}
-          <div className="flex flex-wrap gap-6 py-4 border-t border-b border-line text-sm">
-            <span className="flex items-center gap-2 text-ok">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 6L9 17l-5-5"/>
-              </svg>
-              {"Chính hãng 100%"}
-            </span>
-            <span className="flex items-center gap-2 text-ok">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/>
-              </svg>
-              {"Đổi trả 30 ngày"}
-            </span>
+          {/* CTA & Wishlist */}
+          <div className="mt-4">
+            <div className="flex gap-3">
+              <button
+                onClick={handleAddToCart}
+                disabled={!selectedSize || addLoading}
+                className={`flex-1 py-4 font-display font-black text-sm uppercase tracking-wider rounded-sm transition-all ${
+                  addedToCart
+                    ? 'bg-ok text-white'
+                    : selectedSize && !addLoading
+                    ? 'bg-ink text-white hover:bg-accent'
+                    : 'bg-paper text-muted border border-line cursor-not-allowed'
+                }`}
+              >
+                {addedToCart
+                  ? `✓ ${"Đã thêm vào giỏ"}`
+                  : addLoading
+                  ? '...'
+                  : !selectedSize
+                  ? "Chọn size"
+                  : "Thêm vào giỏ hàng"}
+              </button>
+
+              {/* Wishlist */}
+              <button
+                onClick={handleToggleWishlist}
+                disabled={wishlistPending}
+                className={`inline-flex items-center justify-center w-11 border-[1.5px] rounded-sm transition-colors shrink-0 disabled:opacity-50 ${
+                  wishlistEntry
+                    ? 'border-accent bg-accent text-white hover:bg-accent-700'
+                    : 'border-line bg-white text-ink hover:border-accent hover:text-accent'
+                }`}
+                aria-label={wishlistEntry ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill={wishlistEntry ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 21C12 21 4 16 2 10.5C0.5 6.5 3.5 3.5 7 3.5C9 3.5 10.5 4.7 12 6C13.5 4.7 15 3.5 17 3.5C20.5 3.5 23.5 6.5 22 10.5C20 16 12 21 12 21Z"/>
+                </svg>
+              </button>
+            </div>
+            {addError && <p className="text-xs text-danger mt-2">{addError}</p>}
+
+            <p className="text-base font-normal text-ink text-center my-4">
+              {"Vui lòng chọn màu trước khi mua"}
+            </p>
           </div>
 
           {/* Specs grid */}
@@ -390,11 +420,21 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      {/* ── Tabs: Reviews + Description ── */}
-      <section className="py-16">
+      {/* ── Dedicated Description Section ── */}
+      {product.description && (
+        <section className="py-12 border-t border-line mt-10">
+          <h2 className="font-display font-black text-base uppercase tracking-wider text-ink mb-4">Mô tả sản phẩm</h2>
+          <div className="text-sm text-muted leading-relaxed whitespace-pre-line max-w-3xl">
+            {product.description}
+          </div>
+        </section>
+      )}
+
+      {/* ── Tabs: Reviews + Q&A ── */}
+      <section className="py-12 border-t border-line">
         {/* Tab bar */}
         <div className="flex gap-1 border-b-[1.5px] border-line mb-7">
-          {(['reviews', 'qa', 'description'] as const).map(tab => (
+          {(['reviews', 'qa'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -404,7 +444,7 @@ export default function ProductDetailClient({
                   : 'text-muted border-transparent hover:text-ink'
               }`}
             >
-              {tab === 'reviews' ? "Đánh giá" : tab === 'qa' ? "Hỏi & đáp" : "Mô tả"}
+              {tab === 'reviews' ? "Đánh giá" : "Hỏi & đáp"}
             </button>
           ))}
         </div>
@@ -427,13 +467,6 @@ export default function ProductDetailClient({
             isLoggedIn={isLoggedIn}
             currentUserId={currentUserId}
           />
-        )}
-
-        {/* Description panel */}
-        {activeTab === 'description' && (
-          product.description
-            ? <p className="text-sm text-muted leading-relaxed whitespace-pre-line max-w-2xl">{product.description}</p>
-            : <p className="text-sm text-muted">{"Chưa có mô tả."}</p>
         )}
       </section>
 

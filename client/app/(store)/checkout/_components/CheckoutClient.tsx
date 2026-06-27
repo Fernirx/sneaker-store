@@ -135,6 +135,12 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
+  const [couponCode, setCouponCode] = useState('');
+  const [couponInput, setCouponInput] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState<number>(0);
+  const [couponError, setCouponError] = useState('');
+  const [loadingCoupon, setLoadingCoupon] = useState(false);
+
   useEffect(() => {
     if (!isLoggedIn) return;
     setLoadingAddresses(true);
@@ -197,6 +203,34 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
     };
   }
 
+  async function handleApplyCoupon() {
+    if (!couponInput.trim()) return;
+    setLoadingCoupon(true);
+    setCouponError('');
+    try {
+      const { data } = await clientAxios.post('/api/coupons/preview', {
+        code: couponInput.trim(),
+        orderAmount: totalAmount,
+      });
+      setCouponCode(data.data.code);
+      setCouponDiscount(data.data.discountAmount);
+    } catch (err) {
+      const { general } = parseApiError(err, "Mã không hợp lệ hoặc không áp dụng được.");
+      setCouponError(general);
+      setCouponCode('');
+      setCouponDiscount(0);
+    } finally {
+      setLoadingCoupon(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setCouponInput('');
+    setCouponCode('');
+    setCouponDiscount(0);
+    setCouponError('');
+  }
+
   function startResendTimer() {
     setResendSeconds(60);
     const iv = setInterval(() => {
@@ -254,6 +288,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
           shippingDistrict: form.shippingDistrict.trim(),
           shippingProvince: form.shippingProvince.trim(),
           paymentMethod,
+          couponCode: couponCode || undefined,
           note: form.note.trim() || undefined,
           ...(isLoggedIn ? {} : { guestEmail: guestEmail.trim(), otpCode: otpCode.trim() }),
         },
@@ -280,6 +315,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
     return sum + price * i.quantity;
   }, 0);
   const totalDiscount = subtotalOriginal - totalAmount;
+  const finalTotal = Math.max(0, totalAmount - couponDiscount);
 
   function fieldCls(field: string) {
     return `w-full h-10 px-3 border rounded-sm text-[13px] text-ink placeholder:text-faint bg-white focus:outline-none transition-colors ${
@@ -452,7 +488,9 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                       type="tel"
                       value={form.recipientPhone.startsWith('+84') ? form.recipientPhone.slice(3) : form.recipientPhone}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, '');
+                        let val = e.target.value.replace(/\D/g, '');
+                        if (val.startsWith('84') && val.length >= 10) val = val.substring(2);
+                        if (val.startsWith('0')) val = val.substring(1);
                         setForm(prev => ({ ...prev, recipientPhone: val ? `+84${val}` : '' }));
                       }}
                       placeholder="901234567"
@@ -602,10 +640,57 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                   <span className="tabular-nums text-ok">-{formatPrice(totalDiscount)}</span>
                 </div>
               )}
+              {couponCode && (
+                <div className="flex justify-between items-baseline text-[13px]">
+                  <span className="text-muted">{"Mã giảm giá"} ({couponCode}):</span>
+                  <span className="tabular-nums text-ok">-{formatPrice(couponDiscount)}</span>
+                </div>
+              )}
             </div>
-            <div className="border-t border-line px-5 py-4 flex justify-between items-center">
+            
+            {/* Coupon Input */}
+            <div className="px-5 pb-4 border-b border-line space-y-2">
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted">
+                {"Mã giảm giá"}
+              </label>
+              {!couponCode ? (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                      placeholder="Nhập mã..."
+                      className="w-full h-9 px-3 border border-line rounded-sm text-[12px] text-ink placeholder:text-faint bg-white focus:outline-none focus:border-ink uppercase transition-colors"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={loadingCoupon || !couponInput.trim()}
+                      className="shrink-0 px-4 h-9 text-[11px] font-bold uppercase tracking-wide border border-line rounded-sm hover:bg-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {loadingCoupon ? "..." : "Áp dụng"}
+                    </button>
+                  </div>
+                  {couponError && <p className="text-[11px] text-danger mt-1.5">{couponError}</p>}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between bg-ok/10 border border-ok/20 rounded-sm px-3 py-2">
+                  <div className="flex items-center gap-2 text-ok">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                    <span className="text-[12px] font-bold uppercase tracking-wide">{couponCode}</span>
+                  </div>
+                  <button onClick={handleRemoveCoupon} className="text-[11px] text-danger hover:underline">
+                    Xóa
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="px-5 py-4 flex justify-between items-center">
               <span className="text-[12px] font-bold uppercase tracking-widest text-ink">{"Tổng cộng"}:</span>
-              <span className="text-[20px] font-bold tabular-nums text-ink">{formatPrice(totalAmount)}</span>
+              <span className="text-[20px] font-bold tabular-nums text-ink">{formatPrice(finalTotal)}</span>
             </div>
           </div>
           <p className="text-[11px] text-muted leading-relaxed px-1">

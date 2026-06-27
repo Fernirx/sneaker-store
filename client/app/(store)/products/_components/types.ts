@@ -18,8 +18,8 @@ export interface ProductResponse {
   slug: string;
   name: string;
   gender: string;
-  basePrice: number;
-  originalPrice: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
   newArrival: boolean;
   onSale: boolean;
   brand: BrandBrief;
@@ -53,6 +53,7 @@ export interface ImageItem {
 
 export interface SizeItem {
   variantId: number;
+  sku?: string;
   size: number;
   shoeWidth: string;
   price: number | null;
@@ -70,7 +71,6 @@ export interface ColorDetail {
 export interface ProductDetailResponse {
   id: number;
   slug: string;
-  styleCode: string | null;
   name: string;
   description: string | null;
   gender: string;
@@ -78,8 +78,8 @@ export interface ProductDetailResponse {
   soleType: string | null;
   closureType: string | null;
   shaftStyle: string | null;
-  basePrice: number;
-  originalPrice: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
   newArrival: boolean;
   onSale: boolean;
   soldCount: number;

@@ -6,17 +6,30 @@ import { productUrl } from '@/lib/cloudinaryUrl';
 import { type ProductResponse, formatPrice } from './types';
 
 export default function ProductCard({ product }: { product: ProductResponse }) {
-  const [colorIdx, setColorIdx] = useState(0);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(product.colors.length === 1 ? 0 : null);
 
-  const color = product.colors[colorIdx] ?? product.colors[0];
-  const price = color?.price ?? product.basePrice;
-  const imgSrc = color?.primaryImagePublicId
-    ? productUrl(color.primaryImagePublicId, 400, 400)
+  // Mặc định hiển thị ảnh của màu đầu tiên (0) nếu chưa chọn màu nào
+  const displayColor = selectedIdx != null ? product.colors[selectedIdx] : product.colors[0];
+  const imgSrc = displayColor?.primaryImagePublicId
+    ? productUrl(displayColor.primaryImagePublicId, 400, 400)
     : null;
+
+  // Luôn hiển thị khoảng giá Min - Max của sản phẩm (vì chọn màu ngoài thẻ chưa chọn size)
+  const priceNode = product.minPrice != null ? (
+    <div className="flex items-baseline justify-center gap-2 pt-0.5">
+      <span className="text-xs font-normal text-ink">
+        {product.maxPrice != null && product.maxPrice !== product.minPrice 
+          ? `${formatPrice(product.minPrice)} - ${formatPrice(product.maxPrice)}` 
+          : formatPrice(product.minPrice)}
+      </span>
+    </div>
+  ) : (
+    <div className="pt-0.5 text-xs text-muted font-normal text-center">Chưa có giá</div>
+  );
 
   return (
     <Link href={`/products/${product.slug}`} className="group block">
-      <div className="relative aspect-square bg-paper rounded-sm overflow-hidden border border-line">
+      <div className="relative aspect-square bg-transparent rounded-sm overflow-hidden">
         {imgSrc ? (
           <img
             src={imgSrc}
@@ -42,39 +55,40 @@ export default function ProductCard({ product }: { product: ProductResponse }) {
         </div>
       </div>
 
-      <div className="mt-2.5 space-y-0.5">
-        <p className="text-[11px] text-muted font-medium uppercase tracking-wide">{product.brand.name}</p>
-        <p className="font-bold text-sm leading-snug line-clamp-2">{product.name}</p>
-        <div className="flex items-baseline gap-2 pt-0.5">
-          <span className="font-display font-black text-sm">{formatPrice(price)}</span>
-          {product.originalPrice != null && product.originalPrice > price && (
-            <span className="text-xs text-muted line-through">{formatPrice(product.originalPrice)}</span>
-          )}
+      <div className="mt-2.5 flex flex-col items-center text-center">
+        <p className="text-[11px] text-muted font-normal uppercase tracking-wide">{product.brand.name}</p>
+        <p className="font-bold text-sm leading-snug line-clamp-2 text-ink mt-0.5">{product.name}</p>
+        <div className="mt-2 w-full flex justify-center">
+          {priceNode}
         </div>
       </div>
 
-      {product.colors.length > 1 && (
+      {product.colors.length > 0 && (
         <div
-          className="mt-2 flex gap-1.5 flex-wrap"
+          className="mt-2 flex gap-1.5 flex-wrap justify-center"
           onClick={e => e.preventDefault()}
         >
-          {product.colors.map((c, i) => (
-            <button
-              key={c.colorway}
-              title={c.colorway}
-              onClick={e => {
-                e.preventDefault();
-                e.stopPropagation();
-                setColorIdx(i);
-              }}
-              className={`w-3.5 h-3.5 rounded-full border-2 transition-all ${
-                i === colorIdx ? 'border-ink scale-110' : 'border-transparent hover:border-muted'
-              }`}
-              style={{ backgroundColor: c.colorHex ?? '#aaa' }}
-            />
-          ))}
+          {product.colors.map((c, i) => {
+            const isSelected = selectedIdx != null ? i === selectedIdx : (product.colors.length === 1 && i === 0);
+            return (
+              <button
+                key={c.colorway}
+                title={c.colorway}
+                onClick={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelectedIdx(i === selectedIdx && product.colors.length > 1 ? null : i);
+                }}
+                className={`w-3.5 h-3.5 rounded-full border border-black/25 transition-all duration-200 ${
+                  isSelected ? 'ring-[1.5px] ring-ink ring-offset-1 scale-125 border-black/40' : 'hover:scale-110 hover:border-black/50'
+                }`}
+                style={{ backgroundColor: c.colorHex ?? '#aaa' }}
+              />
+            );
+          })}
         </div>
       )}
     </Link>
   );
 }
+
