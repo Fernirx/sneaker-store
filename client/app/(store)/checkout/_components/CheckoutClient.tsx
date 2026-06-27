@@ -57,12 +57,12 @@ function CheckoutItem({ item }: { item: CartItemData }) {
 
   return (
     <div className="flex gap-4 py-4 border-b border-line last:border-b-0">
-      <div className="shrink-0 w-[72px] h-[72px] rounded-sm border border-line bg-paper overflow-hidden">
+      <div className="shrink-0 w-[72px] h-[72px] bg-transparent overflow-hidden">
         {item.primaryImagePublicId ? (
           <img
             src={productUrl(item.primaryImagePublicId, 144, 144)}
             alt={item.productName}
-            className="w-full h-full object-contain p-1"
+            className="w-full h-full object-contain"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-faint text-xs">—</div>

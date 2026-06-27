@@ -140,13 +140,13 @@ export default function ProductDetailClient({
                   key={img.publicId}
                   onClick={() => setMainImgIdx(i)}
                   className={`aspect-square rounded-sm overflow-hidden transition-all ${
-                    i === mainImgIdx ? 'border-[1.5px] border-ink bg-white' : 'border-[1.5px] border-transparent hover:opacity-80'
+                    i === mainImgIdx ? 'border-[1.5px] border-ink bg-transparent' : 'border-[1.5px] border-transparent hover:opacity-80 bg-transparent'
                   }`}
                 >
                   <img
                     src={productUrl(img.publicId, 120, 120)}
                     alt=""
-                    className="w-full h-full object-contain bg-transparent p-1"
+                    className="w-full h-full object-contain bg-transparent"
                   />
                 </button>
               ))}
@@ -159,7 +159,7 @@ export default function ProductDetailClient({
               <img
                 src={productUrl(currentImg.publicId, 700, 700)}
                 alt={product.name}
-                className="w-full h-full object-contain p-5"
+                className="w-full h-full object-contain"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-faint">—</div>

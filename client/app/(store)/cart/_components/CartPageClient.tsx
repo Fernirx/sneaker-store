@@ -68,13 +68,13 @@ function CartItemRow({ item }: { item: CartItemData }) {
       {/* Image */}
       <Link
         href={`/products/${item.productSlug}`}
-        className="shrink-0 w-[88px] h-[88px] rounded-sm border border-line bg-paper overflow-hidden"
+        className="shrink-0 w-[88px] h-[88px] bg-transparent overflow-hidden"
       >
         {item.primaryImagePublicId ? (
           <img
             src={productUrl(item.primaryImagePublicId, 176, 176)}
             alt={item.productName}
-            className="w-full h-full object-contain p-1.5"
+            className="w-full h-full object-contain"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-faint text-xs">—</div>

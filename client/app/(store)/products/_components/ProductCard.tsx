@@ -34,7 +34,7 @@ export default function ProductCard({ product }: { product: ProductResponse }) {
           <img
             src={imgSrc}
             alt={product.name}
-            className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted text-xs">
