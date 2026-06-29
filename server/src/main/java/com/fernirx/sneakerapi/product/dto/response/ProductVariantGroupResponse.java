@@ -21,6 +21,10 @@ public record ProductVariantGroupResponse(
             BigDecimal costPrice,
             Integer stockQuantity,
             Integer minStockLevel,
+            Integer weight,
+            Integer length,
+            Integer width,
+            Integer height,
             Integer displayOrder,
             Boolean active
     ) {}

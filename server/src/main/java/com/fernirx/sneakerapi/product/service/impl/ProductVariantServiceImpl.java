@@ -89,6 +89,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         variant.setSku(request.sku());
         variant.setStockQuantity(request.stockQuantity());
         variant.setMinStockLevel(request.minStockLevel() != null ? request.minStockLevel() : 5);
+        variant.setWeight(request.weight() != null ? request.weight() : 800);
+        variant.setLength(request.length() != null ? request.length() : 33);
+        variant.setWidth(request.width() != null ? request.width() : 22);
+        variant.setHeight(request.height() != null ? request.height() : 12);
         variant.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
         variant.setOriginalPrice(request.originalPrice());
         variant.setCostPrice(request.costPrice());

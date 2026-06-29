@@ -37,6 +37,14 @@ public record UpdateVariantRequest(
 
         Integer minStockLevel,
 
+        Integer weight,
+
+        Integer length,
+
+        Integer width,
+
+        Integer height,
+
         Integer displayOrder,
 
         Boolean active

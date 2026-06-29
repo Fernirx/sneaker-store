@@ -20,5 +20,9 @@ public record VariantSearchResponse(
         BigDecimal price,
 
         Integer stockQuantity,
+        Integer weight,
+        Integer length,
+        Integer width,
+        Integer height,
         Boolean active
 ) {}

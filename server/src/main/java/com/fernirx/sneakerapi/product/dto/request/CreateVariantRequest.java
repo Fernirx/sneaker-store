@@ -42,6 +42,14 @@ public record CreateVariantRequest(
 
         Integer minStockLevel,
 
+        Integer weight,
+
+        Integer length,
+
+        Integer width,
+
+        Integer height,
+
         Integer displayOrder,
 
         Boolean active

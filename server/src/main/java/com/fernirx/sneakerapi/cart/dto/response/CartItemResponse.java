@@ -19,5 +19,9 @@ public record CartItemResponse(
         BigDecimal originalPrice,
         Boolean selected,
         Integer stockQuantity,
-        Boolean outOfStock
+        Boolean outOfStock,
+        Integer weight,
+        Integer length,
+        Integer width,
+        Integer height
 ) {}

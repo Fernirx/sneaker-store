@@ -90,6 +90,26 @@ public class ProductVariant extends BaseAuditEntity {
     private Integer minStockLevel;
 
     @NotNull
+    @ColumnDefault("800")
+    @Column(name = "weight", nullable = false)
+    private Integer weight = 800;
+
+    @NotNull
+    @ColumnDefault("33")
+    @Column(name = "length", nullable = false)
+    private Integer length = 33;
+
+    @NotNull
+    @ColumnDefault("22")
+    @Column(name = "width", nullable = false)
+    private Integer width = 22;
+
+    @NotNull
+    @ColumnDefault("12")
+    @Column(name = "height", nullable = false)
+    private Integer height = 12;
+
+    @NotNull
     @ColumnDefault("0")
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder;

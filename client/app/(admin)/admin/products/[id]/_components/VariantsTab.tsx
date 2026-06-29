@@ -15,6 +15,10 @@ interface VariantRow {
   costPrice?: number | null;
   stockQuantity: number;
   minStockLevel: number;
+  weight?: number;
+  length?: number;
+  width?: number;
+  height?: number;
   displayOrder: number;
   active: boolean;
 }
@@ -31,6 +35,7 @@ type VForm = {
   size: string; shoeWidth: string; sku: string;
   price: string; originalPrice: string; costPrice: string;
   stockQuantity: string; minStockLevel: string; displayOrder: string;
+  weight: string; length: string; width: string; height: string;
   active: boolean;
 };
 
@@ -39,6 +44,7 @@ const EMPTY: VForm = {
   size: '', shoeWidth: 'REGULAR', sku: '',
   price: '', originalPrice: '', costPrice: '',
   stockQuantity: '0', minStockLevel: '5', displayOrder: '0',
+  weight: '800', length: '33', width: '22', height: '12',
   active: true,
 };
 
@@ -140,6 +146,29 @@ function VariantForm({
         </div>
       </div>
 
+      <div className="grid grid-cols-4 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">TLượng (g)</label>
+          <input type="number" value={form.weight} onChange={e => s('weight', e.target.value)} required min="1"
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Dài (cm)</label>
+          <input type="number" value={form.length} onChange={e => s('length', e.target.value)} required min="1"
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Rộng (cm)</label>
+          <input type="number" value={form.width} onChange={e => s('width', e.target.value)} required min="1"
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Cao (cm)</label>
+          <input type="number" value={form.height} onChange={e => s('height', e.target.value)} required min="1"
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
+        </div>
+      </div>
+
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Giá bán <span className="text-danger">*</span></label>
@@ -223,6 +252,10 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
         costPrice:     addForm.costPrice ? Number(addForm.costPrice) : null,
         stockQuantity: Number(addForm.stockQuantity),
         minStockLevel: Number(addForm.minStockLevel),
+        weight:        Number(addForm.weight || 800),
+        length:        Number(addForm.length || 33),
+        width:         Number(addForm.width || 22),
+        height:        Number(addForm.height || 12),
         displayOrder:  Number(addForm.displayOrder),
         active:        addForm.active,
       });
@@ -252,6 +285,10 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
       costPrice:     v.costPrice != null ? String(v.costPrice) : '',
       stockQuantity: String(v.stockQuantity),
       minStockLevel: String(v.minStockLevel),
+      weight:        v.weight != null ? String(v.weight) : '800',
+      length:        v.length != null ? String(v.length) : '33',
+      width:         v.width != null ? String(v.width) : '22',
+      height:        v.height != null ? String(v.height) : '12',
       displayOrder:  String(v.displayOrder),
       active:        v.active,
     });
@@ -275,6 +312,10 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
         costPrice:     editForm.costPrice     ? Number(editForm.costPrice)     : null,
         stockQuantity: editForm.stockQuantity ? Number(editForm.stockQuantity) : null,
         minStockLevel: editForm.minStockLevel ? Number(editForm.minStockLevel) : null,
+        weight:        editForm.weight ? Number(editForm.weight) : null,
+        length:        editForm.length ? Number(editForm.length) : null,
+        width:         editForm.width ? Number(editForm.width) : null,
+        height:        editForm.height ? Number(editForm.height) : null,
         displayOrder:  editForm.displayOrder  ? Number(editForm.displayOrder)  : null,
         active:        editForm.active,
       });
