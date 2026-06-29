@@ -94,3 +94,8 @@ customer:
   silver-threshold: ${CUSTOMER_SILVER_THRESHOLD:5000000}
   gold-threshold: ${CUSTOMER_GOLD_THRESHOLD:15000000}
   platinum-threshold: ${CUSTOMER_PLATINUM_THRESHOLD:30000000}
+
+ghn:
+  api-url: ${GHN_API_URL:https://dev-online-gateway.ghn.vn/shiip/public-api/v3}
+  token: ${GHN_TOKEN:}
+

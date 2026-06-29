@@ -24,13 +24,9 @@ public record CreateOrderRequest(
         @Size(max = 255, message = "{validation.size.max}")
         String shippingStreet,
 
-        @NullableNotBlank
-        @Size(max = 100, message = "{validation.size.max}")
-        String shippingWard,
-
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
-        String shippingDistrict,
+        String shippingWard,
 
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")

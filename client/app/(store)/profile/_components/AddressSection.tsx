@@ -9,8 +9,7 @@ interface Address {
   name: string;
   phone: string;
   street: string;
-  ward?: string;
-  district: string;
+  ward: string;
   province: string;
   postalCode?: string;
   defaultAddress: boolean;
@@ -65,7 +64,7 @@ export default function AddressSection() {
   }
 
   function formatAddress(a: Address) {
-    return [a.street, a.ward, a.district, a.province].filter(Boolean).join(', ');
+    return [a.street, a.ward, a.province].filter(Boolean).join(', ');
   }
 
   if (loading) {

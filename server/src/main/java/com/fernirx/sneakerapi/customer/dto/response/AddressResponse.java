@@ -11,7 +11,6 @@ public record AddressResponse(
         String phone,
         String street,
         String ward,
-        String district,
         String province,
         String postalCode,
         Boolean defaultAddress,

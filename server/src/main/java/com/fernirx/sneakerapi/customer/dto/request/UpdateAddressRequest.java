@@ -24,10 +24,6 @@ public record UpdateAddressRequest(
 
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
-        String district,
-
-        @NullableNotBlank
-        @Size(max = 100, message = "{validation.size.max}")
         String province,
 
         @NullableNotBlank

@@ -56,7 +56,7 @@ export default function ProductDetailClient({
   const currentVariantId = selectedSize?.variantId ?? null;
   const wishlistEntry    = isWishlisted(product.id, currentVariantId);
 
-  const displayPrice  = selectedSize?.price ?? color?.price ?? product.minPrice;
+  const displayPrice  = selectedSize?.price ?? color?.sizes?.[0]?.price ?? product.minPrice;
   const hasDiscount   = false; // originalPrice is removed from product level
   const discountPct   = 0;
 

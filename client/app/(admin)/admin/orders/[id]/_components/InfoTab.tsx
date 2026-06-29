@@ -47,7 +47,7 @@ export default function InfoTab({
     }
   }
 
-  const fullAddress = [order.shippingStreet, order.shippingWard, order.shippingDistrict, order.shippingProvince]
+  const fullAddress = [order.shippingStreet, order.shippingWard, order.shippingProvince]
     .filter(Boolean)
     .join(', ');
 

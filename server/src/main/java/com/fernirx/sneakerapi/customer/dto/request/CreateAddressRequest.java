@@ -20,13 +20,9 @@ public record CreateAddressRequest(
         @Size(max = 255, message = "{validation.size.max}")
         String street,
 
-        @NullableNotBlank
-        @Size(max = 100, message = "{validation.size.max}")
-        String ward,
-
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
-        String district,
+        String ward,
 
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")

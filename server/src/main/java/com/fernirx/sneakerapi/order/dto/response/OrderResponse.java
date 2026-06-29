@@ -18,7 +18,6 @@ public record OrderResponse(
         String recipientPhone,
         String shippingStreet,
         String shippingWard,
-        String shippingDistrict,
         String shippingProvince,
         BigDecimal subtotal,
         BigDecimal shippingFee,

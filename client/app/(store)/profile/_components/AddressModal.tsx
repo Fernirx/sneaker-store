@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { parseApiError } from '@/lib/parseApiError';
+import AddressSelector from '@/components/AddressSelector';
+
 
 export interface AddressForm {
   name: string;
   phone: string;
   street: string;
   ward: string;
-  district: string;
   province: string;
   postalCode: string;
   defaultAddress: boolean;
@@ -16,7 +17,7 @@ export interface AddressForm {
 
 const EMPTY: AddressForm = {
   name: '', phone: '', street: '', ward: '',
-  district: '', province: '', postalCode: '', defaultAddress: false,
+  province: '', postalCode: '', defaultAddress: false,
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -62,7 +63,7 @@ export default function AddressModal({
     if (!form.name.trim()) e.name = "Bắt buộc";
     if (!form.phone.trim()) e.phone = "Bắt buộc";
     if (!form.street.trim()) e.street = "Bắt buộc";
-    if (!form.district.trim()) e.district = "Bắt buộc";
+    if (!form.ward.trim()) e.ward = "Bắt buộc";
     if (!form.province.trim()) e.province = "Bắt buộc";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -136,29 +137,27 @@ export default function AddressModal({
             {errors.street && <p className="text-xs text-danger mt-1">{errors.street}</p>}
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={"Phường / Xã (tùy chọn)"}>
-              <input value={form.ward} onChange={e => set('ward', e.target.value)}
-                className={inputCls()} />
-            </Field>
-            <Field label={"Quận / Huyện"}>
-              <input value={form.district} onChange={e => set('district', e.target.value)}
-                className={inputCls(errors.district)} />
-              {errors.district && <p className="text-xs text-danger mt-1">{errors.district}</p>}
-            </Field>
-          </div>
+          <AddressSelector
+            province={form.province}
+            ward={form.ward}
+            onChange={({ province, ward }) => {
+              setForm(f => ({ ...f, province, ward }));
+              setErrors(e => {
+                const next = { ...e };
+                delete next.province;
+                delete next.ward;
+                return next;
+              });
+            }}
+            provinceError={errors.province}
+            wardError={errors.ward}
+          />
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={"Tỉnh / Thành phố"}>
-              <input value={form.province} onChange={e => set('province', e.target.value)}
-                className={inputCls(errors.province)} />
-              {errors.province && <p className="text-xs text-danger mt-1">{errors.province}</p>}
-            </Field>
-            <Field label={"Mã bưu chính (tùy chọn)"}>
-              <input value={form.postalCode} onChange={e => set('postalCode', e.target.value)}
-                className={inputCls()} />
-            </Field>
-          </div>
+          <Field label={"Mã bưu chính (tùy chọn)"}>
+            <input value={form.postalCode} onChange={e => set('postalCode', e.target.value)}
+              className={inputCls()} />
+          </Field>
+
 
           <label className="flex items-center gap-3 cursor-pointer select-none">
             <input type="checkbox" checked={form.defaultAddress}

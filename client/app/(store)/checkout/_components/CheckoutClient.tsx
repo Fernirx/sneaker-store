@@ -9,13 +9,14 @@ import { parseApiError } from '@/lib/parseApiError';
 import { guestHeaders } from '@/lib/guestToken';
 import { formatPrice } from '../../products/_components/types';
 import clientAxios from '@/lib/axios/clientAxios';
+import AddressSelector from '@/components/AddressSelector';
 
 type ShippingForm = {
+
   recipientName: string;
   recipientPhone: string;
   shippingStreet: string;
   shippingWard: string;
-  shippingDistrict: string;
   shippingProvince: string;
   note: string;
 };
@@ -26,7 +27,6 @@ interface Address {
   phone: string;
   street: string;
   ward?: string;
-  district: string;
   province: string;
   postalCode?: string;
   defaultAddress: boolean;
@@ -39,7 +39,6 @@ const EMPTY_FORM: ShippingForm = {
   recipientPhone: '',
   shippingStreet: '',
   shippingWard: '',
-  shippingDistrict: '',
   shippingProvince: '',
   note: '',
 };
@@ -156,7 +155,6 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
             recipientPhone: def.phone,
             shippingStreet: def.street,
             shippingWard: def.ward ?? '',
-            shippingDistrict: def.district,
             shippingProvince: def.province,
           }));
         }
@@ -172,7 +170,6 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       recipientPhone: addr.phone,
       shippingStreet: addr.street,
       shippingWard: addr.ward ?? '',
-      shippingDistrict: addr.district,
       shippingProvince: addr.province,
     }));
     setFieldErrors({});
@@ -265,7 +262,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       !form.recipientName.trim() ||
       !form.recipientPhone.trim() ||
       !form.shippingStreet.trim() ||
-      !form.shippingDistrict.trim() ||
+      !form.shippingWard.trim() ||
       !form.shippingProvince.trim();
     if (missingRequired) {
       setError("Vui lòng điền đầy đủ các trường bắt buộc.");
@@ -284,8 +281,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
           recipientName: form.recipientName.trim(),
           recipientPhone: form.recipientPhone.trim(),
           shippingStreet: form.shippingStreet.trim(),
-          shippingWard: form.shippingWard.trim() || undefined,
-          shippingDistrict: form.shippingDistrict.trim(),
+          shippingWard: form.shippingWard.trim(),
           shippingProvince: form.shippingProvince.trim(),
           paymentMethod,
           couponCode: couponCode || undefined,
@@ -411,8 +407,8 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                   {savedAddresses.map(addr => {
                     const isSelected = form.recipientName === addr.name &&
                                        form.recipientPhone === addr.phone &&
-                                       form.shippingStreet === addr.street &&
-                                       form.shippingDistrict === addr.district;
+                                       form.shippingWard === (addr.ward ?? '') &&
+                                       form.shippingProvince === addr.province;
                     return (
                       <label
                         key={addr.id}
@@ -437,7 +433,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                             )}
                           </p>
                           <p className="text-[12px] text-muted mt-0.5 truncate">
-                            {[addr.street, addr.ward, addr.district, addr.province].filter(Boolean).join(', ')}
+                            {[addr.street, addr.ward, addr.province].filter(Boolean).join(', ')}
                           </p>
                         </div>
                       </label>
@@ -515,45 +511,22 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                 <FieldError msg={fieldErrors.shippingStreet} />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                    {"Phường/Xã"}
-                  </label>
-                  <input
-                    type="text"
-                    value={form.shippingWard}
-                    onChange={handleField('shippingWard')}
-                    className={fieldCls('shippingWard')}
-                  />
-                  <FieldError msg={fieldErrors.shippingWard} />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                    {"Quận/Huyện"} <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.shippingDistrict}
-                    onChange={handleField('shippingDistrict')}
-                    className={fieldCls('shippingDistrict')}
-                  />
-                  <FieldError msg={fieldErrors.shippingDistrict} />
-                </div>
-              </div>
+              <AddressSelector
+                province={form.shippingProvince}
+                ward={form.shippingWard}
+                onChange={({ province, ward }) => {
+                  setForm(f => ({ ...f, shippingProvince: province, shippingWard: ward }));
+                  setFieldErrors(e => {
+                    const next = { ...e };
+                    delete next.shippingProvince;
+                    delete next.shippingWard;
+                    return next;
+                  });
+                }}
+                provinceError={fieldErrors.shippingProvince}
+                wardError={fieldErrors.shippingWard}
+              />
 
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                  {"Tỉnh/Thành phố"} <span className="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.shippingProvince}
-                  onChange={handleField('shippingProvince')}
-                  className={fieldCls('shippingProvince')}
-                />
-                <FieldError msg={fieldErrors.shippingProvince} />
-              </div>
 
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
