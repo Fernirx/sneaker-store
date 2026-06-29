@@ -12,15 +12,19 @@ export interface Locality {
 
 interface AddressSelectorProps {
   province: string;
+  provinceCode?: string;
   ward: string;
-  onChange: (data: { province: string; ward: string }) => void;
+  wardCode?: string;
+  onChange: (data: { province: string; provinceCode: string; ward: string; wardCode: string }) => void;
   provinceError?: string;
   wardError?: string;
 }
 
 export default function AddressSelector({
   province,
+  provinceCode,
   ward,
+  wardCode,
   onChange,
   provinceError,
   wardError,
@@ -155,7 +159,7 @@ export default function AddressSelector({
                       setSelectedProvinceId(p.id);
                       setProvOpen(false);
                       setProvSearch('');
-                      onChange({ province: p.name, ward: '' });
+                      onChange({ province: p.name, provinceCode: p.id, ward: '', wardCode: '' });
                     }}
                     className={`px-3 py-2 text-xs rounded cursor-pointer transition-colors ${
                       province === p.name ? 'bg-accent text-white font-semibold' : 'hover:bg-line-2 text-ink'
@@ -216,7 +220,7 @@ export default function AddressSelector({
                     onClick={() => {
                       setWardOpen(false);
                       setWardSearch('');
-                      onChange({ province, ward: w.name });
+                      onChange({ province, provinceCode: selectedProvinceId, ward: w.name, wardCode: w.id });
                     }}
                     className={`px-3 py-2 text-xs rounded cursor-pointer transition-colors ${
                       ward === w.name ? 'bg-accent text-white font-semibold' : 'hover:bg-line-2 text-ink'

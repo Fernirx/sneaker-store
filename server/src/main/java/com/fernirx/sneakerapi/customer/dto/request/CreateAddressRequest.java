@@ -25,8 +25,16 @@ public record CreateAddressRequest(
         String ward,
 
         @NotBlank(message = "{validation.field.not_blank}")
+        @Size(max = 50, message = "{validation.size.max}")
+        String wardCode,
+
+        @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
         String province,
+
+        @NotBlank(message = "{validation.field.not_blank}")
+        @Size(max = 50, message = "{validation.size.max}")
+        String provinceCode,
 
         @NullableNotBlank
         @Size(max = 20, message = "{validation.size.max}")

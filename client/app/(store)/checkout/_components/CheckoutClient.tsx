@@ -17,7 +17,9 @@ type ShippingForm = {
   recipientPhone: string;
   shippingStreet: string;
   shippingWard: string;
+  shippingWardCode: string;
   shippingProvince: string;
+  shippingProvinceCode: string;
   note: string;
 };
 
@@ -27,7 +29,9 @@ interface Address {
   phone: string;
   street: string;
   ward?: string;
+  wardCode?: string;
   province: string;
+  provinceCode?: string;
   postalCode?: string;
   defaultAddress: boolean;
 }
@@ -39,7 +43,9 @@ const EMPTY_FORM: ShippingForm = {
   recipientPhone: '',
   shippingStreet: '',
   shippingWard: '',
+  shippingWardCode: '',
   shippingProvince: '',
+  shippingProvinceCode: '',
   note: '',
 };
 
@@ -155,7 +161,9 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
             recipientPhone: def.phone,
             shippingStreet: def.street,
             shippingWard: def.ward ?? '',
+            shippingWardCode: def.wardCode ?? '',
             shippingProvince: def.province,
+            shippingProvinceCode: def.provinceCode ?? '',
           }));
         }
       })
@@ -170,7 +178,9 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       recipientPhone: addr.phone,
       shippingStreet: addr.street,
       shippingWard: addr.ward ?? '',
+      shippingWardCode: addr.wardCode ?? '',
       shippingProvince: addr.province,
+      shippingProvinceCode: addr.provinceCode ?? '',
     }));
     setFieldErrors({});
   }
@@ -282,7 +292,9 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
           recipientPhone: form.recipientPhone.trim(),
           shippingStreet: form.shippingStreet.trim(),
           shippingWard: form.shippingWard.trim(),
+          shippingWardCode: form.shippingWardCode.trim() || '10001',
           shippingProvince: form.shippingProvince.trim(),
+          shippingProvinceCode: form.shippingProvinceCode.trim() || '201',
           paymentMethod,
           couponCode: couponCode || undefined,
           note: form.note.trim() || undefined,
@@ -513,9 +525,11 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
 
               <AddressSelector
                 province={form.shippingProvince}
+                provinceCode={form.shippingProvinceCode}
                 ward={form.shippingWard}
-                onChange={({ province, ward }) => {
-                  setForm(f => ({ ...f, shippingProvince: province, shippingWard: ward }));
+                wardCode={form.shippingWardCode}
+                onChange={({ province, provinceCode, ward, wardCode }) => {
+                  setForm(f => ({ ...f, shippingProvince: province, shippingProvinceCode: provinceCode, shippingWard: ward, shippingWardCode: wardCode }));
                   setFieldErrors(e => {
                     const next = { ...e };
                     delete next.shippingProvince;

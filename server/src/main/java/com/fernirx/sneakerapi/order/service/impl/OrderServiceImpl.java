@@ -137,7 +137,9 @@ public class OrderServiceImpl implements OrderService {
         order.setRecipientPhone(request.recipientPhone());
         order.setShippingStreet(request.shippingStreet());
         order.setShippingWard(request.shippingWard());
+        order.setShippingWardCode(request.shippingWardCode());
         order.setShippingProvince(request.shippingProvince());
+        order.setShippingProvinceCode(request.shippingProvinceCode());
         order.setSubtotal(subtotal);
         order.setShippingFee(shippingFee);
         order.setDiscountAmount(discountAmount);

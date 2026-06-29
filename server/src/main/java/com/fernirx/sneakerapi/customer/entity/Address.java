@@ -45,10 +45,20 @@ public class Address extends BaseAuditEntity {
     @Column(name = "ward", nullable = false, length = 100)
     private String ward;
 
+    @Size(max = 50)
+    @NotNull
+    @Column(name = "ward_code", nullable = false, length = 50)
+    private String wardCode;
+
     @Size(max = 100)
     @NotNull
     @Column(name = "province", nullable = false, length = 100)
     private String province;
+
+    @Size(max = 50)
+    @NotNull
+    @Column(name = "province_code", nullable = false, length = 50)
+    private String provinceCode;
 
     @Size(max = 20)
     @Column(name = "postal_code", length = 20)

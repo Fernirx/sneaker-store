@@ -10,7 +10,9 @@ interface Address {
   phone: string;
   street: string;
   ward: string;
+  wardCode?: string;
   province: string;
+  provinceCode?: string;
   postalCode?: string;
   defaultAddress: boolean;
 }

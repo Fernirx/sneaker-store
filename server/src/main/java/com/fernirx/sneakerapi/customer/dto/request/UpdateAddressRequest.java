@@ -23,8 +23,16 @@ public record UpdateAddressRequest(
         String ward,
 
         @NullableNotBlank
+        @Size(max = 50, message = "{validation.size.max}")
+        String wardCode,
+
+        @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         String province,
+
+        @NullableNotBlank
+        @Size(max = 50, message = "{validation.size.max}")
+        String provinceCode,
 
         @NullableNotBlank
         @Size(max = 20, message = "{validation.size.max}")

@@ -10,14 +10,16 @@ export interface AddressForm {
   phone: string;
   street: string;
   ward: string;
+  wardCode: string;
   province: string;
+  provinceCode: string;
   postalCode: string;
   defaultAddress: boolean;
 }
 
 const EMPTY: AddressForm = {
-  name: '', phone: '', street: '', ward: '',
-  province: '', postalCode: '', defaultAddress: false,
+  name: '', phone: '', street: '', ward: '', wardCode: '',
+  province: '', provinceCode: '', postalCode: '', defaultAddress: false,
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -139,9 +141,11 @@ export default function AddressModal({
 
           <AddressSelector
             province={form.province}
+            provinceCode={form.provinceCode}
             ward={form.ward}
-            onChange={({ province, ward }) => {
-              setForm(f => ({ ...f, province, ward }));
+            wardCode={form.wardCode}
+            onChange={({ province, provinceCode, ward, wardCode }) => {
+              setForm(f => ({ ...f, province, provinceCode, ward, wardCode }));
               setErrors(e => {
                 const next = { ...e };
                 delete next.province;

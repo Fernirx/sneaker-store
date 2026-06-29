@@ -29,8 +29,16 @@ public record CreateOrderRequest(
         String shippingWard,
 
         @NotBlank(message = "{validation.field.not_blank}")
+        @Size(max = 50, message = "{validation.size.max}")
+        String shippingWardCode,
+
+        @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
         String shippingProvince,
+
+        @NotBlank(message = "{validation.field.not_blank}")
+        @Size(max = 50, message = "{validation.size.max}")
+        String shippingProvinceCode,
 
         @NotNull(message = "{validation.field.not_blank}")
         PaymentMethod paymentMethod,
