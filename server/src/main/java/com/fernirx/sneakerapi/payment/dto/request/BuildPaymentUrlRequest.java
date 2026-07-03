@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-public record PaymentRequest(
+public record BuildPaymentUrlRequest(
         @NotNull(message = "{validation.field.not_blank}")
         Long orderId,
 

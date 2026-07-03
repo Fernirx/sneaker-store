@@ -1,10 +1,10 @@
 package com.fernirx.sneakerapi.payment.provider;
 
-import com.fernirx.sneakerapi.payment.dto.request.PaymentRequest;
+import com.fernirx.sneakerapi.payment.dto.request.BuildPaymentUrlRequest;
 
 import java.util.Map;
 
 public interface PaymentProvider {
-    String buildPaymentUrl(PaymentRequest request, String ipAddress);
+    String buildPaymentUrl(BuildPaymentUrlRequest request, String ipAddress);
     boolean verifySignature(Map<String, String> params);
 }

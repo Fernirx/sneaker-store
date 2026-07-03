@@ -1,7 +1,7 @@
 package com.fernirx.sneakerapi.payment.provider.vnpay;
 
 import com.fernirx.sneakerapi.payment.config.VNPayProperties;
-import com.fernirx.sneakerapi.payment.dto.request.PaymentRequest;
+import com.fernirx.sneakerapi.payment.dto.request.BuildPaymentUrlRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +25,7 @@ public class VNPayClient {
 
     private final VNPayProperties properties;
 
-    public Map<String, String> buildBaseParams(PaymentRequest request, String ipAddress) {
+    public Map<String, String> buildBaseParams(BuildPaymentUrlRequest request, String ipAddress) {
         LocalDateTime now = LocalDateTime.now();
         String txnRef = request.orderId() + "_" + now.format(VNPAY_DATE);
         Map<String, String> params = new TreeMap<>();

@@ -8,7 +8,7 @@ import com.fernirx.sneakerapi.order.enums.OrderStatus;
 import com.fernirx.sneakerapi.order.enums.PaymentMethod;
 import com.fernirx.sneakerapi.order.service.OrderService;
 import com.fernirx.sneakerapi.payment.dto.request.PaymentFilterRequest;
-import com.fernirx.sneakerapi.payment.dto.request.PaymentRequest;
+import com.fernirx.sneakerapi.payment.dto.request.BuildPaymentUrlRequest;
 import com.fernirx.sneakerapi.payment.dto.response.PaymentInternalResponse;
 import com.fernirx.sneakerapi.payment.entity.Payment;
 import com.fernirx.sneakerapi.payment.enums.PaymentStatus;
@@ -53,7 +53,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw BusinessException.tooMany("label.payment");
         }
 
-        PaymentRequest request = new PaymentRequest(order.getId(), order.getCode(), order.getTotalAmount());
+        BuildPaymentUrlRequest request = new BuildPaymentUrlRequest(order.getId(), order.getCode(), order.getTotalAmount());
         return paymentProvider.buildPaymentUrl(request, ipAddress);
     }
 
