@@ -88,20 +88,26 @@ public class Order extends BaseAuditEntity {
     @Column(name = "shipping_ward", nullable = false, length = 100)
     private String shippingWard;
 
-    @Size(max = 50)
     @NotNull
-    @Column(name = "shipping_ward_code", nullable = false, length = 50)
-    private String shippingWardCode;
+    @Column(name = "shipping_ward_code", nullable = false)
+    private Integer shippingWardCode;
+
+    @Size(max = 100)
+    @NotNull
+    @Column(name = "shipping_district", nullable = false, length = 100)
+    private String shippingDistrict;
+
+    @Column(name = "shipping_district_code")
+    private Integer shippingDistrictCode;
 
     @Size(max = 100)
     @NotNull
     @Column(name = "shipping_province", nullable = false, length = 100)
     private String shippingProvince;
 
-    @Size(max = 50)
     @NotNull
-    @Column(name = "shipping_province_code", nullable = false, length = 50)
-    private String shippingProvinceCode;
+    @Column(name = "shipping_province_code", nullable = false)
+    private Integer shippingProvinceCode;
 
     @NotNull
     @Column(name = "subtotal", nullable = false, precision = 15, scale = 2)

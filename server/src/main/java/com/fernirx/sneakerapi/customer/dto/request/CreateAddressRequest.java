@@ -24,17 +24,21 @@ public record CreateAddressRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String ward,
 
+        @NotNull(message = "{validation.field.not_blank}")
+        Integer wardCode,
+
         @NotBlank(message = "{validation.field.not_blank}")
-        @Size(max = 50, message = "{validation.size.max}")
-        String wardCode,
+        @Size(max = 100, message = "{validation.size.max}")
+        String district,
+
+        Integer districtCode,
 
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
         String province,
 
-        @NotBlank(message = "{validation.field.not_blank}")
-        @Size(max = 50, message = "{validation.size.max}")
-        String provinceCode,
+        @NotNull(message = "{validation.field.not_blank}")
+        Integer provinceCode,
 
         @NullableNotBlank
         @Size(max = 20, message = "{validation.size.max}")

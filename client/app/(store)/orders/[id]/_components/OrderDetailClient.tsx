@@ -86,7 +86,7 @@ export default function OrderDetailClient({ orderId }: { orderId: number }) {
     );
   }
 
-  const fullAddress = [order.shippingStreet, order.shippingWard, order.shippingProvince]
+  const fullAddress = [order.shippingStreet, order.shippingWard, order.shippingDistrict, order.shippingProvince]
     .filter(Boolean)
     .join(', ');
 

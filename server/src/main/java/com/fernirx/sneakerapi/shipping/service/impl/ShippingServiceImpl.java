@@ -21,8 +21,19 @@ public class ShippingServiceImpl implements ShippingService {
     }
 
     @Override
-    @Cacheable(value = "shipping_wards_v2", key = "#provinceId")
-    public List<LocalityResponse> getWardsByProvince(Integer provinceId) {
-        return shippingProvider.getWardsByProvince(provinceId);
+    @Cacheable(value = "shipping_districts_v2", key = "#provinceId")
+    public List<LocalityResponse> getDistricts(Integer provinceId) {
+        return shippingProvider.getDistricts(provinceId);
+    }
+
+    @Override
+    @Cacheable(value = "shipping_wards_v2", key = "#districtId")
+    public List<LocalityResponse> getWardsByDistrict(Integer districtId) {
+        return shippingProvider.getWardsByDistrict(districtId);
+    }
+
+    @Override
+    public java.math.BigDecimal calculateFee(Integer toWardCode, String toAddress, List<com.fernirx.sneakerapi.shipping.dto.ParcelItem> items) {
+        return shippingProvider.calculateFee(toWardCode, toAddress, items);
     }
 }

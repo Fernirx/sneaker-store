@@ -11,6 +11,8 @@ interface Address {
   street: string;
   ward: string;
   wardCode?: string;
+  district: string;
+  districtCode?: string;
   province: string;
   provinceCode?: string;
   postalCode?: string;
@@ -66,7 +68,7 @@ export default function AddressSection() {
   }
 
   function formatAddress(a: Address) {
-    return [a.street, a.ward, a.province].filter(Boolean).join(', ');
+    return [a.street, a.ward, a.district, a.province].filter(Boolean).join(', ');
   }
 
   if (loading) {

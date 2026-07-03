@@ -3,12 +3,12 @@ import axios from 'axios';
 import { publicAxios } from '@/lib/axios/serverAxios';
 
 export async function GET(req: NextRequest) {
-  const districtId = req.nextUrl.searchParams.get('districtId');
-  if (!districtId) {
-    return NextResponse.json({ message: 'Missing districtId parameter' }, { status: 400 });
+  const provinceId = req.nextUrl.searchParams.get('provinceId');
+  if (!provinceId) {
+    return NextResponse.json({ message: 'Missing provinceId parameter' }, { status: 400 });
   }
   try {
-    const { data } = await publicAxios.get(`/public/shipping/wards?districtId=${districtId}`);
+    const { data } = await publicAxios.get(`/public/shipping/districts?provinceId=${provinceId}`);
     return NextResponse.json(data);
   } catch (error) {
     if (axios.isAxiosError(error)) {

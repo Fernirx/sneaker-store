@@ -22,17 +22,19 @@ public record UpdateAddressRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String ward,
 
+        Integer wardCode,
+
         @NullableNotBlank
-        @Size(max = 50, message = "{validation.size.max}")
-        String wardCode,
+        @Size(max = 100, message = "{validation.size.max}")
+        String district,
+
+        Integer districtCode,
 
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         String province,
 
-        @NullableNotBlank
-        @Size(max = 50, message = "{validation.size.max}")
-        String provinceCode,
+        Integer provinceCode,
 
         @NullableNotBlank
         @Size(max = 20, message = "{validation.size.max}")

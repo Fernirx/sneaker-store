@@ -11,6 +11,8 @@ export interface AddressForm {
   street: string;
   ward: string;
   wardCode: string;
+  district: string;
+  districtCode: string;
   province: string;
   provinceCode: string;
   postalCode: string;
@@ -18,7 +20,7 @@ export interface AddressForm {
 }
 
 const EMPTY: AddressForm = {
-  name: '', phone: '', street: '', ward: '', wardCode: '',
+  name: '', phone: '', street: '', ward: '', wardCode: '', district: '', districtCode: '',
   province: '', provinceCode: '', postalCode: '', defaultAddress: false,
 };
 
@@ -65,6 +67,7 @@ export default function AddressModal({
     if (!form.name.trim()) e.name = "Bắt buộc";
     if (!form.phone.trim()) e.phone = "Bắt buộc";
     if (!form.street.trim()) e.street = "Bắt buộc";
+    if (!form.district.trim()) e.district = "Bắt buộc";
     if (!form.ward.trim()) e.ward = "Bắt buộc";
     if (!form.province.trim()) e.province = "Bắt buộc";
     setErrors(e);
@@ -79,6 +82,7 @@ export default function AddressModal({
       await onSave({
         ...form,
         ward: form.ward.trim() || '',
+        district: form.district.trim() || '',
         postalCode: form.postalCode.trim() || '',
       });
     } catch (err: unknown) {
@@ -142,18 +146,22 @@ export default function AddressModal({
           <AddressSelector
             province={form.province}
             provinceCode={form.provinceCode}
+            district={form.district}
+            districtCode={form.districtCode}
             ward={form.ward}
             wardCode={form.wardCode}
-            onChange={({ province, provinceCode, ward, wardCode }) => {
-              setForm(f => ({ ...f, province, provinceCode, ward, wardCode }));
+            onChange={({ province, provinceCode, district, districtCode, ward, wardCode }) => {
+              setForm(f => ({ ...f, province, provinceCode, district, districtCode, ward, wardCode }));
               setErrors(e => {
                 const next = { ...e };
                 delete next.province;
+                delete next.district;
                 delete next.ward;
                 return next;
               });
             }}
             provinceError={errors.province}
+            districtError={errors.district}
             wardError={errors.ward}
           />
 

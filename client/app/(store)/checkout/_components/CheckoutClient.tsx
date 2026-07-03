@@ -18,6 +18,8 @@ type ShippingForm = {
   shippingStreet: string;
   shippingWard: string;
   shippingWardCode: string;
+  shippingDistrict: string;
+  shippingDistrictCode: string;
   shippingProvince: string;
   shippingProvinceCode: string;
   note: string;
@@ -30,6 +32,8 @@ interface Address {
   street: string;
   ward?: string;
   wardCode?: string;
+  district?: string;
+  districtCode?: string;
   province: string;
   provinceCode?: string;
   postalCode?: string;
@@ -44,6 +48,8 @@ const EMPTY_FORM: ShippingForm = {
   shippingStreet: '',
   shippingWard: '',
   shippingWardCode: '',
+  shippingDistrict: '',
+  shippingDistrictCode: '',
   shippingProvince: '',
   shippingProvinceCode: '',
   note: '',
@@ -146,6 +152,59 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
   const [couponError, setCouponError] = useState('');
   const [loadingCoupon, setLoadingCoupon] = useState(false);
 
+  const [shippingFee, setShippingFee] = useState<number | null>(null);
+  const [loadingShippingFee, setLoadingShippingFee] = useState(false);
+
+  const selectedItems = (cart?.items ?? []).filter(i => i.selected && !i.outOfStock);
+  const totalAmount   = Number(cart?.totalAmount ?? 0);
+
+  useEffect(() => {
+    if (!form.shippingWardCode || selectedItems.length === 0) {
+      setShippingFee(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingShippingFee(true);
+
+    const itemsPayload = selectedItems.map(item => ({
+      variantId: item.variantId,
+      quantity: item.quantity,
+    }));
+    const toAddress = [form.shippingStreet, form.shippingWard].filter(Boolean).join(', ');
+
+    clientAxios.post('/api/shipping/fee', {
+      toWardCode: form.shippingWardCode,
+      toAddress,
+      items: itemsPayload,
+    })
+      .then(({ data }) => {
+        if (!cancelled && data?.data !== undefined && data?.data !== null) {
+          setShippingFee(Number(data.data));
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching shipping fee:", err);
+        if (!cancelled) {
+          setShippingFee(30000); // Fallback fee nếu API lỗi
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingShippingFee(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    form.shippingWardCode,
+    form.shippingStreet,
+    form.shippingWard,
+    JSON.stringify(selectedItems.map(i => ({ v: i.variantId, q: i.quantity })))
+  ]);
+
   useEffect(() => {
     if (!isLoggedIn) return;
     setLoadingAddresses(true);
@@ -162,6 +221,8 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
             shippingStreet: def.street,
             shippingWard: def.ward ?? '',
             shippingWardCode: def.wardCode ?? '',
+            shippingDistrict: def.district ?? '',
+            shippingDistrictCode: def.districtCode ?? '',
             shippingProvince: def.province,
             shippingProvinceCode: def.provinceCode ?? '',
           }));
@@ -179,6 +240,8 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       shippingStreet: addr.street,
       shippingWard: addr.ward ?? '',
       shippingWardCode: addr.wardCode ?? '',
+      shippingDistrict: addr.district ?? '',
+      shippingDistrictCode: addr.districtCode ?? '',
       shippingProvince: addr.province,
       shippingProvinceCode: addr.provinceCode ?? '',
     }));
@@ -186,9 +249,6 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
   }
 
   if (loading) return <CheckoutSkeleton />;
-
-  const selectedItems = (cart?.items ?? []).filter(i => i.selected && !i.outOfStock);
-  const totalAmount   = Number(cart?.totalAmount ?? 0);
 
   if (selectedItems.length === 0) {
     return (
@@ -273,6 +333,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       !form.recipientPhone.trim() ||
       !form.shippingStreet.trim() ||
       !form.shippingWard.trim() ||
+      !form.shippingDistrict.trim() ||
       !form.shippingProvince.trim();
     if (missingRequired) {
       setError("Vui lòng điền đầy đủ các trường bắt buộc.");
@@ -293,6 +354,8 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
           shippingStreet: form.shippingStreet.trim(),
           shippingWard: form.shippingWard.trim(),
           shippingWardCode: form.shippingWardCode.trim() || '10001',
+          shippingDistrict: form.shippingDistrict.trim(),
+          shippingDistrictCode: form.shippingDistrictCode.trim() || undefined,
           shippingProvince: form.shippingProvince.trim(),
           shippingProvinceCode: form.shippingProvinceCode.trim() || '201',
           paymentMethod,
@@ -323,7 +386,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
     return sum + price * i.quantity;
   }, 0);
   const totalDiscount = subtotalOriginal - totalAmount;
-  const finalTotal = Math.max(0, totalAmount - couponDiscount);
+  const finalTotal = Math.max(0, totalAmount - couponDiscount + (shippingFee ?? 0));
 
   function fieldCls(field: string) {
     return `w-full h-10 px-3 border rounded-sm text-[13px] text-ink placeholder:text-faint bg-white focus:outline-none transition-colors ${
@@ -445,7 +508,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                             )}
                           </p>
                           <p className="text-[12px] text-muted mt-0.5 truncate">
-                            {[addr.street, addr.ward, addr.province].filter(Boolean).join(', ')}
+                            {[addr.street, addr.ward, addr.district, addr.province].filter(Boolean).join(', ')}
                           </p>
                         </div>
                       </label>
@@ -526,18 +589,27 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
               <AddressSelector
                 province={form.shippingProvince}
                 provinceCode={form.shippingProvinceCode}
+                district={form.shippingDistrict}
+                districtCode={form.shippingDistrictCode}
                 ward={form.shippingWard}
                 wardCode={form.shippingWardCode}
-                onChange={({ province, provinceCode, ward, wardCode }) => {
-                  setForm(f => ({ ...f, shippingProvince: province, shippingProvinceCode: provinceCode, shippingWard: ward, shippingWardCode: wardCode }));
+                onChange={({ province, provinceCode, district, districtCode, ward, wardCode }) => {
+                  setForm(f => ({
+                    ...f,
+                    shippingProvince: province, shippingProvinceCode: provinceCode,
+                    shippingDistrict: district, shippingDistrictCode: districtCode,
+                    shippingWard: ward, shippingWardCode: wardCode,
+                  }));
                   setFieldErrors(e => {
                     const next = { ...e };
                     delete next.shippingProvince;
+                    delete next.shippingDistrict;
                     delete next.shippingWard;
                     return next;
                   });
                 }}
                 provinceError={fieldErrors.shippingProvince}
+                districtError={fieldErrors.shippingDistrict}
                 wardError={fieldErrors.shippingWard}
               />
 
@@ -633,6 +705,18 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                   <span className="tabular-nums text-ok">-{formatPrice(couponDiscount)}</span>
                 </div>
               )}
+              <div className="flex justify-between items-baseline text-[13px]">
+                <span className="text-muted">{"Phí vận chuyển"}:</span>
+                <span className="tabular-nums text-ink">
+                  {loadingShippingFee ? (
+                    <span className="text-muted animate-pulse">{"Đang tính..."}</span>
+                  ) : shippingFee !== null ? (
+                    formatPrice(shippingFee)
+                  ) : (
+                    <span className="text-faint">{"Chưa chọn địa chỉ"}</span>
+                  )}
+                </span>
+              </div>
             </div>
             
             {/* Coupon Input */}
@@ -681,7 +765,9 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
             </div>
           </div>
           <p className="text-[11px] text-muted leading-relaxed px-1">
-            {"Phí giao hàng sẽ được cộng vào tổng đơn hàng khi đặt hàng thành công."}
+            {shippingFee !== null
+              ? "Phí giao hàng được tự động tính toán bởi GHN dựa trên địa chỉ và kích thước kiện hàng."
+              : "Phí giao hàng sẽ được hiển thị sau khi bạn chọn địa chỉ giao hàng."}
           </p>
 
           {error && (

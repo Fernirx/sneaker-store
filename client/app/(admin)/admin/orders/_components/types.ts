@@ -29,6 +29,7 @@ export interface OrderInternalResponse {
   recipientPhone: string;
   shippingStreet: string;
   shippingWard: string;
+  shippingDistrict: string;
   shippingProvince: string;
   subtotal: number;
   shippingFee: number;

@@ -69,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
     private final CouponService couponService;
     private final InventoryTransactionService inventoryTransactionService;
     private final OtpService otpService;
+    private final com.fernirx.sneakerapi.shipping.service.ShippingService shippingService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -123,7 +124,19 @@ public class OrderServiceImpl implements OrderService {
             discountAmount = couponResult.discountAmount();
         }
 
-        BigDecimal shippingFee = orderProperties.getShippingFee();
+        List<com.fernirx.sneakerapi.shipping.dto.ParcelItem> parcelItems = resolvedItems.stream()
+                .map(ri -> new com.fernirx.sneakerapi.shipping.dto.ParcelItem(
+                        ri.variant().getWeight(),
+                        ri.variant().getLength(),
+                        ri.variant().getWidth(),
+                        ri.variant().getHeight(),
+                        ri.quantity()
+                ))
+                .toList();
+        String toAddress = String.format("%s, %s",
+                request.shippingStreet() != null ? request.shippingStreet() : "",
+                request.shippingWard() != null ? request.shippingWard() : "");
+        BigDecimal shippingFee = shippingService.calculateFee(request.shippingWardCode(), toAddress, parcelItems);
         BigDecimal totalAmount = subtotal.add(shippingFee).subtract(discountAmount);
 
         Order order = new Order();
@@ -138,6 +151,8 @@ public class OrderServiceImpl implements OrderService {
         order.setShippingStreet(request.shippingStreet());
         order.setShippingWard(request.shippingWard());
         order.setShippingWardCode(request.shippingWardCode());
+        order.setShippingDistrict(request.shippingDistrict());
+        order.setShippingDistrictCode(request.shippingDistrictCode());
         order.setShippingProvince(request.shippingProvince());
         order.setShippingProvinceCode(request.shippingProvinceCode());
         order.setSubtotal(subtotal);

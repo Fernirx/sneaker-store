@@ -28,17 +28,21 @@ public record CreateOrderRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String shippingWard,
 
+        @NotNull(message = "{validation.field.not_blank}")
+        Integer shippingWardCode,
+
         @NotBlank(message = "{validation.field.not_blank}")
-        @Size(max = 50, message = "{validation.size.max}")
-        String shippingWardCode,
+        @Size(max = 100, message = "{validation.size.max}")
+        String shippingDistrict,
+
+        Integer shippingDistrictCode,
 
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
         String shippingProvince,
 
-        @NotBlank(message = "{validation.field.not_blank}")
-        @Size(max = 50, message = "{validation.size.max}")
-        String shippingProvinceCode,
+        @NotNull(message = "{validation.field.not_blank}")
+        Integer shippingProvinceCode,
 
         @NotNull(message = "{validation.field.not_blank}")
         PaymentMethod paymentMethod,
@@ -49,7 +53,6 @@ public record CreateOrderRequest(
 
         String note,
 
-        // Bắt buộc nếu là guest (userId == null) — validate trong service vì phụ thuộc context
         @NullableNotBlank
         @Email(message = "{validation.format.invalid}")
         String guestEmail,
