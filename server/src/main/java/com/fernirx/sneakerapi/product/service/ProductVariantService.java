@@ -15,6 +15,8 @@ public interface ProductVariantService {
 
     ProductVariant findActiveById(Long id);
 
+    List<ProductVariant> findAllActiveByIds(List<Long> ids);
+
     ProductVariant findById(Long id);
 
     List<ProductVariantGroupResponse> getVariants(Long productId);

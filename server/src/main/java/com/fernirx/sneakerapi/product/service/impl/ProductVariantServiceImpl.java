@@ -45,6 +45,16 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ProductVariant> findAllActiveByIds(List<Long> ids) {
+        List<ProductVariant> variants = productVariantRepository.findByIdInAndActiveTrue(ids);
+        if (variants.size() != ids.stream().distinct().count()) {
+            throw BusinessException.notFound("label.product.variant");
+        }
+        return variants;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ProductVariant findById(Long id) {
         return productVariantRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
