@@ -19,7 +19,10 @@ public class RedisConfig {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
         GenericJacksonJsonRedisSerializer serializer =
-                GenericJacksonJsonRedisSerializer.builder().build();
+                GenericJacksonJsonRedisSerializer.builder()
+                        .typePropertyName("@class")
+                        .enableUnsafeDefaultTyping()
+                        .build();
 
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(30))
