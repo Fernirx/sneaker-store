@@ -10,6 +10,7 @@ import { useWishlist } from '@/contexts/WishlistContext';
 import { parseApiError } from '@/lib/parseApiError';
 import ReviewsPanel from './ReviewsPanel';
 import CommentsPanel from './CommentsPanel';
+import ImageUnavailable from '@/components/ImageUnavailable';
 
 const GENDER_LABEL: Record<string, string> = {
   MEN: 'Nam', WOMEN: 'Nữ', UNISEX: 'Unisex', KIDS: 'Trẻ em',
@@ -162,7 +163,7 @@ export default function ProductDetailClient({
                 className="w-full h-full object-contain"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-faint">—</div>
+              <ImageUnavailable className="w-14 h-14" />
             )}
 
             {/* Badges */}

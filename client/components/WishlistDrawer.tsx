@@ -7,6 +7,7 @@ import { useCart } from '@/contexts/CartContext';
 import { productUrl } from '@/lib/cloudinaryUrl';
 import { formatPrice } from '@/app/(store)/products/_components/types';
 import { parseApiError } from '@/lib/parseApiError';
+import ImageUnavailable from '@/components/ImageUnavailable';
 
 function DrawerItem({ item, onClose }: { item: WishlistItemData; onClose: () => void }) {
   const { remove } = useWishlist();
@@ -60,7 +61,7 @@ function DrawerItem({ item, onClose }: { item: WishlistItemData; onClose: () => 
               className="w-full h-full object-contain group-hover/thumb:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-faint text-xs">—</div>
+            <ImageUnavailable className="w-8 h-8" />
           )}
         </Link>
 

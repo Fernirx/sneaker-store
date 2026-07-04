@@ -7,6 +7,7 @@ import { useCart, type CartItemData } from '@/contexts/CartContext';
 import { productUrl } from '@/lib/cloudinaryUrl';
 import { formatPrice } from '../../products/_components/types';
 import { parseApiError } from '@/lib/parseApiError';
+import ImageUnavailable from '@/components/ImageUnavailable';
 
 
 // ── Item row ──────────────────────────────────────────────────────────────────
@@ -77,7 +78,7 @@ function CartItemRow({ item }: { item: CartItemData }) {
             className="w-full h-full object-contain"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-faint text-xs">—</div>
+          <ImageUnavailable className="w-7 h-7" />
         )}
       </Link>
 
