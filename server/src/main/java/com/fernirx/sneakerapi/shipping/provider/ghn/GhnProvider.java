@@ -3,6 +3,9 @@ package com.fernirx.sneakerapi.shipping.provider.ghn;
 import com.fernirx.sneakerapi.shipping.config.GhnProperties;
 import com.fernirx.sneakerapi.shipping.dto.ParcelItem;
 import com.fernirx.sneakerapi.shipping.dto.ghn.GhnFeeRequest;
+import com.fernirx.sneakerapi.shipping.dto.ghn.GhnPreviewItem;
+import com.fernirx.sneakerapi.shipping.dto.ghn.GhnPreviewRequest;
+import com.fernirx.sneakerapi.shipping.dto.request.PreviewOrderFeeRequest;
 import com.fernirx.sneakerapi.shipping.dto.response.LocalityResponse;
 import com.fernirx.sneakerapi.shipping.provider.ShippingProvider;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,13 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class GhnProvider implements ShippingProvider {
+    /** Chính sách xem hàng mặc định khi tạo đơn GHN - cho xem, không cho thử/mở hộp */
+    private static final String DEFAULT_REQUIRED_NOTE = "CHOXEMHANGKHONGTHU";
+    /** payment_type_id = 1: người gửi (shop) trả phí GHN, khớp với model shippingFee gộp vào totalAmount khách trả cho shop */
+    private static final Integer DEFAULT_PAYMENT_TYPE_ID = 1;
+    /** service_type_id = 2: hàng nhẹ - GHN tính cước theo length/width/height/weight top-level, không đọc items[] */
+    private static final Integer SERVICE_TYPE_ID = 2;
+
     private final GhnClient ghnClient;
     private final GhnProperties properties;
 
@@ -39,7 +49,52 @@ public class GhnProvider implements ShippingProvider {
     }
 
     @Override
-    public BigDecimal calculateFee(Integer toWardCode, String toAddress, List<ParcelItem> items) {
+    public BigDecimal calculateFee(Integer toDistrictCode, Integer toWardCode, List<ParcelItem> items) {
+        PackageDimensions dimensions = aggregateDimensions(items);
+
+        GhnFeeRequest requestDto = new GhnFeeRequest(
+                properties.getShopId(),
+                SERVICE_TYPE_ID,
+                toDistrictCode,
+                toWardCode,
+                dimensions.height(),
+                dimensions.length(),
+                dimensions.weight(),
+                dimensions.width()
+        );
+
+        return ghnClient.calculateFee(requestDto, properties.getFallbackFee());
+    }
+
+    @Override
+    public BigDecimal previewOrderFee(PreviewOrderFeeRequest request) {
+        PackageDimensions dimensions = aggregateDimensions(request.items());
+
+        List<GhnPreviewItem> previewItems = request.items().stream()
+                .map(item -> new GhnPreviewItem(item.name(), item.code(), item.quantity()))
+                .toList();
+
+        GhnPreviewRequest requestDto = new GhnPreviewRequest(
+                DEFAULT_PAYMENT_TYPE_ID,
+                DEFAULT_REQUIRED_NOTE,
+                request.recipientName(),
+                request.recipientPhone(),
+                request.shippingStreet(),
+                request.shippingWard(),
+                request.shippingDistrict(),
+                request.shippingProvince(),
+                dimensions.length(),
+                dimensions.width(),
+                dimensions.height(),
+                dimensions.weight(),
+                SERVICE_TYPE_ID,
+                previewItems
+        );
+
+        return ghnClient.previewOrder(requestDto, properties.getFallbackFee());
+    }
+
+    private PackageDimensions aggregateDimensions(List<ParcelItem> items) {
         int totalWeight = items.stream()
                 .mapToInt(item -> (item.weight() != null && item.weight() > 0 ? item.weight() : 800) * (item.quantity() != null ? item.quantity() : 1))
                 .sum();
@@ -64,25 +119,8 @@ public class GhnProvider implements ShippingProvider {
             totalHeight = 12;
         }
 
-        String fromAddressV2 = String.format("%s, %s",
-                properties.getFromStreet() != null ? properties.getFromStreet() : "",
-                properties.getFromWardName() != null ? properties.getFromWardName() : "");
-
-        GhnFeeRequest requestDto = new GhnFeeRequest(
-                properties.getShopId(),
-                2,
-                properties.getFromWardCode(),
-                fromAddressV2,
-                toWardCode,
-                toAddress != null && !toAddress.isBlank() ? toAddress : ("Khách hàng, Phường/Xã " + toWardCode),
-                true,
-                true,
-                totalHeight,
-                maxLength,
-                totalWeight,
-                maxWidth
-        );
-
-        return ghnClient.calculateFee(requestDto, properties.getFallbackFee());
+        return new PackageDimensions(totalWeight, maxLength, maxWidth, totalHeight);
     }
+
+    private record PackageDimensions(int weight, int length, int width, int height) {}
 }

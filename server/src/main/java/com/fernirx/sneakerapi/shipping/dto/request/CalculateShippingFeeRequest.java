@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record CalculateShippingFeeRequest(
+        @NotNull Integer toDistrictCode,
         @NotNull Integer toWardCode,
-        String toAddress,
         @NotEmpty @Valid List<ShippingItemRequest> items
 ) {}

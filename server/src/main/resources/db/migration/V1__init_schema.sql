@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS `addresses` (
   `ward`        VARCHAR(100)     NOT NULL,
   `ward_code`   INT              NOT NULL,
   `district`    VARCHAR(100)     NOT NULL,
-  `district_code` INT            NULL DEFAULT NULL,
+  `district_code` INT            NOT NULL,
   `province`    VARCHAR(100)     NOT NULL,
   `province_code` INT            NOT NULL,
   `postal_code` VARCHAR(20)      NULL DEFAULT NULL,
@@ -518,11 +518,8 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `recipient_phone`  VARCHAR(20)      NOT NULL,
   `shipping_street`  VARCHAR(255)     NOT NULL,
   `shipping_ward`         VARCHAR(100)     NOT NULL,
-  `shipping_ward_code`    INT              NOT NULL,
   `shipping_district`     VARCHAR(100)     NOT NULL,
-  `shipping_district_code` INT             NULL DEFAULT NULL,
   `shipping_province`     VARCHAR(100)     NOT NULL,
-  `shipping_province_code` INT             NOT NULL,
   `subtotal`         DECIMAL(15,2)    NOT NULL,
   `shipping_fee`     DECIMAL(15,2)    NOT NULL DEFAULT 0,
   `discount_amount`  DECIMAL(15,2)    NOT NULL DEFAULT 0,
@@ -871,3 +868,21 @@ CREATE TABLE IF NOT EXISTS `point_transactions` (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
   COMMENT = 'Lịch sử giao dịch điểm tích lũy của khách hàng';
+
+
+-- =====================================================
+-- MODULE: setting
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS `store_settings` (
+  `id`                   BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `points_per_amount`    DECIMAL(15,2)    NOT NULL,
+  `free_ship_threshold`  DECIMAL(15,2)    NOT NULL,
+  `silver_threshold`     DECIMAL(15,2)    NOT NULL,
+  `gold_threshold`       DECIMAL(15,2)    NOT NULL,
+  `platinum_threshold`   DECIMAL(15,2)    NOT NULL,
+  `created_at`           DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`           DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
+  COMMENT = 'Chính sách giá/ưu đãi của cửa hàng - điểm tích lũy, free-ship, hạng thành viên, luôn đúng 1 dòng (id=1)';

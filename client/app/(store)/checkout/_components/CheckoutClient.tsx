@@ -17,11 +17,11 @@ type ShippingForm = {
   recipientPhone: string;
   shippingStreet: string;
   shippingWard: string;
-  shippingWardCode: string;
+  shippingWardCode: number | null;
   shippingDistrict: string;
-  shippingDistrictCode: string;
+  shippingDistrictCode: number | null;
   shippingProvince: string;
-  shippingProvinceCode: string;
+  shippingProvinceCode: number | null;
   note: string;
 };
 
@@ -31,11 +31,11 @@ interface Address {
   phone: string;
   street: string;
   ward?: string;
-  wardCode?: string;
+  wardCode?: number;
   district?: string;
-  districtCode?: string;
+  districtCode?: number;
   province: string;
-  provinceCode?: string;
+  provinceCode?: number;
   postalCode?: string;
   defaultAddress: boolean;
 }
@@ -47,11 +47,11 @@ const EMPTY_FORM: ShippingForm = {
   recipientPhone: '',
   shippingStreet: '',
   shippingWard: '',
-  shippingWardCode: '',
+  shippingWardCode: null,
   shippingDistrict: '',
-  shippingDistrictCode: '',
+  shippingDistrictCode: null,
   shippingProvince: '',
-  shippingProvinceCode: '',
+  shippingProvinceCode: null,
   note: '',
 };
 
@@ -145,6 +145,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
 
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
   const [couponCode, setCouponCode] = useState('');
   const [couponInput, setCouponInput] = useState('');
@@ -159,7 +160,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
   const totalAmount   = Number(cart?.totalAmount ?? 0);
 
   useEffect(() => {
-    if (!form.shippingWardCode || selectedItems.length === 0) {
+    if (!form.shippingWardCode || !form.shippingDistrictCode || selectedItems.length === 0) {
       setShippingFee(null);
       return;
     }
@@ -171,11 +172,10 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       variantId: item.variantId,
       quantity: item.quantity,
     }));
-    const toAddress = [form.shippingStreet, form.shippingWard].filter(Boolean).join(', ');
 
     clientAxios.post('/api/shipping/fee', {
+      toDistrictCode: form.shippingDistrictCode,
       toWardCode: form.shippingWardCode,
-      toAddress,
       items: itemsPayload,
     })
       .then(({ data }) => {
@@ -186,7 +186,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       .catch((err) => {
         console.error("Error fetching shipping fee:", err);
         if (!cancelled) {
-          setShippingFee(30000); // Fallback fee nếu API lỗi
+          setShippingFee(0);
         }
       })
       .finally(() => {
@@ -200,8 +200,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
     };
   }, [
     form.shippingWardCode,
-    form.shippingStreet,
-    form.shippingWard,
+    form.shippingDistrictCode,
     JSON.stringify(selectedItems.map(i => ({ v: i.variantId, q: i.quantity })))
   ]);
 
@@ -220,12 +219,13 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
             recipientPhone: def.phone,
             shippingStreet: def.street,
             shippingWard: def.ward ?? '',
-            shippingWardCode: def.wardCode ?? '',
+            shippingWardCode: def.wardCode ?? null,
             shippingDistrict: def.district ?? '',
-            shippingDistrictCode: def.districtCode ?? '',
+            shippingDistrictCode: def.districtCode ?? null,
             shippingProvince: def.province,
-            shippingProvinceCode: def.provinceCode ?? '',
+            shippingProvinceCode: def.provinceCode ?? null,
           }));
+          setSelectedAddressId(def.id);
         }
       })
       .catch(() => {})
@@ -239,12 +239,13 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       recipientPhone: addr.phone,
       shippingStreet: addr.street,
       shippingWard: addr.ward ?? '',
-      shippingWardCode: addr.wardCode ?? '',
+      shippingWardCode: addr.wardCode ?? null,
       shippingDistrict: addr.district ?? '',
-      shippingDistrictCode: addr.districtCode ?? '',
+      shippingDistrictCode: addr.districtCode ?? null,
       shippingProvince: addr.province,
-      shippingProvinceCode: addr.provinceCode ?? '',
+      shippingProvinceCode: addr.provinceCode ?? null,
     }));
+    setSelectedAddressId(addr.id);
     setFieldErrors({});
   }
 
@@ -353,11 +354,8 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
           recipientPhone: form.recipientPhone.trim(),
           shippingStreet: form.shippingStreet.trim(),
           shippingWard: form.shippingWard.trim(),
-          shippingWardCode: form.shippingWardCode.trim() || '10001',
           shippingDistrict: form.shippingDistrict.trim(),
-          shippingDistrictCode: form.shippingDistrictCode.trim() || undefined,
           shippingProvince: form.shippingProvince.trim(),
-          shippingProvinceCode: form.shippingProvinceCode.trim() || '201',
           paymentMethod,
           couponCode: couponCode || undefined,
           note: form.note.trim() || undefined,
@@ -480,10 +478,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
               <div className="p-5">
                 <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
                   {savedAddresses.map(addr => {
-                    const isSelected = form.recipientName === addr.name &&
-                                       form.recipientPhone === addr.phone &&
-                                       form.shippingWard === (addr.ward ?? '') &&
-                                       form.shippingProvince === addr.province;
+                    const isSelected = addr.id === selectedAddressId;
                     return (
                       <label
                         key={addr.id}

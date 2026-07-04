@@ -10,18 +10,18 @@ export interface AddressForm {
   phone: string;
   street: string;
   ward: string;
-  wardCode: string;
+  wardCode: number | null;
   district: string;
-  districtCode: string;
+  districtCode: number | null;
   province: string;
-  provinceCode: string;
+  provinceCode: number | null;
   postalCode: string;
   defaultAddress: boolean;
 }
 
 const EMPTY: AddressForm = {
-  name: '', phone: '', street: '', ward: '', wardCode: '', district: '', districtCode: '',
-  province: '', provinceCode: '', postalCode: '', defaultAddress: false,
+  name: '', phone: '', street: '', ward: '', wardCode: null, district: '', districtCode: null,
+  province: '', provinceCode: null, postalCode: '', defaultAddress: false,
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

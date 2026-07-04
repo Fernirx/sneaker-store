@@ -87,20 +87,8 @@ vnpay:
 order:
   expire-minutes: ${ORDER_EXPIRE_MINUTES:15}
   max-payment-attempts: ${ORDER_MAX_PAYMENT_ATTEMPTS:4}
-  shipping-fee: ${ORDER_SHIPPING_FEE:30000}
-
-customer:
-  points-per-amount: ${CUSTOMER_POINTS_PER_AMOUNT:10000}
-  silver-threshold: ${CUSTOMER_SILVER_THRESHOLD:5000000}
-  gold-threshold: ${CUSTOMER_GOLD_THRESHOLD:15000000}
-  platinum-threshold: ${CUSTOMER_PLATINUM_THRESHOLD:30000000}
 
 ghn:
-  api-url: ${GHN_API_URL:https://dev-online-gateway.ghn.vn/shiip/public-api}
-  fee-url: ${GHN_FEE_URL:https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee}
+  url: ${GHN_URL:https://dev-online-gateway.ghn.vn/shiip/public-api}
   token: ${GHN_TOKEN:568912b0-e502-11ef-b2e4-6ec7c647cc27}
   shop-id: ${GHN_SHOP_ID:200925}
-  from-ward-code: ${GHN_FROM_WARD_CODE:1003646}
-  from-ward-name: ${GHN_FROM_WARD_NAME:Hiệp Phước}
-  from-street: ${GHN_FROM_STREET:183/7 ấp 37}
-

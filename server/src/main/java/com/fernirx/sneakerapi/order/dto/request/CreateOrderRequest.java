@@ -28,21 +28,13 @@ public record CreateOrderRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String shippingWard,
 
-        @NotNull(message = "{validation.field.not_blank}")
-        Integer shippingWardCode,
-
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
         String shippingDistrict,
 
-        Integer shippingDistrictCode,
-
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
         String shippingProvince,
-
-        @NotNull(message = "{validation.field.not_blank}")
-        Integer shippingProvinceCode,
 
         @NotNull(message = "{validation.field.not_blank}")
         PaymentMethod paymentMethod,

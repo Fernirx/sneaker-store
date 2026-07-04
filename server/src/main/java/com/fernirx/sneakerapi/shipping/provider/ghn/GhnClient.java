@@ -2,10 +2,7 @@ package com.fernirx.sneakerapi.shipping.provider.ghn;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fernirx.sneakerapi.shipping.config.GhnProperties;
-import com.fernirx.sneakerapi.shipping.dto.ghn.GhnApiResponse;
-import com.fernirx.sneakerapi.shipping.dto.ghn.GhnFeeApiResponse;
-import com.fernirx.sneakerapi.shipping.dto.ghn.GhnFeeRequest;
-import com.fernirx.sneakerapi.shipping.dto.ghn.GhnLocality;
+import com.fernirx.sneakerapi.shipping.dto.ghn.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -22,30 +19,23 @@ import java.util.Map;
 @Component
 public class GhnClient {
     private final RestClient restClient;
-    private final RestClient feeClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public GhnClient(GhnProperties properties) {
-        this.restClient = RestClient.builder()
-                .baseUrl(properties.getApiUrl())
-                .defaultHeader("token", properties.getToken())
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        RestClient.Builder feeBuilder = RestClient.builder()
-                .baseUrl(properties.getFeeUrl())
+        RestClient.Builder builder = RestClient.builder()
+                .baseUrl(properties.getUrl())
                 .defaultHeader("token", properties.getToken())
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE);
         if (properties.getShopId() != null) {
-            feeBuilder.defaultHeader("ShopId", String.valueOf(properties.getShopId()))
-                      .defaultHeader("shop_id", String.valueOf(properties.getShopId()));
+            builder.defaultHeader("ShopId", String.valueOf(properties.getShopId()))
+                   .defaultHeader("shop_id", String.valueOf(properties.getShopId()));
         }
-        this.feeClient = feeBuilder.build();
+        this.restClient = builder.build();
     }
 
-    public List<GhnLocality> getProvinces() {
+    public List<GhnProvince> getProvinces() {
         try {
-            GhnApiResponse<GhnLocality> response = restClient.get()
+            GhnApiResponse<GhnProvince> response = restClient.get()
                     .uri("/master-data/province")
                     .retrieve()
                     .body(new ParameterizedTypeReference<>() {});
@@ -56,9 +46,9 @@ public class GhnClient {
         }
     }
 
-    public List<GhnLocality> getDistricts(Integer provinceId) {
+    public List<GhnDistrict> getDistricts(Integer provinceId) {
         try {
-            GhnApiResponse<GhnLocality> response = restClient.post()
+            GhnApiResponse<GhnDistrict> response = restClient.post()
                     .uri("/master-data/district")
                     .body(Map.of("province_id", provinceId))
                     .retrieve()
@@ -70,9 +60,9 @@ public class GhnClient {
         }
     }
 
-    public List<GhnLocality> getWardsByDistrict(Integer districtId) {
+    public List<GhnWard> getWardsByDistrict(Integer districtId) {
         try {
-            GhnApiResponse<GhnLocality> response = restClient.post()
+            GhnApiResponse<GhnWard> response = restClient.post()
                     .uri("/master-data/ward")
                     .body(Map.of("district_id", districtId))
                     .retrieve()
@@ -86,7 +76,8 @@ public class GhnClient {
 
     public BigDecimal calculateFee(GhnFeeRequest request, BigDecimal fallbackFee) {
         try {
-            GhnFeeApiResponse response = feeClient.post()
+            GhnFeeApiResponse response = restClient.post()
+                    .uri("/v2/shipping-order/fee")
                     .body(request)
                     .retrieve()
                     .body(GhnFeeApiResponse.class);
@@ -113,6 +104,40 @@ public class GhnClient {
             return fallbackFee;
         } catch (Exception e) {
             log.error("Error calculating shipping fee from GHN: {}", e.getMessage(), e);
+            return fallbackFee;
+        }
+    }
+
+    public BigDecimal previewOrder(GhnPreviewRequest request, BigDecimal fallbackFee) {
+        try {
+            GhnPreviewApiResponse response = restClient.post()
+                    .uri("/v2/shipping-order/preview")
+                    .body(request)
+                    .retrieve()
+                    .body(GhnPreviewApiResponse.class);
+
+            if (response != null && response.code() != null && response.code() != 200) {
+                log.warn("GHN Preview API returned non-200 code {}: message={}, code_message={}",
+                        response.code(), response.message(), response.codeMessage());
+            }
+
+            if (response != null && response.data() != null && response.data().totalFee() != null) {
+                return response.data().totalFee();
+            }
+            log.warn("Could not retrieve total_fee from GHN preview response, fallback to fee {}. Response: {}", fallbackFee, response);
+            return fallbackFee;
+        } catch (RestClientResponseException ex) {
+            String errorBody = ex.getResponseBodyAsString();
+            try {
+                GhnPreviewApiResponse errResp = objectMapper.readValue(errorBody, GhnPreviewApiResponse.class);
+                log.warn("GHN Preview API error status {}: code={}, message={}, code_message={}",
+                        ex.getStatusCode(), errResp.code(), errResp.message(), errResp.codeMessage());
+            } catch (Exception parseEx) {
+                log.warn("GHN Preview API error status {}: {}", ex.getStatusCode(), errorBody);
+            }
+            return fallbackFee;
+        } catch (Exception e) {
+            log.error("Error previewing order fee from GHN: {}", e.getMessage(), e);
             return fallbackFee;
         }
     }

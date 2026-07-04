@@ -1,8 +1,6 @@
 package com.fernirx.sneakerapi.shipping.controller;
 
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
-import com.fernirx.sneakerapi.product.service.ProductVariantService;
-import com.fernirx.sneakerapi.shipping.dto.ParcelItem;
 import com.fernirx.sneakerapi.shipping.dto.request.CalculateShippingFeeRequest;
 import com.fernirx.sneakerapi.shipping.dto.response.LocalityResponse;
 import com.fernirx.sneakerapi.shipping.service.ShippingService;
@@ -22,7 +20,6 @@ import java.util.List;
 @Tag(name = "Public Shipping API", description = "API giao nhận & thông tin địa chỉ công khai")
 public class ShippingController {
     private final ShippingService shippingService;
-    private final ProductVariantService productVariantService;
 
     @GetMapping("/provinces")
     @Operation(summary = "Danh sách Tỉnh/Thành phố")
@@ -45,19 +42,7 @@ public class ShippingController {
     @PostMapping("/fee")
     @Operation(summary = "Tính phí vận chuyển theo GHN")
     public ResponseEntity<SuccessResponse<BigDecimal>> calculateFee(@Valid @RequestBody CalculateShippingFeeRequest request) {
-        List<ParcelItem> parcelItems = request.items().stream()
-                .map(item -> {
-                    var variant = productVariantService.findActiveById(item.variantId());
-                    return new ParcelItem(
-                            variant.getWeight(),
-                            variant.getLength(),
-                            variant.getWidth(),
-                            variant.getHeight(),
-                            item.quantity()
-                    );
-                })
-                .toList();
-        BigDecimal fee = shippingService.calculateFee(request.toWardCode(), request.toAddress(), parcelItems);
+        BigDecimal fee = shippingService.calculateFee(request);
         return ResponseEntity.ok(SuccessResponse.of(fee));
     }
 }

@@ -31,6 +31,7 @@ public record CreateAddressRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String district,
 
+        @NotNull(message = "{validation.field.not_blank}")
         Integer districtCode,
 
         @NotBlank(message = "{validation.field.not_blank}")

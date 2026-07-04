@@ -54,7 +54,8 @@ public class Address extends BaseAuditEntity {
     @Column(name = "district", nullable = false, length = 100)
     private String district;
 
-    @Column(name = "district_code")
+    @NotNull
+    @Column(name = "district_code", nullable = false)
     private Integer districtCode;
 
     @Size(max = 100)

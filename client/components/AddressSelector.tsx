@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 export interface Locality {
-  id: string;
+  id: number;
   name: string;
 }
 
@@ -12,15 +12,15 @@ export interface Locality {
 
 interface AddressSelectorProps {
   province: string;
-  provinceCode?: string;
+  provinceCode?: number | null;
   district: string;
-  districtCode?: string;
+  districtCode?: number | null;
   ward: string;
-  wardCode?: string;
+  wardCode?: number | null;
   onChange: (data: {
-    province: string; provinceCode: string;
-    district: string; districtCode: string;
-    ward: string; wardCode: string;
+    province: string; provinceCode: number;
+    district: string; districtCode: number;
+    ward: string; wardCode: number;
   }) => void;
   provinceError?: string;
   districtError?: string;
@@ -42,8 +42,8 @@ export default function AddressSelector({
   const [provinces, setProvinces] = useState<Locality[]>([]);
   const [districts, setDistricts] = useState<Locality[]>([]);
   const [wards, setWards] = useState<Locality[]>([]);
-  const [selectedProvinceId, setSelectedProvinceId] = useState<string>('');
-  const [selectedDistrictId, setSelectedDistrictId] = useState<string>('');
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(provinceCode ?? null);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(districtCode ?? null);
 
   const [loadingProvinces, setLoadingProvinces] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -210,13 +210,13 @@ export default function AddressSelector({
                     key={p.id}
                     onClick={() => {
                       setSelectedProvinceId(p.id);
-                      setSelectedDistrictId('');
+                      setSelectedDistrictId(null);
                       setProvOpen(false);
                       setProvSearch('');
                       onChange({
                         province: p.name, provinceCode: p.id,
-                        district: '', districtCode: '',
-                        ward: '', wardCode: '',
+                        district: '', districtCode: 0,
+                        ward: '', wardCode: 0,
                       });
                     }}
                     className={`px-3 py-2 text-xs rounded cursor-pointer transition-colors ${
@@ -280,9 +280,9 @@ export default function AddressSelector({
                       setDistOpen(false);
                       setDistSearch('');
                       onChange({
-                        province, provinceCode: selectedProvinceId,
+                        province, provinceCode: selectedProvinceId ?? 0,
                         district: d.name, districtCode: d.id,
-                        ward: '', wardCode: '',
+                        ward: '', wardCode: 0,
                       });
                     }}
                     className={`px-3 py-2 text-xs rounded cursor-pointer transition-colors ${
@@ -345,8 +345,8 @@ export default function AddressSelector({
                       setWardOpen(false);
                       setWardSearch('');
                       onChange({
-                        province, provinceCode: selectedProvinceId,
-                        district, districtCode: selectedDistrictId,
+                        province, provinceCode: selectedProvinceId ?? 0,
+                        district, districtCode: selectedDistrictId ?? 0,
                         ward: w.name, wardCode: w.id,
                       });
                     }}

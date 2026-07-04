@@ -34,6 +34,10 @@ import com.fernirx.sneakerapi.order.service.OrderService;
 import com.fernirx.sneakerapi.product.dto.response.StockChangeResult;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
+import com.fernirx.sneakerapi.setting.service.SettingService;
+import com.fernirx.sneakerapi.shipping.dto.ParcelItem;
+import com.fernirx.sneakerapi.shipping.dto.request.PreviewOrderFeeRequest;
+import com.fernirx.sneakerapi.shipping.service.ShippingService;
 import com.fernirx.sneakerapi.user.entity.User;
 import com.fernirx.sneakerapi.user.enums.OtpPurpose;
 import jakarta.persistence.EntityManager;
@@ -69,7 +73,8 @@ public class OrderServiceImpl implements OrderService {
     private final CouponService couponService;
     private final InventoryTransactionService inventoryTransactionService;
     private final OtpService otpService;
-    private final com.fernirx.sneakerapi.shipping.service.ShippingService shippingService;
+    private final ShippingService shippingService;
+    private final SettingService settingService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -124,19 +129,25 @@ public class OrderServiceImpl implements OrderService {
             discountAmount = couponResult.discountAmount();
         }
 
-        List<com.fernirx.sneakerapi.shipping.dto.ParcelItem> parcelItems = resolvedItems.stream()
-                .map(ri -> new com.fernirx.sneakerapi.shipping.dto.ParcelItem(
-                        ri.variant().getWeight(),
-                        ri.variant().getLength(),
-                        ri.variant().getWidth(),
-                        ri.variant().getHeight(),
-                        ri.quantity()
-                ))
-                .toList();
-        String toAddress = String.format("%s, %s",
-                request.shippingStreet() != null ? request.shippingStreet() : "",
-                request.shippingWard() != null ? request.shippingWard() : "");
-        BigDecimal shippingFee = shippingService.calculateFee(request.shippingWardCode(), toAddress, parcelItems);
+        BigDecimal freeShipThreshold = settingService.getStoreSetting().freeShipThreshold();
+        BigDecimal shippingFee;
+        if (subtotal.compareTo(freeShipThreshold) >= 0) {
+            shippingFee = BigDecimal.ZERO;
+        } else {
+            List<ParcelItem> previewItems = resolvedItems.stream()
+                    .map(ri -> ParcelItem.from(ri.variant(), ri.quantity()))
+                    .toList();
+            PreviewOrderFeeRequest previewRequest = new PreviewOrderFeeRequest(
+                    request.recipientName(),
+                    request.recipientPhone(),
+                    request.shippingStreet(),
+                    request.shippingWard(),
+                    request.shippingDistrict(),
+                    request.shippingProvince(),
+                    previewItems
+            );
+            shippingFee = shippingService.previewOrderFee(previewRequest);
+        }
         BigDecimal totalAmount = subtotal.add(shippingFee).subtract(discountAmount);
 
         Order order = new Order();
@@ -150,11 +161,8 @@ public class OrderServiceImpl implements OrderService {
         order.setRecipientPhone(request.recipientPhone());
         order.setShippingStreet(request.shippingStreet());
         order.setShippingWard(request.shippingWard());
-        order.setShippingWardCode(request.shippingWardCode());
         order.setShippingDistrict(request.shippingDistrict());
-        order.setShippingDistrictCode(request.shippingDistrictCode());
         order.setShippingProvince(request.shippingProvince());
-        order.setShippingProvinceCode(request.shippingProvinceCode());
         order.setSubtotal(subtotal);
         order.setShippingFee(shippingFee);
         order.setDiscountAmount(discountAmount);

@@ -1,7 +1,6 @@
 package com.fernirx.sneakerapi.customer.service.impl;
 
 import com.fernirx.sneakerapi.common.exception.BusinessException;
-import com.fernirx.sneakerapi.customer.config.CustomerProperties;
 import com.fernirx.sneakerapi.customer.dto.request.UpdateCustomerRequest;
 import com.fernirx.sneakerapi.customer.dto.request.CustomerFilterRequest;
 import com.fernirx.sneakerapi.customer.dto.response.CustomerInternalResponse;
@@ -15,6 +14,8 @@ import com.fernirx.sneakerapi.customer.repository.CustomerRepository;
 import com.fernirx.sneakerapi.customer.repository.CustomerSpec;
 import com.fernirx.sneakerapi.customer.repository.PointTransactionRepository;
 import com.fernirx.sneakerapi.customer.service.CustomerService;
+import com.fernirx.sneakerapi.setting.dto.response.StoreSettingResponse;
+import com.fernirx.sneakerapi.setting.service.SettingService;
 import com.fernirx.sneakerapi.user.entity.User;
 import com.fernirx.sneakerapi.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final PointTransactionRepository pointTransactionRepository;
     private final CustomerMapper customerMapper;
     private final UserRepository userRepository;
-    private final CustomerProperties customerProperties;
+    private final SettingService settingService;
 
     @Override
     public Customer getOrCreateByUserId(Long userId) {
@@ -107,7 +108,7 @@ public class CustomerServiceImpl implements CustomerService {
             return;
         }
 
-        long earnedPoints = earnedAmount.divideToIntegralValue(customerProperties.getPointsPerAmount()).longValue();
+        long earnedPoints = earnedAmount.divideToIntegralValue(settingService.getStoreSetting().pointsPerAmount()).longValue();
         
         PointTransaction tx = new PointTransaction();
         tx.setCustomer(customer);
@@ -143,7 +144,7 @@ public class CustomerServiceImpl implements CustomerService {
             return;
         }
 
-        long revokedPoints = revokedAmount.divideToIntegralValue(customerProperties.getPointsPerAmount()).longValue();
+        long revokedPoints = revokedAmount.divideToIntegralValue(settingService.getStoreSetting().pointsPerAmount()).longValue();
 
         PointTransaction tx = new PointTransaction();
         tx.setCustomer(customer);
@@ -165,9 +166,10 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private MembershipTier resolveTier(BigDecimal totalSpent) {
-        if (totalSpent.compareTo(customerProperties.getPlatinumThreshold()) >= 0) return MembershipTier.PLATINUM;
-        if (totalSpent.compareTo(customerProperties.getGoldThreshold()) >= 0) return MembershipTier.GOLD;
-        if (totalSpent.compareTo(customerProperties.getSilverThreshold()) >= 0) return MembershipTier.SILVER;
+        StoreSettingResponse storeSetting = settingService.getStoreSetting();
+        if (totalSpent.compareTo(storeSetting.platinumThreshold()) >= 0) return MembershipTier.PLATINUM;
+        if (totalSpent.compareTo(storeSetting.goldThreshold()) >= 0) return MembershipTier.GOLD;
+        if (totalSpent.compareTo(storeSetting.silverThreshold()) >= 0) return MembershipTier.SILVER;
         return MembershipTier.BRONZE;
     }
 }
