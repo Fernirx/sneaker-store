@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart, type CartItemData } from '@/contexts/CartContext';
@@ -10,9 +10,16 @@ import { guestHeaders } from '@/lib/guestToken';
 import { formatPrice } from '../../products/_components/types';
 import clientAxios from '@/lib/axios/clientAxios';
 import AddressSelector from '@/components/AddressSelector';
+import ImageUnavailable from '@/components/ImageUnavailable';
+
+const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+function formatExpectedDeliveryHeading(iso: string): string {
+  const d = new Date(iso);
+  return `${WEEKDAY_LABELS[d.getDay()]}, ngày ${d.getDate()} tháng ${d.getMonth() + 1}`;
+}
 
 type ShippingForm = {
-
   recipientName: string;
   recipientPhone: string;
   shippingStreet: string;
@@ -59,6 +66,66 @@ function FieldError({ msg }: { msg?: string }) {
   return msg ? <p className="text-[11px] text-danger mt-1">{msg}</p> : null;
 }
 
+// ── Floating-label field (label sits on the border once focused/filled) ───────
+
+const FLOATING_LABEL_FLOATED =
+  "peer-focus:top-0 peer-focus:text-[10px] peer-focus:text-muted peer-focus:font-semibold peer-focus:uppercase peer-focus:tracking-wide " +
+  "peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-muted peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:uppercase peer-[:not(:placeholder-shown)]:tracking-wide";
+
+interface FloatingInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  id: string;
+  label: string;
+  required?: boolean;
+  prefix?: string;
+  error?: string;
+}
+
+function FloatingInput({ id, label, required = true, prefix, error, className = '', ...inputProps }: FloatingInputProps) {
+  return (
+    <div className="relative">
+      {prefix && (
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-ink z-10 font-medium">
+          {prefix}
+        </span>
+      )}
+      <input
+        id={id}
+        placeholder=" "
+        {...inputProps}
+        className={`peer w-full h-12 px-3 border rounded-sm text-[13px] text-ink placeholder-transparent bg-white focus:outline-none transition-colors ${
+          prefix ? 'pl-10' : ''
+        } ${error ? 'border-danger focus:border-danger' : 'border-line focus:border-ink'} ${className}`}
+      />
+      <label
+        htmlFor={id}
+        className={`absolute ${prefix ? 'left-10' : 'left-3'} top-1/2 -translate-y-1/2 text-[13px] text-faint pointer-events-none transition-all duration-150 bg-white px-1 ${FLOATING_LABEL_FLOATED}`}
+      >
+        {label} {required && <span className="text-danger">*</span>}
+      </label>
+      <FieldError msg={error} />
+    </div>
+  );
+}
+
+function FloatingTextarea({ id, label, ...textareaProps }: { id: string; label: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <div className="relative">
+      <textarea
+        id={id}
+        placeholder=" "
+        {...textareaProps}
+        className="peer w-full px-3 py-3 border border-line rounded-sm text-[13px] text-ink placeholder-transparent bg-white focus:outline-none focus:border-ink transition-colors resize-none"
+      />
+      <label
+        htmlFor={id}
+        className={`absolute left-3 top-3 text-[13px] text-faint pointer-events-none transition-all duration-150 bg-white px-1 ${FLOATING_LABEL_FLOATED}`}
+      >
+        {label}
+      </label>
+    </div>
+  );
+}
+
 // ── Read-only item row ────────────────────────────────────────────────────────
 
 function CheckoutItem({ item }: { item: CartItemData }) {
@@ -76,7 +143,7 @@ function CheckoutItem({ item }: { item: CartItemData }) {
             className="w-full h-full object-contain"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-faint text-xs">—</div>
+          <ImageUnavailable className="w-6 h-6" />
         )}
       </div>
 
@@ -144,8 +211,19 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
-  const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [savedAddrOpen, setSavedAddrOpen] = useState(false);
+  const savedAddrRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (savedAddrRef.current && !savedAddrRef.current.contains(e.target as Node)) {
+        setSavedAddrOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const [couponCode, setCouponCode] = useState('');
   const [couponInput, setCouponInput] = useState('');
@@ -154,14 +232,35 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
   const [loadingCoupon, setLoadingCoupon] = useState(false);
 
   const [shippingFee, setShippingFee] = useState<number | null>(null);
+  const [expectedDeliveryTime, setExpectedDeliveryTime] = useState<string | null>(null);
   const [loadingShippingFee, setLoadingShippingFee] = useState(false);
+
+  const [freeShipThreshold, setFreeShipThreshold] = useState<number | null>(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const selectedItems = (cart?.items ?? []).filter(i => i.selected && !i.outOfStock);
   const totalAmount   = Number(cart?.totalAmount ?? 0);
 
   useEffect(() => {
-    if (!form.shippingWardCode || !form.shippingDistrictCode || selectedItems.length === 0) {
+    clientAxios.get('/api/settings/free-ship-threshold')
+      .then(({ data }) => setFreeShipThreshold(Number(data.data)))
+      .catch(() => {});
+  }, []);
+
+  const isFreeShip = freeShipThreshold !== null && totalAmount >= freeShipThreshold;
+
+  useEffect(() => {
+    if (!form.shippingStreet.trim() || !form.shippingWard || !form.shippingDistrict || !form.shippingProvince
+        || selectedItems.length === 0) {
       setShippingFee(null);
+      setExpectedDeliveryTime(null);
+      return;
+    }
+
+    if (isFreeShip) {
+      setShippingFee(0);
+      setExpectedDeliveryTime(null);
+      setLoadingShippingFee(false);
       return;
     }
 
@@ -173,20 +272,24 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       quantity: item.quantity,
     }));
 
-    clientAxios.post('/api/shipping/fee', {
-      toDistrictCode: form.shippingDistrictCode,
-      toWardCode: form.shippingWardCode,
+    clientAxios.post('/api/shipping/preview', {
+      shippingStreet: form.shippingStreet.trim(),
+      shippingWard: form.shippingWard,
+      shippingDistrict: form.shippingDistrict,
+      shippingProvince: form.shippingProvince,
       items: itemsPayload,
     })
       .then(({ data }) => {
-        if (!cancelled && data?.data !== undefined && data?.data !== null) {
-          setShippingFee(Number(data.data));
+        if (!cancelled && data?.data) {
+          setShippingFee(Number(data.data.fee ?? 0));
+          setExpectedDeliveryTime(data.data.expectedDeliveryTime ?? null);
         }
       })
       .catch((err) => {
         console.error("Error fetching shipping fee:", err);
         if (!cancelled) {
           setShippingFee(0);
+          setExpectedDeliveryTime(null);
         }
       })
       .finally(() => {
@@ -199,14 +302,16 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       cancelled = true;
     };
   }, [
-    form.shippingWardCode,
-    form.shippingDistrictCode,
-    JSON.stringify(selectedItems.map(i => ({ v: i.variantId, q: i.quantity })))
+    form.shippingWard,
+    form.shippingDistrict,
+    form.shippingProvince,
+    form.shippingStreet,
+    JSON.stringify(selectedItems.map(i => ({ v: i.variantId, q: i.quantity }))),
+    isFreeShip
   ]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    setLoadingAddresses(true);
     clientAxios.get('/api/me/addresses')
       .then(({ data }) => {
         const addrs = data.data ?? [];
@@ -228,8 +333,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
           setSelectedAddressId(def.id);
         }
       })
-      .catch(() => {})
-      .finally(() => setLoadingAddresses(false));
+      .catch(() => {});
   }, [isLoggedIn]);
 
   function handleSelectAddress(addr: Address) {
@@ -412,38 +516,33 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
 
           {/* Guest contact */}
           {!isLoggedIn && (
-            <section className="border border-line rounded-sm overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-line bg-line-2">
-                <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                  {"Thông tin liên hệ"}
-                </h2>
-              </div>
-              <div className="p-5 space-y-4">
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                    {"Email"} <span className="text-danger">*</span>
-                  </label>
-                  <div className="flex gap-2">
-                    <input
+            <section>
+              <h2 className="text-[16px] font-bold text-ink mb-3">
+                {"Thông tin liên hệ"}
+              </h2>
+              <div className="space-y-4">
+                <div className="flex gap-2 items-start">
+                  <div className="flex-1">
+                    <FloatingInput
+                      id="guestEmail"
+                      label="Email"
                       type="email"
                       value={guestEmail}
                       onChange={e => setGuestEmail(e.target.value)}
-                      placeholder={"ban@email.com"}
-                      className={fieldCls('guestEmail')}
+                      error={fieldErrors.guestEmail}
                     />
-                    <button
-                      onClick={handleSendOtp}
-                      disabled={sendingOtp || resendSeconds > 0 || !guestEmail.trim()}
-                      className="shrink-0 px-4 h-10 text-[11px] font-bold uppercase tracking-wide border border-line rounded-sm hover:bg-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                      {sendingOtp
-                        ? "Đang gửi..."
-                        : resendSeconds > 0
-                          ? `Gửi lại sau ${resendSeconds}s`
-                          : otpSent ? "Gửi lại mã" : "Gửi mã xác nhận"}
-                    </button>
                   </div>
-                  <FieldError msg={fieldErrors.guestEmail} />
+                  <button
+                    onClick={handleSendOtp}
+                    disabled={sendingOtp || resendSeconds > 0 || !guestEmail.trim()}
+                    className="shrink-0 px-4 h-12 text-[11px] font-bold uppercase tracking-wide border border-line rounded-sm hover:bg-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {sendingOtp
+                      ? "Đang gửi..."
+                      : resendSeconds > 0
+                        ? `Gửi lại sau ${resendSeconds}s`
+                        : otpSent ? "Gửi lại mã" : "Gửi mã xác nhận"}
+                  </button>
                 </div>
 
                 {otpSent && (
@@ -467,37 +566,66 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
             </section>
           )}
 
-          {/* Saved Addresses */}
-          {isLoggedIn && savedAddresses.length > 0 && (
-            <section className="border border-line rounded-sm overflow-hidden mb-6">
-              <div className="px-5 py-3.5 border-b border-line bg-line-2 flex items-center justify-between">
-                <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                  {"Địa chỉ đã lưu"}
-                </h2>
-              </div>
-              <div className="p-5">
-                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                  {savedAddresses.map(addr => {
-                    const isSelected = addr.id === selectedAddressId;
-                    return (
-                      <label
-                        key={addr.id}
-                        className={`flex items-start gap-3 p-3 border rounded-sm cursor-pointer transition-colors ${
-                          isSelected ? 'border-ink bg-paper' : 'border-line hover:bg-paper/50'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="savedAddress"
-                          checked={isSelected}
-                          onChange={() => handleSelectAddress(addr)}
-                          className="mt-0.5 accent-ink shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-semibold text-ink">
-                            {addr.name} <span className="text-muted font-normal mx-1">·</span> {addr.phone}
+          {/* Thông tin giao hàng */}
+          <section>
+            <h2 className="text-[16px] font-bold text-ink mb-3">
+              {"Thông tin giao hàng"}
+            </h2>
+
+            {isLoggedIn && savedAddresses.length > 0 && (
+              <div className="relative mb-4" ref={savedAddrRef}>
+                <div
+                  onClick={() => setSavedAddrOpen(o => !o)}
+                  className="relative w-full min-h-12 pl-3 pr-9 py-3 border border-line rounded-sm bg-white cursor-pointer flex items-center transition-colors hover:border-ink"
+                >
+                  <label className="absolute left-3 -top-0 -translate-y-1/2 text-[10px] text-muted font-semibold uppercase tracking-wide bg-white px-1 pointer-events-none">
+                    {"Địa chỉ đã lưu trữ"}
+                  </label>
+                  {selectedAddressId !== null ? (() => {
+                    const addr = savedAddresses.find(a => a.id === selectedAddressId);
+                    return addr ? (
+                      <div className="text-[13px] pr-2 flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-ink truncate">
+                            {addr.name} <span className="text-muted font-normal">({addr.phone})</span>
+                          </p>
+                          {addr.defaultAddress && (
+                            <span className="shrink-0 text-accent text-[11px] font-medium">{"Mặc định"}</span>
+                          )}
+                        </div>
+                        <p className="text-muted mt-0.5">
+                          {[addr.street, addr.ward, addr.district, addr.province].filter(Boolean).join(', ')}
+                        </p>
+                      </div>
+                    ) : null;
+                  })() : null}
+                  <svg
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted transition-transform ${savedAddrOpen ? 'rotate-180' : ''}`}
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </div>
+
+                {savedAddrOpen && (
+                  <div className="absolute z-50 mt-1 w-full bg-white border border-line rounded-sm shadow-lg max-h-72 overflow-y-auto">
+                    {savedAddresses.map(addr => {
+                      const isSelected = addr.id === selectedAddressId;
+                      return (
+                        <div
+                          key={addr.id}
+                          onClick={() => {
+                            handleSelectAddress(addr);
+                            setSavedAddrOpen(false);
+                          }}
+                          className={`px-3 py-2.5 cursor-pointer border-b border-line last:border-b-0 transition-colors ${
+                            isSelected ? 'bg-paper' : 'hover:bg-paper/50'
+                          }`}
+                        >
+                          <p className="text-[13px] font-semibold text-ink flex items-center gap-2">
+                            {addr.name} <span className="text-muted font-normal">· {addr.phone}</span>
                             {addr.defaultAddress && (
-                              <span className="ml-2 px-1.5 py-0.5 text-[9px] bg-accent text-white uppercase rounded-sm tracking-wider">
+                              <span className="px-1.5 py-0.5 text-[9px] bg-accent text-white uppercase rounded-sm tracking-wider">
                                 {"Mặc định"}
                               </span>
                             )}
@@ -506,80 +634,47 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                             {[addr.street, addr.ward, addr.district, addr.province].filter(Boolean).join(', ')}
                           </p>
                         </div>
-                      </label>
-                    );
-                  })}
-                </div>
-                
-                <div className="flex items-center gap-3 mt-5 mb-1">
-                  <div className="flex-1 h-px bg-line" />
-                  <span className="text-[10px] uppercase tracking-widest text-faint">{"Hoặc nhập địa chỉ mới"}</span>
-                  <div className="flex-1 h-px bg-line" />
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Shipping form */}
-          <section className="border border-line rounded-sm overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-line bg-line-2">
-              <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                {"Thông tin giao hàng"}
-              </h2>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                    {"Họ và tên"} <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.recipientName}
-                    onChange={handleField('recipientName')}
-                    placeholder={"Nguyễn Văn A"}
-                    className={fieldCls('recipientName')}
-                  />
-                  <FieldError msg={fieldErrors.recipientName} />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                    {"Số điện thoại"} <span className="text-danger">*</span>
-                  </label>
-                  <div className="flex relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-ink z-10 font-medium">
-                      +84
-                    </span>
-                    <input
-                      type="tel"
-                      value={form.recipientPhone.startsWith('+84') ? form.recipientPhone.slice(3) : form.recipientPhone}
-                      onChange={(e) => {
-                        let val = e.target.value.replace(/\D/g, '');
-                        if (val.startsWith('84') && val.length >= 10) val = val.substring(2);
-                        if (val.startsWith('0')) val = val.substring(1);
-                        setForm(prev => ({ ...prev, recipientPhone: val ? `+84${val}` : '' }));
-                      }}
-                      placeholder="901234567"
-                      className={`${fieldCls('recipientPhone')} pl-10`}
-                    />
+                      );
+                    })}
                   </div>
-                  <FieldError msg={fieldErrors.recipientPhone} />
-                </div>
+                )}
               </div>
+            )}
 
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                  {"Địa chỉ (số nhà, đường)"} <span className="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.shippingStreet}
-                  onChange={handleField('shippingStreet')}
-                  placeholder={"123 Lê Lợi"}
-                  className={fieldCls('shippingStreet')}
-                />
-                <FieldError msg={fieldErrors.shippingStreet} />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <FloatingInput
+                id="recipientName"
+                label="Họ và tên"
+                type="text"
+                value={form.recipientName}
+                onChange={handleField('recipientName')}
+                error={fieldErrors.recipientName}
+              />
+              <FloatingInput
+                id="recipientPhone"
+                label="Số điện thoại"
+                type="tel"
+                prefix="+84"
+                value={form.recipientPhone.startsWith('+84') ? form.recipientPhone.slice(3) : form.recipientPhone}
+                onChange={(e) => {
+                  let val = e.target.value.replace(/\D/g, '');
+                  if (val.startsWith('84') && val.length >= 10) val = val.substring(2);
+                  if (val.startsWith('0')) val = val.substring(1);
+                  setForm(prev => ({ ...prev, recipientPhone: val ? `+84${val}` : '' }));
+                }}
+                error={fieldErrors.recipientPhone}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <FloatingInput
+                id="shippingStreet"
+                label="Địa chỉ (số nhà, đường)"
+                type="text"
+                value={form.shippingStreet}
+                onChange={handleField('shippingStreet')}
+                error={fieldErrors.shippingStreet}
+              />
 
               <AddressSelector
                 province={form.shippingProvince}
@@ -607,31 +702,25 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
                 districtError={fieldErrors.shippingDistrict}
                 wardError={fieldErrors.shippingWard}
               />
+            </div>
 
-
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                  {"Ghi chú"}
-                </label>
-                <textarea
-                  value={form.note}
-                  onChange={handleField('note')}
-                  placeholder={"Ghi chú cho đơn hàng (không bắt buộc)"}
-                  rows={3}
-                  className="w-full px-3 py-2.5 border border-line rounded-sm text-[13px] text-ink placeholder:text-faint bg-white focus:outline-none focus:border-ink transition-colors resize-none"
-                />
-              </div>
+            <div className="mt-4">
+              <FloatingTextarea
+                id="note"
+                label="Ghi chú"
+                value={form.note}
+                onChange={handleField('note')}
+                rows={3}
+              />
             </div>
           </section>
 
           {/* Payment method */}
-          <section className="border border-line rounded-sm overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-line bg-line-2">
-              <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                {"Phương thức thanh toán"}
-              </h2>
-            </div>
-            <div className="p-5 space-y-3">
+          <section>
+            <h2 className="text-[16px] font-bold text-ink mb-3">
+              {"Phương thức thanh toán"}
+            </h2>
+            <div className="space-y-3">
               {([
                 { value: 'VNPAY' as const, title: "Thanh toán qua VNPay", desc: "Chuyển đến cổng VNPay để hoàn tất giao dịch." },
                 { value: 'COD' as const,   title: "Thanh toán khi nhận hàng (COD)",   desc: "Thanh toán bằng tiền mặt khi nhận hàng." },
@@ -657,113 +746,6 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
               ))}
             </div>
           </section>
-
-          {/* Items list */}
-          <section className="border border-line rounded-sm overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-line bg-line-2">
-              <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                {`Sản phẩm (${selectedItems.length})`}
-              </h2>
-            </div>
-            <div className="px-5">
-              {selectedItems.map(item => (
-                <CheckoutItem key={item.id} item={item} />
-              ))}
-            </div>
-          </section>
-        </div>
-
-        {/* ── RIGHT ── */}
-        <aside className="lg:sticky lg:top-[84px] space-y-3">
-
-          {/* Summary */}
-          <div className="border border-line rounded-sm overflow-hidden bg-line-2">
-            <div className="px-5 py-3.5 border-b border-line">
-              <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">
-                {"Tóm tắt đơn hàng"}
-              </h2>
-            </div>
-            <div className="px-5 pt-4 pb-3 space-y-2.5">
-              <div className="flex justify-between items-baseline text-[13px]">
-                <span className="text-muted">{"Tạm tính"}:</span>
-                <span className="tabular-nums text-ink">{formatPrice(subtotalOriginal)}</span>
-              </div>
-              {totalDiscount > 0 && (
-                <div className="flex justify-between items-baseline text-[13px]">
-                  <span className="text-muted">{"Giảm giá"}:</span>
-                  <span className="tabular-nums text-ok">-{formatPrice(totalDiscount)}</span>
-                </div>
-              )}
-              {couponCode && (
-                <div className="flex justify-between items-baseline text-[13px]">
-                  <span className="text-muted">{"Mã giảm giá"} ({couponCode}):</span>
-                  <span className="tabular-nums text-ok">-{formatPrice(couponDiscount)}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-baseline text-[13px]">
-                <span className="text-muted">{"Phí vận chuyển"}:</span>
-                <span className="tabular-nums text-ink">
-                  {loadingShippingFee ? (
-                    <span className="text-muted animate-pulse">{"Đang tính..."}</span>
-                  ) : shippingFee !== null ? (
-                    formatPrice(shippingFee)
-                  ) : (
-                    <span className="text-faint">{"Chưa chọn địa chỉ"}</span>
-                  )}
-                </span>
-              </div>
-            </div>
-            
-            {/* Coupon Input */}
-            <div className="px-5 pb-4 border-b border-line space-y-2">
-              <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted">
-                {"Mã giảm giá"}
-              </label>
-              {!couponCode ? (
-                <div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={couponInput}
-                      onChange={e => setCouponInput(e.target.value.toUpperCase())}
-                      placeholder="Nhập mã..."
-                      className="w-full h-9 px-3 border border-line rounded-sm text-[12px] text-ink placeholder:text-faint bg-white focus:outline-none focus:border-ink uppercase transition-colors"
-                    />
-                    <button
-                      onClick={handleApplyCoupon}
-                      disabled={loadingCoupon || !couponInput.trim()}
-                      className="shrink-0 px-4 h-9 text-[11px] font-bold uppercase tracking-wide border border-line rounded-sm hover:bg-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                      {loadingCoupon ? "..." : "Áp dụng"}
-                    </button>
-                  </div>
-                  {couponError && <p className="text-[11px] text-danger mt-1.5">{couponError}</p>}
-                </div>
-              ) : (
-                <div className="flex items-center justify-between bg-ok/10 border border-ok/20 rounded-sm px-3 py-2">
-                  <div className="flex items-center gap-2 text-ok">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 6L9 17l-5-5"/>
-                    </svg>
-                    <span className="text-[12px] font-bold uppercase tracking-wide">{couponCode}</span>
-                  </div>
-                  <button onClick={handleRemoveCoupon} className="text-[11px] text-danger hover:underline">
-                    Xóa
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="px-5 py-4 flex justify-between items-center">
-              <span className="text-[12px] font-bold uppercase tracking-widest text-ink">{"Tổng cộng"}:</span>
-              <span className="text-[20px] font-bold tabular-nums text-ink">{formatPrice(finalTotal)}</span>
-            </div>
-          </div>
-          <p className="text-[11px] text-muted leading-relaxed px-1">
-            {shippingFee !== null
-              ? "Phí giao hàng được tự động tính toán bởi GHN dựa trên địa chỉ và kích thước kiện hàng."
-              : "Phí giao hàng sẽ được hiển thị sau khi bạn chọn địa chỉ giao hàng."}
-          </p>
 
           {error && (
             <p className="text-[12px] text-danger bg-danger/5 border border-danger/20 rounded-sm px-3 py-2.5">
@@ -792,6 +774,163 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
           {paymentMethod === 'VNPAY' && (
             <p className="text-[11px] text-muted text-center leading-relaxed">
               {"Bạn sẽ được chuyển đến cổng thanh toán VNPay để hoàn tất giao dịch."}
+            </p>
+          )}
+        </div>
+
+        {/* ── RIGHT ── */}
+        <aside className="lg:sticky lg:top-[84px] space-y-3">
+
+          {/* Summary */}
+          <div className="rounded-sm overflow-hidden bg-line-2">
+            <button
+              type="button"
+              onClick={() => setSummaryOpen(o => !o)}
+              className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left lg:pointer-events-none"
+            >
+              <h2 className="text-[16px] font-bold text-ink shrink-0">
+                {"Tóm tắt đơn hàng"}
+              </h2>
+              <div className="flex items-center gap-2 lg:hidden">
+                <span className="text-[12px] font-semibold tabular-nums text-ink">
+                  {formatPrice(finalTotal)} ({selectedItems.length} sp)
+                </span>
+                <svg
+                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                  className={`shrink-0 transition-transform ${summaryOpen ? 'rotate-180' : ''}`}
+                >
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </button>
+
+            <div className="mx-5 border-b border-line" />
+
+            <div className={`${summaryOpen ? 'flex' : 'hidden'} lg:flex flex-col`}>
+              {/* Giá & tổng — trên desktop hiện trước sản phẩm, trên mobile hiện sau */}
+              <div className="order-2 lg:order-1">
+                <div className="mx-5 border-t border-line lg:hidden" />
+                <div className="px-5 pt-3 pb-3 space-y-2.5">
+                  <div className="flex justify-between items-baseline text-[13px]">
+                    <span className="text-muted">{"Tạm tính"}:</span>
+                    <span className="tabular-nums text-ink">{formatPrice(subtotalOriginal)}</span>
+                  </div>
+                  {totalDiscount > 0 && (
+                    <div className="flex justify-between items-baseline text-[13px]">
+                      <span className="text-muted">{"Giảm giá"}:</span>
+                      <span className="tabular-nums text-ok">-{formatPrice(totalDiscount)}</span>
+                    </div>
+                  )}
+                  {couponCode && (
+                    <div className="flex justify-between items-baseline text-[13px]">
+                      <span className="text-muted">{"Mã giảm giá"} ({couponCode}):</span>
+                      <span className="tabular-nums text-ok">-{formatPrice(couponDiscount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-baseline text-[13px]">
+                    <span className="text-muted">{"Vận chuyển (Tạm tính)"}:</span>
+                    <span className="tabular-nums text-ink">
+                      {isFreeShip ? (
+                        "-"
+                      ) : loadingShippingFee ? (
+                        <span className="text-muted animate-pulse">{"Đang tính..."}</span>
+                      ) : shippingFee !== null ? (
+                        formatPrice(shippingFee)
+                      ) : (
+                        <span className="text-faint">{"Chưa chọn địa chỉ"}</span>
+                      )}
+                    </span>
+                  </div>
+
+                  {freeShipThreshold !== null && freeShipThreshold > 0 && (
+                    totalAmount >= freeShipThreshold ? (
+                      <p className="text-[11px] text-ok font-medium">{"Đơn hàng của bạn được miễn phí vận chuyển!"}</p>
+                    ) : (
+                      <div className="pt-0.5">
+                        <p className="text-[11px] text-muted">
+                          {"Mua thêm "}
+                          <span className="font-semibold text-ink">{formatPrice(freeShipThreshold - totalAmount)}</span>
+                          {" để được miễn phí vận chuyển!"}
+                        </p>
+                        <div className="mt-1.5 h-1 w-full bg-line rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-ok rounded-full transition-all"
+                            style={{ width: `${Math.min(100, (totalAmount / freeShipThreshold) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  )}
+
+                  {/* Coupon Input */}
+                  <div className="pt-2 space-y-2">
+                    <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted">
+                      {"Mã giảm giá"}
+                    </label>
+                    {!couponCode ? (
+                      <div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={couponInput}
+                            onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                            placeholder="Nhập mã..."
+                            className="w-full h-9 px-3 border border-line rounded-sm text-[12px] text-ink placeholder:text-faint bg-white focus:outline-none focus:border-ink uppercase transition-colors"
+                          />
+                          <button
+                            onClick={handleApplyCoupon}
+                            disabled={loadingCoupon || !couponInput.trim()}
+                            className="shrink-0 px-4 h-9 text-[11px] font-bold uppercase tracking-wide border border-line rounded-sm hover:bg-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                          >
+                            {loadingCoupon ? "..." : "Áp dụng"}
+                          </button>
+                        </div>
+                        {couponError && <p className="text-[11px] text-danger mt-1.5">{couponError}</p>}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between bg-ok/10 border border-ok/20 rounded-sm px-3 py-2">
+                        <div className="flex items-center gap-2 text-ok">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M20 6L9 17l-5-5"/>
+                          </svg>
+                          <span className="text-[12px] font-bold uppercase tracking-wide">{couponCode}</span>
+                        </div>
+                        <button onClick={handleRemoveCoupon} className="text-[11px] text-danger hover:underline">
+                          Xóa
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mx-5 border-t border-line" />
+
+                <div className="px-5 pt-3 flex justify-between items-center">
+                  <span className="text-[13px] font-bold text-ink">{"Tổng cộng"}:</span>
+                  <span className="text-[20px] font-bold tabular-nums text-ink">{formatPrice(finalTotal)}</span>
+                </div>
+
+                <div className="mx-5 border-b border-line hidden lg:block mt-3" />
+              </div>
+
+              {/* Sản phẩm — trên mobile hiện trước giá, trên desktop hiện sau */}
+              <div className="order-1 lg:order-2 px-5 pt-4 pb-1">
+                <h3 className="text-[13px] font-semibold text-ink mb-2">
+                  {expectedDeliveryTime
+                    ? `Hàng sẽ đến vào ${formatExpectedDeliveryHeading(expectedDeliveryTime)}`
+                    : `${selectedItems.length} sản phẩm`}
+                </h3>
+                <div className="max-h-72 overflow-y-auto">
+                  {selectedItems.map(item => (
+                    <CheckoutItem key={item.id} item={item} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          {shippingFee === null && (
+            <p className="text-[11px] text-muted leading-relaxed px-1">
+              {"Phí giao hàng sẽ được hiển thị sau khi bạn chọn địa chỉ giao hàng."}
             </p>
           )}
         </aside>

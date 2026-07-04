@@ -8,8 +8,6 @@ export interface Locality {
   name: string;
 }
 
-
-
 interface AddressSelectorProps {
   province: string;
   provinceCode?: number | null;
@@ -170,17 +168,19 @@ export default function AddressSelector({
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {/* Province Combobox */}
       <div className="relative" ref={provRef}>
-        <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
-          Tỉnh / Thành phố <span className="text-danger">*</span>
-        </label>
         <div
           onClick={() => setProvOpen(!provOpen)}
-          className={`w-full border rounded px-3 py-2.5 text-sm bg-white cursor-pointer flex items-center justify-between transition-colors ${
+          className={`relative w-full h-12 border rounded px-3 text-sm bg-white cursor-pointer flex items-center justify-between transition-colors ${
             provinceError ? 'border-danger' : 'border-line hover:border-ink'
           }`}
         >
-          <span className={province ? 'text-ink font-medium truncate' : 'text-faint truncate'}>
-            {loadingProvinces ? 'Đang tải...' : (province || 'Chọn Tỉnh / Thành phố')}
+          <label className={`absolute left-3 -translate-y-1/2 pointer-events-none transition-all duration-150 ${
+            province ? 'top-0 text-[10px] text-muted font-semibold uppercase tracking-wide bg-white px-1' : 'top-1/2 text-[13px] text-faint'
+          }`}>
+            Tỉnh / Thành phố <span className="text-danger">*</span>
+          </label>
+          <span className={`truncate ${province ? 'text-ink font-medium' : 'opacity-0'}`}>
+            {loadingProvinces ? 'Đang tải...' : province}
           </span>
           <svg className={`w-4 h-4 text-muted flex-shrink-0 ml-2 transition-transform ${provOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -234,20 +234,22 @@ export default function AddressSelector({
 
       {/* District Combobox */}
       <div className="relative" ref={distRef}>
-        <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
-          Quận / Huyện <span className="text-danger">*</span>
-        </label>
         <div
           onClick={() => {
             if (!province) return;
             setDistOpen(!distOpen);
           }}
-          className={`w-full border rounded px-3 py-2.5 text-sm bg-white flex items-center justify-between transition-colors ${
+          className={`relative w-full h-12 border rounded px-3 text-sm bg-white flex items-center justify-between transition-colors ${
             !province ? 'bg-line-2 cursor-not-allowed opacity-60 border-line' : 'cursor-pointer hover:border-ink border-line'
           } ${districtError ? 'border-danger' : ''}`}
         >
-          <span className={district ? 'text-ink font-medium truncate' : 'text-faint truncate'}>
-            {!province ? 'Vui lòng chọn Tỉnh trước' : loadingDistricts ? 'Đang tải...' : (district || 'Chọn Quận / Huyện')}
+          <label className={`absolute left-3 -translate-y-1/2 pointer-events-none transition-all duration-150 ${
+            district ? 'top-0 text-[10px] text-muted font-semibold uppercase tracking-wide bg-white px-1' : 'top-1/2 text-[13px] text-faint'
+          }`}>
+            Quận / Huyện <span className="text-danger">*</span>
+          </label>
+          <span className={`truncate ${district ? 'text-ink font-medium' : 'opacity-0'}`}>
+            {!province ? '' : loadingDistricts ? 'Đang tải...' : district}
           </span>
           <svg className={`w-4 h-4 text-muted flex-shrink-0 ml-2 transition-transform ${distOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -300,20 +302,22 @@ export default function AddressSelector({
 
       {/* Ward Combobox */}
       <div className="relative" ref={wardRef}>
-        <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
-          Phường / Xã <span className="text-danger">*</span>
-        </label>
         <div
           onClick={() => {
             if (!district) return;
             setWardOpen(!wardOpen);
           }}
-          className={`w-full border rounded px-3 py-2.5 text-sm bg-white flex items-center justify-between transition-colors ${
+          className={`relative w-full h-12 border rounded px-3 text-sm bg-white flex items-center justify-between transition-colors ${
             !district ? 'bg-line-2 cursor-not-allowed opacity-60 border-line' : 'cursor-pointer hover:border-ink border-line'
           } ${wardError ? 'border-danger' : ''}`}
         >
-          <span className={ward ? 'text-ink font-medium truncate' : 'text-faint truncate'}>
-            {!district ? 'Vui lòng chọn Quận/Huyện trước' : loadingWards ? 'Đang tải...' : (ward || 'Chọn Phường / Xã')}
+          <label className={`absolute left-3 -translate-y-1/2 pointer-events-none transition-all duration-150 ${
+            ward ? 'top-0 text-[10px] text-muted font-semibold uppercase tracking-wide bg-white px-1' : 'top-1/2 text-[13px] text-faint'
+          }`}>
+            Phường / Xã <span className="text-danger">*</span>
+          </label>
+          <span className={`truncate ${ward ? 'text-ink font-medium' : 'opacity-0'}`}>
+            {!district ? '' : loadingWards ? 'Đang tải...' : ward}
           </span>
           <svg className={`w-4 h-4 text-muted flex-shrink-0 ml-2 transition-transform ${wardOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
