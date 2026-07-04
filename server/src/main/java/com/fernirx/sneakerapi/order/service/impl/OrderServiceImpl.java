@@ -34,9 +34,8 @@ import com.fernirx.sneakerapi.order.service.OrderService;
 import com.fernirx.sneakerapi.product.dto.response.StockChangeResult;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
-import com.fernirx.sneakerapi.setting.service.SettingService;
 import com.fernirx.sneakerapi.shipping.dto.ParcelItem;
-import com.fernirx.sneakerapi.shipping.dto.request.PreviewOrderFeeRequest;
+import com.fernirx.sneakerapi.shipping.dto.command.CalculateShippingFeeCommand;
 import com.fernirx.sneakerapi.shipping.service.ShippingService;
 import com.fernirx.sneakerapi.user.entity.User;
 import com.fernirx.sneakerapi.user.enums.OtpPurpose;
@@ -54,14 +53,16 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
-
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
@@ -74,7 +75,6 @@ public class OrderServiceImpl implements OrderService {
     private final InventoryTransactionService inventoryTransactionService;
     private final OtpService otpService;
     private final ShippingService shippingService;
-    private final SettingService settingService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -109,9 +109,13 @@ public class OrderServiceImpl implements OrderService {
             throw BusinessException.bad("label.cart");
         }
 
+        List<Long> variantIds = selectedItems.stream().map(CartItemResponse::variantId).toList();
+        Map<Long, ProductVariant> variantsById = productVariantService.findAllActiveByIds(variantIds).stream()
+                .collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
+
         List<ResolvedItem> resolvedItems = selectedItems.stream()
                 .map(item -> {
-                    ProductVariant variant = productVariantService.findActiveById(item.variantId());
+                    ProductVariant variant = variantsById.get(item.variantId());
                     BigDecimal unitPrice = resolveUnitPrice(variant);
                     BigDecimal originalPrice = resolveOriginalPrice(variant, unitPrice);
                     return new ResolvedItem(variant, item.quantity(), unitPrice, originalPrice);
@@ -129,25 +133,20 @@ public class OrderServiceImpl implements OrderService {
             discountAmount = couponResult.discountAmount();
         }
 
-        BigDecimal freeShipThreshold = settingService.getStoreSetting().freeShipThreshold();
-        BigDecimal shippingFee;
-        if (subtotal.compareTo(freeShipThreshold) >= 0) {
-            shippingFee = BigDecimal.ZERO;
-        } else {
-            List<ParcelItem> previewItems = resolvedItems.stream()
-                    .map(ri -> ParcelItem.from(ri.variant(), ri.quantity()))
-                    .toList();
-            PreviewOrderFeeRequest previewRequest = new PreviewOrderFeeRequest(
-                    request.recipientName(),
-                    request.recipientPhone(),
-                    request.shippingStreet(),
-                    request.shippingWard(),
-                    request.shippingDistrict(),
-                    request.shippingProvince(),
-                    previewItems
-            );
-            shippingFee = shippingService.previewOrderFee(previewRequest);
-        }
+        List<ParcelItem> parcelItems = resolvedItems.stream()
+                .map(ri -> ParcelItem.from(ri.variant(), ri.quantity()))
+                .toList();
+        CalculateShippingFeeCommand shippingFeeCommand = new CalculateShippingFeeCommand(
+                request.recipientName(),
+                request.recipientPhone(),
+                request.shippingStreet(),
+                request.shippingWard(),
+                request.shippingDistrict(),
+                request.shippingProvince(),
+                subtotal,
+                parcelItems
+        );
+        BigDecimal shippingFee = shippingService.calculateShippingFee(shippingFeeCommand).fee();
         BigDecimal totalAmount = subtotal.add(shippingFee).subtract(discountAmount);
 
         Order order = new Order();

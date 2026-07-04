@@ -2,17 +2,21 @@ package com.fernirx.sneakerapi.shipping.provider.ghn;
 
 import com.fernirx.sneakerapi.shipping.config.GhnProperties;
 import com.fernirx.sneakerapi.shipping.dto.ParcelItem;
-import com.fernirx.sneakerapi.shipping.dto.ghn.GhnFeeRequest;
 import com.fernirx.sneakerapi.shipping.dto.ghn.GhnPreviewItem;
 import com.fernirx.sneakerapi.shipping.dto.ghn.GhnPreviewRequest;
-import com.fernirx.sneakerapi.shipping.dto.request.PreviewOrderFeeRequest;
+import com.fernirx.sneakerapi.shipping.dto.ghn.GhnPreviewResponse;
+import com.fernirx.sneakerapi.shipping.dto.command.CalculateShippingFeeCommand;
 import com.fernirx.sneakerapi.shipping.dto.response.LocalityResponse;
+import com.fernirx.sneakerapi.shipping.dto.response.ShippingFeeResponse;
 import com.fernirx.sneakerapi.shipping.provider.ShippingProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -23,6 +27,10 @@ public class GhnProvider implements ShippingProvider {
     private static final Integer DEFAULT_PAYMENT_TYPE_ID = 1;
     /** service_type_id = 2: hàng nhẹ - GHN tính cước theo length/width/height/weight top-level, không đọc items[] */
     private static final Integer SERVICE_TYPE_ID = 2;
+    /** GHN trả expected_delivery_time theo UTC - hệ thống chỉ vận hành ở VN nên quy đổi trực tiếp sang giờ VN */
+    private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    /** Hệ thống cần admin xác nhận đơn trước khi bàn giao GHN nên cộng thêm 1 ngày vào mốc GHN dự kiến khi hiển thị cho khách */
+    private static final int CONFIRM_DELAY_DAYS = 1;
 
     private final GhnClient ghnClient;
     private final GhnProperties properties;
@@ -31,43 +39,25 @@ public class GhnProvider implements ShippingProvider {
     public List<LocalityResponse> getProvinces() {
         return ghnClient.getProvinces().stream()
                 .map(dto -> new LocalityResponse(dto.id(), dto.name()))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
     public List<LocalityResponse> getDistricts(Integer provinceId) {
         return ghnClient.getDistricts(provinceId).stream()
                 .map(dto -> new LocalityResponse(dto.id(), dto.name()))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
     public List<LocalityResponse> getWardsByDistrict(Integer districtId) {
         return ghnClient.getWardsByDistrict(districtId).stream()
                 .map(dto -> new LocalityResponse(dto.id(), dto.name()))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
-    public BigDecimal calculateFee(Integer toDistrictCode, Integer toWardCode, List<ParcelItem> items) {
-        PackageDimensions dimensions = aggregateDimensions(items);
-
-        GhnFeeRequest requestDto = new GhnFeeRequest(
-                properties.getShopId(),
-                SERVICE_TYPE_ID,
-                toDistrictCode,
-                toWardCode,
-                dimensions.height(),
-                dimensions.length(),
-                dimensions.weight(),
-                dimensions.width()
-        );
-
-        return ghnClient.calculateFee(requestDto, properties.getFallbackFee());
-    }
-
-    @Override
-    public BigDecimal previewOrderFee(PreviewOrderFeeRequest request) {
+    public ShippingFeeResponse calculateShippingFee(CalculateShippingFeeCommand request) {
         PackageDimensions dimensions = aggregateDimensions(request.items());
 
         List<GhnPreviewItem> previewItems = request.items().stream()
@@ -91,7 +81,13 @@ public class GhnProvider implements ShippingProvider {
                 previewItems
         );
 
-        return ghnClient.previewOrder(requestDto, properties.getFallbackFee());
+        GhnPreviewResponse response = ghnClient.previewOrder(requestDto, properties.getFallbackFee());
+
+        LocalDateTime expectedDeliveryTime = response.expectedDeliveryTime() != null
+                ? LocalDateTime.ofInstant(response.expectedDeliveryTime(), VN_ZONE).plusDays(CONFIRM_DELAY_DAYS)
+                : null;
+
+        return new ShippingFeeResponse(response.totalFee(), expectedDeliveryTime);
     }
 
     private PackageDimensions aggregateDimensions(List<ParcelItem> items) {

@@ -74,41 +74,7 @@ public class GhnClient {
         }
     }
 
-    public BigDecimal calculateFee(GhnFeeRequest request, BigDecimal fallbackFee) {
-        try {
-            GhnFeeApiResponse response = restClient.post()
-                    .uri("/v2/shipping-order/fee")
-                    .body(request)
-                    .retrieve()
-                    .body(GhnFeeApiResponse.class);
-
-            if (response != null && response.code() != null && response.code() != 200) {
-                log.warn("GHN Fee API returned non-200 code {}: message={}, code_message={}: {}",
-                        response.code(), response.message(), response.codeMessage(), response.codeMessageValue());
-            }
-
-            if (response != null && response.data() != null && response.data().total() != null) {
-                return response.data().total();
-            }
-            log.warn("Could not retrieve total fee from GHN response, fallback to fee {}. Response: {}", fallbackFee, response);
-            return fallbackFee;
-        } catch (RestClientResponseException ex) {
-            String errorBody = ex.getResponseBodyAsString();
-            try {
-                GhnFeeApiResponse errResp = objectMapper.readValue(errorBody, GhnFeeApiResponse.class);
-                log.warn("GHN Fee API error status {}: code={}, message={}, code_message={}: {}",
-                        ex.getStatusCode(), errResp.code(), errResp.message(), errResp.codeMessage(), errResp.codeMessageValue());
-            } catch (Exception parseEx) {
-                log.warn("GHN Fee API error status {}: {}", ex.getStatusCode(), errorBody);
-            }
-            return fallbackFee;
-        } catch (Exception e) {
-            log.error("Error calculating shipping fee from GHN: {}", e.getMessage(), e);
-            return fallbackFee;
-        }
-    }
-
-    public BigDecimal previewOrder(GhnPreviewRequest request, BigDecimal fallbackFee) {
+    public GhnPreviewResponse previewOrder(GhnPreviewRequest request, BigDecimal fallbackFee) {
         try {
             GhnPreviewApiResponse response = restClient.post()
                     .uri("/v2/shipping-order/preview")
@@ -122,10 +88,10 @@ public class GhnClient {
             }
 
             if (response != null && response.data() != null && response.data().totalFee() != null) {
-                return response.data().totalFee();
+                return response.data();
             }
             log.warn("Could not retrieve total_fee from GHN preview response, fallback to fee {}. Response: {}", fallbackFee, response);
-            return fallbackFee;
+            return new GhnPreviewResponse(fallbackFee, null);
         } catch (RestClientResponseException ex) {
             String errorBody = ex.getResponseBodyAsString();
             try {
@@ -135,10 +101,10 @@ public class GhnClient {
             } catch (Exception parseEx) {
                 log.warn("GHN Preview API error status {}: {}", ex.getStatusCode(), errorBody);
             }
-            return fallbackFee;
+            return new GhnPreviewResponse(fallbackFee, null);
         } catch (Exception e) {
             log.error("Error previewing order fee from GHN: {}", e.getMessage(), e);
-            return fallbackFee;
+            return new GhnPreviewResponse(fallbackFee, null);
         }
     }
 }

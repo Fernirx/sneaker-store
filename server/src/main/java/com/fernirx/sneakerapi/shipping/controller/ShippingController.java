@@ -1,8 +1,9 @@
 package com.fernirx.sneakerapi.shipping.controller;
 
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
-import com.fernirx.sneakerapi.shipping.dto.request.CalculateShippingFeeRequest;
+import com.fernirx.sneakerapi.shipping.dto.request.PreviewShippingFeeRequest;
 import com.fernirx.sneakerapi.shipping.dto.response.LocalityResponse;
+import com.fernirx.sneakerapi.shipping.dto.response.ShippingFeeResponse;
 import com.fernirx.sneakerapi.shipping.service.ShippingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -39,10 +39,10 @@ public class ShippingController {
         return ResponseEntity.ok(SuccessResponse.of(shippingService.getWardsByDistrict(districtId)));
     }
 
-    @PostMapping("/fee")
-    @Operation(summary = "Tính phí vận chuyển theo GHN")
-    public ResponseEntity<SuccessResponse<BigDecimal>> calculateFee(@Valid @RequestBody CalculateShippingFeeRequest request) {
-        BigDecimal fee = shippingService.calculateFee(request);
-        return ResponseEntity.ok(SuccessResponse.of(fee));
+    @PostMapping("/preview")
+    @Operation(summary = "Xem trước phí vận chuyển & thời gian giao dự kiến theo GHN")
+    public ResponseEntity<SuccessResponse<ShippingFeeResponse>> previewFee(@Valid @RequestBody PreviewShippingFeeRequest request) {
+        ShippingFeeResponse response = shippingService.previewShippingFee(request);
+        return ResponseEntity.ok(SuccessResponse.of(response));
     }
 }
