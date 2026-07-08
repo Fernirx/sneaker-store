@@ -162,6 +162,9 @@ export default function OrdersClient({ initialData }: { initialData: PageResult 
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${STATUS_COLORS[order.status]}`}>
                       {STATUS_LABELS[order.status]}
                     </span>
+                    {order.shipment?.expectedDeliveryAt && (
+                      <p className="text-[10px] text-muted mt-1">Dự kiến: {formatDateTime(order.shipment.expectedDeliveryAt)}</p>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${PAYMENT_STATUS_COLORS[order.paymentStatus]}`}>

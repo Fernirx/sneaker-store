@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
 import {
-  formatPrice, formatDateTime, STATUS_OPTIONS, PAYMENT_STATUS_COLORS, PAYMENT_STATUS_LABELS,
+  formatPrice, formatDateTime, STATUS_OPTIONS, PAYMENT_STATUS_COLORS, PAYMENT_STATUS_LABELS, SHIPMENT_STATUS_LABELS,
   type OrderInternalResponse, type OrderStatus,
 } from '../../_components/types';
 
@@ -29,6 +29,16 @@ export default function InfoTab({
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
 
+  // order.status có thể đổi từ bên ngoài (tạo/hủy/đồng bộ vận đơn) — dropdown phải theo kịp, không chỉ đọc 1 lần lúc mount
+  useEffect(() => {
+    setStatus(order.status);
+  }, [order.status]);
+
+  const [creatingShipment, setCreatingShipment] = useState(false);
+  const [cancelingShipment, setCancelingShipment] = useState(false);
+  const [syncingShipment, setSyncingShipment]   = useState(false);
+  const [shipmentError, setShipmentError]       = useState('');
+
   async function handleUpdateStatus() {
     setError('');
     setSaving(true);
@@ -44,6 +54,51 @@ export default function InfoTab({
       setError(general);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleCreateShipment() {
+    setShipmentError('');
+    setCreatingShipment(true);
+    try {
+      const { data } = await clientAxios.post(`/api/admin/orders/${order.id}/shipment`);
+      onUpdated(data.data);
+    } catch (err) {
+      const { general } = parseApiError(err);
+      setShipmentError(general);
+    } finally {
+      setCreatingShipment(false);
+    }
+  }
+
+  async function handleCancelShipment() {
+    if (!window.confirm('Hủy vận đơn GHN hiện tại? Đơn sẽ quay lại trạng thái "Đã xác nhận" và có thể tạo vận đơn mới sau đó.')) {
+      return;
+    }
+    setShipmentError('');
+    setCancelingShipment(true);
+    try {
+      const { data } = await clientAxios.delete(`/api/admin/orders/${order.id}/shipment`);
+      onUpdated(data.data);
+    } catch (err) {
+      const { general } = parseApiError(err);
+      setShipmentError(general);
+    } finally {
+      setCancelingShipment(false);
+    }
+  }
+
+  async function handleSyncShipment() {
+    setShipmentError('');
+    setSyncingShipment(true);
+    try {
+      const { data } = await clientAxios.post(`/api/admin/orders/${order.id}/shipment/sync`);
+      onUpdated(data.data);
+    } catch (err) {
+      const { general } = parseApiError(err);
+      setShipmentError(general);
+    } finally {
+      setSyncingShipment(false);
     }
   }
 
@@ -84,6 +139,61 @@ export default function InfoTab({
         <Row label="Tổng tiền" value={<span className="font-bold">{formatPrice(order.totalAmount)}</span>} />
         <Row label="Hết hạn TT" value={formatDateTime(order.expiredAt)} />
         <Row label="Ngày tạo" value={formatDateTime(order.createdAt)} />
+      </div>
+
+      <div className="bg-white border border-line rounded-sm p-5 space-y-3 lg:col-span-2">
+        <h3 className="font-display font-bold text-xs uppercase tracking-wide text-muted mb-2">
+          Vận chuyển (GHN)
+        </h3>
+        {order.shipment ? (
+          <>
+            <Row label="Mã vận đơn" value={order.shipment.shippingOrderCode ?? '—'} mono />
+            {order.shipment.status && (
+              <Row label="Trạng thái GHN" value={SHIPMENT_STATUS_LABELS[order.shipment.status] ?? order.shipment.status} />
+            )}
+            {order.shipment.expectedDeliveryAt && (
+              <Row label="Dự kiến giao" value={formatDateTime(order.shipment.expectedDeliveryAt)} />
+            )}
+            <Row
+              label="Đồng bộ lần cuối"
+              value={order.shipment.syncedAt ? formatDateTime(order.shipment.syncedAt) : 'Chưa đồng bộ'}
+            />
+            <div className="flex items-center gap-3 pt-1">
+              {(order.status === 'SHIPPING' || order.status === 'CONFIRMED') && (
+                <button
+                  onClick={handleSyncShipment}
+                  disabled={syncingShipment}
+                  className="border border-line text-ink font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-bg-subtle transition-colors disabled:opacity-40"
+                >
+                  {syncingShipment ? 'Đang đồng bộ...' : 'Làm mới trạng thái GHN'}
+                </button>
+              )}
+              {(order.status === 'SHIPPING' || order.status === 'CONFIRMED') && (
+                <button
+                  onClick={handleCancelShipment}
+                  disabled={cancelingShipment}
+                  className="border border-danger text-danger font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-danger-bg transition-colors disabled:opacity-40"
+                >
+                  {cancelingShipment ? 'Đang hủy...' : 'Hủy vận đơn'}
+                </button>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleCreateShipment}
+              disabled={creatingShipment || order.status !== 'CONFIRMED'}
+              className="bg-ink text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-ink/80 transition-colors disabled:opacity-40"
+            >
+              {creatingShipment ? 'Đang tạo...' : 'Tạo vận đơn GHN'}
+            </button>
+            {order.status !== 'CONFIRMED' && (
+              <span className="text-xs text-muted">Chỉ tạo được khi đơn đã "Đã xác nhận".</span>
+            )}
+          </div>
+        )}
+        {shipmentError && <p className="text-xs text-danger">{shipmentError}</p>}
       </div>
 
       <div className="bg-white border border-line rounded-sm p-5 space-y-3 lg:col-span-2">
