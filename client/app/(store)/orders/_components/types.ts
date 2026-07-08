@@ -16,6 +16,21 @@ export interface OrderItemResponse {
   subtotal: number;
 }
 
+export interface ShipmentResponse {
+  shippingOrderCode: string | null;
+  status: string | null;
+  expectedDeliveryAt: string | null;
+  syncedAt: string | null;
+}
+
+export const SHIPMENT_STATUS_LABELS: Record<string, string> = {
+  ready_to_pick: 'Đã tạo đơn giao hàng',
+  picking: 'Đang lấy hàng',
+  delivering: 'Đang giao hàng',
+  delivered: 'Đã giao hàng',
+  cancel: 'Đã hủy',
+};
+
 export interface OrderResponse {
   id: number;
   code: string;
@@ -37,6 +52,7 @@ export interface OrderResponse {
   expiredAt: string;
   createdAt: string;
   items: OrderItemResponse[];
+  shipment: ShipmentResponse | null;
 }
 
 export interface OrderStatusHistoryResponse {

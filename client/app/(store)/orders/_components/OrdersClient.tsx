@@ -97,6 +97,9 @@ export default function OrdersClient({ isLoggedIn }: { isLoggedIn: boolean }) {
               <span>{formatDateTime(order.createdAt)} · {order.items.length} sản phẩm</span>
               <span className="text-[14px] font-bold text-ink tabular-nums">{formatPrice(order.totalAmount)}</span>
             </div>
+            {order.shipment?.expectedDeliveryAt && (
+              <p className="text-[11px] text-muted mt-1">Dự kiến giao: {formatDateTime(order.shipment.expectedDeliveryAt)}</p>
+            )}
           </Link>
         ))}
       </div>

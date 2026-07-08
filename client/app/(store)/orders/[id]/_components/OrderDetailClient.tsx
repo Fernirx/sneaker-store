@@ -7,7 +7,7 @@ import { parseApiError } from '@/lib/parseApiError';
 import { guestHeaders } from '@/lib/guestToken';
 import { formatPrice } from '../../../products/_components/types';
 import {
-  formatDateTime, STATUS_COLORS, STATUS_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_METHOD_LABELS,
+  formatDateTime, STATUS_COLORS, STATUS_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_METHOD_LABELS, SHIPMENT_STATUS_LABELS,
   type OrderResponse, type OrderStatusHistoryResponse, type OrderStatus,
 } from '../../_components/types';
 
@@ -179,6 +179,35 @@ export default function OrderDetailClient({ orderId }: { orderId: number }) {
             )}
           </div>
         </section>
+
+        {/* Shipment (GHN) */}
+        {order.shipment && (
+          <section className="border border-line rounded-sm overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-line bg-line-2">
+              <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">{"Vận chuyển"}</h2>
+            </div>
+            <div className="p-5 space-y-2 text-[13px]">
+              {order.shipment.shippingOrderCode && (
+                <div className="flex justify-between">
+                  <span className="text-muted">{"Mã vận đơn"}:</span>
+                  <span className="text-ink font-medium font-body">{order.shipment.shippingOrderCode}</span>
+                </div>
+              )}
+              {order.shipment.status && (
+                <div className="flex justify-between">
+                  <span className="text-muted">{"Trạng thái vận chuyển"}:</span>
+                  <span className="text-ink">{SHIPMENT_STATUS_LABELS[order.shipment.status] ?? order.shipment.status}</span>
+                </div>
+              )}
+              {order.shipment.expectedDeliveryAt && (
+                <div className="flex justify-between">
+                  <span className="text-muted">{"Dự kiến giao"}:</span>
+                  <span className="text-ink font-medium">{formatDateTime(order.shipment.expectedDeliveryAt)}</span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* History */}
         {history.length > 0 && (
