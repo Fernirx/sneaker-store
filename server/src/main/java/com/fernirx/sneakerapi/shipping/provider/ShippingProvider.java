@@ -1,7 +1,10 @@
 package com.fernirx.sneakerapi.shipping.provider;
 
 import com.fernirx.sneakerapi.shipping.dto.command.CalculateShippingFeeCommand;
+import com.fernirx.sneakerapi.shipping.dto.command.CreateShipmentCommand;
 import com.fernirx.sneakerapi.shipping.dto.response.LocalityResponse;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentResult;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentStatusResult;
 import com.fernirx.sneakerapi.shipping.dto.response.ShippingFeeResponse;
 
 import java.util.List;
@@ -11,4 +14,7 @@ public interface ShippingProvider {
     List<LocalityResponse> getDistricts(Integer provinceId);
     List<LocalityResponse> getWardsByDistrict(Integer districtId);
     ShippingFeeResponse calculateShippingFee(CalculateShippingFeeCommand request);
+    ShipmentResult createShipment(CreateShipmentCommand command);
+    void cancelShipment(String shippingOrderCode);
+    ShipmentStatusResult getShipmentStatus(String clientOrderCode);
 }

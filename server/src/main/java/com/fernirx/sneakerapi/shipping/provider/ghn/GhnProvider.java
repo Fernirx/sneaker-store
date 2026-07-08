@@ -2,11 +2,18 @@ package com.fernirx.sneakerapi.shipping.provider.ghn;
 
 import com.fernirx.sneakerapi.shipping.config.GhnProperties;
 import com.fernirx.sneakerapi.shipping.dto.ParcelItem;
+import com.fernirx.sneakerapi.shipping.dto.ghn.GhnCreateOrderItem;
+import com.fernirx.sneakerapi.shipping.dto.ghn.GhnCreateOrderRequest;
+import com.fernirx.sneakerapi.shipping.dto.ghn.GhnCreateOrderResponse;
+import com.fernirx.sneakerapi.shipping.dto.ghn.GhnOrderDetailItem;
 import com.fernirx.sneakerapi.shipping.dto.ghn.GhnPreviewItem;
 import com.fernirx.sneakerapi.shipping.dto.ghn.GhnPreviewRequest;
 import com.fernirx.sneakerapi.shipping.dto.ghn.GhnPreviewResponse;
 import com.fernirx.sneakerapi.shipping.dto.command.CalculateShippingFeeCommand;
+import com.fernirx.sneakerapi.shipping.dto.command.CreateShipmentCommand;
 import com.fernirx.sneakerapi.shipping.dto.response.LocalityResponse;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentResult;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentStatusResult;
 import com.fernirx.sneakerapi.shipping.dto.response.ShippingFeeResponse;
 import com.fernirx.sneakerapi.shipping.provider.ShippingProvider;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -31,6 +39,38 @@ public class GhnProvider implements ShippingProvider {
     private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
     /** Hệ thống cần admin xác nhận đơn trước khi bàn giao GHN nên cộng thêm 1 ngày vào mốc GHN dự kiến khi hiển thị cho khách */
     private static final int CONFIRM_DELAY_DAYS = 1;
+
+    /**
+     * Chuẩn hóa 22 trạng thái GHN thành 5 nhóm nội bộ - không để nguyên vocabulary riêng của GHN lộ ra
+     * ngoài package này (Order module, FE chỉ biết 5 giá trị). Nhóm "delivering" gồm cả các trạng thái
+     * giao/trả hàng chưa ngã ngũ (delivery_fail, return*, exception, damage, lost) - khớp đúng quy tắc
+     * nghiệp vụ đã chốt: chỉ "cancel"/"returned" mới thật sự chuyển Order sang CANCELLED, các trạng thái
+     * còn lại vẫn coi là đơn đang trong quá trình vận chuyển (SHIPPING).
+     */
+    private static final Map<String, String> GHN_STATUS_GROUPS = Map.ofEntries(
+            Map.entry("ready_to_pick", "ready_to_pick"),
+            Map.entry("picking", "picking"),
+            Map.entry("money_collect_picking", "picking"),
+            Map.entry("picked", "picking"),
+            Map.entry("storing", "picking"),
+            Map.entry("transporting", "picking"),
+            Map.entry("sorting", "picking"),
+            Map.entry("delivering", "delivering"),
+            Map.entry("money_collect_delivering", "delivering"),
+            Map.entry("delivery_fail", "delivering"),
+            Map.entry("waiting_to_return", "delivering"),
+            Map.entry("return", "delivering"),
+            Map.entry("return_transporting", "delivering"),
+            Map.entry("return_sorting", "delivering"),
+            Map.entry("returning", "delivering"),
+            Map.entry("return_fail", "delivering"),
+            Map.entry("exception", "delivering"),
+            Map.entry("damage", "delivering"),
+            Map.entry("lost", "delivering"),
+            Map.entry("delivered", "delivered"),
+            Map.entry("cancel", "cancel"),
+            Map.entry("returned", "cancel")
+    );
 
     private final GhnClient ghnClient;
     private final GhnProperties properties;
@@ -88,6 +128,72 @@ public class GhnProvider implements ShippingProvider {
                 : null;
 
         return new ShippingFeeResponse(response.totalFee(), expectedDeliveryTime);
+    }
+
+    @Override
+    public ShipmentResult createShipment(CreateShipmentCommand command) {
+        PackageDimensions dimensions = aggregateDimensions(command.items());
+
+        List<GhnCreateOrderItem> orderItems = command.items().stream()
+                .map(item -> new GhnCreateOrderItem(
+                        item.name(),
+                        item.code(),
+                        item.quantity(),
+                        item.price() != null ? item.price().longValue() : 0L))
+                .toList();
+
+        GhnCreateOrderRequest requestDto = new GhnCreateOrderRequest(
+                command.recipientName(),
+                command.recipientPhone(),
+                command.shippingStreet(),
+                command.shippingWard(),
+                command.shippingDistrict(),
+                command.shippingProvince(),
+                command.clientOrderCode(),
+                command.codAmount(),
+                buildContent(command.items()),
+                dimensions.length(),
+                dimensions.width(),
+                dimensions.height(),
+                dimensions.weight(),
+                SERVICE_TYPE_ID,
+                command.paymentTypeId(),
+                command.note(),
+                DEFAULT_REQUIRED_NOTE,
+                orderItems
+        );
+
+        GhnCreateOrderResponse response = ghnClient.createOrder(requestDto);
+
+        LocalDateTime expectedDeliveryAt = response.expectedDeliveryTime() != null
+                ? LocalDateTime.ofInstant(response.expectedDeliveryTime(), VN_ZONE)
+                : null;
+
+        return new ShipmentResult(response.orderCode(), expectedDeliveryAt);
+    }
+
+    @Override
+    public void cancelShipment(String shippingOrderCode) {
+        ghnClient.cancelOrder(shippingOrderCode);
+    }
+
+    @Override
+    public ShipmentStatusResult getShipmentStatus(String clientOrderCode) {
+        GhnOrderDetailItem detail = ghnClient.getOrderDetail(clientOrderCode);
+
+        LocalDateTime expectedDeliveryAt = detail.leadtime() != null
+                ? LocalDateTime.ofInstant(detail.leadtime(), VN_ZONE)
+                : null;
+        LocalDateTime deliveredAt = detail.finishDate() != null
+                ? LocalDateTime.ofInstant(detail.finishDate(), VN_ZONE)
+                : null;
+
+        String normalizedStatus = GHN_STATUS_GROUPS.getOrDefault(detail.status(), "picking");
+        return new ShipmentStatusResult(normalizedStatus, expectedDeliveryAt, deliveredAt);
+    }
+
+    private String buildContent(List<ParcelItem> items) {
+        return items.stream().map(ParcelItem::name).distinct().collect(Collectors.joining(", "));
     }
 
     private PackageDimensions aggregateDimensions(List<ParcelItem> items) {

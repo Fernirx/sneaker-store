@@ -1,6 +1,8 @@
 package com.fernirx.sneakerapi.shipping.provider.ghn;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fernirx.sneakerapi.common.enums.ErrorCode;
+import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.shipping.config.GhnProperties;
 import com.fernirx.sneakerapi.shipping.dto.ghn.*;
 import lombok.extern.slf4j.Slf4j;
@@ -105,6 +107,92 @@ public class GhnClient {
         } catch (Exception e) {
             log.error("Error previewing order fee from GHN: {}", e.getMessage(), e);
             return new GhnPreviewResponse(fallbackFee, null);
+        }
+    }
+
+    /** Khác previewOrder: tạo vận đơn thật không có fallback hợp lý - lỗi phải được ném ra để admin biết và thử lại */
+    public GhnCreateOrderResponse createOrder(GhnCreateOrderRequest request) {
+        try {
+            GhnCreateOrderApiResponse response = restClient.post()
+                    .uri("/v2/shipping-order/create")
+                    .body(request)
+                    .retrieve()
+                    .body(GhnCreateOrderApiResponse.class);
+
+            if (response == null || response.data() == null || response.data().orderCode() == null) {
+                log.error("GHN Create Order API did not return order_code. Response: {}", response);
+                throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE);
+            }
+            return response.data();
+        } catch (RestClientResponseException ex) {
+            String errorBody = ex.getResponseBodyAsString();
+            try {
+                GhnCreateOrderApiResponse errResp = objectMapper.readValue(errorBody, GhnCreateOrderApiResponse.class);
+                log.error("GHN Create Order API error status {}: code={}, message={}, code_message={}",
+                        ex.getStatusCode(), errResp.code(), errResp.message(), errResp.codeMessage());
+            } catch (Exception parseEx) {
+                log.error("GHN Create Order API error status {}: {}", ex.getStatusCode(), errorBody);
+            }
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE);
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (Exception e) {
+            log.error("Error creating order via GHN: {}", e.getMessage(), e);
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE);
+        }
+    }
+
+    /** Hủy vận đơn GHN. Ném lỗi nếu gọi API thất bại hoặc GHN trả result=false cho mã đơn này */
+    public void cancelOrder(String shippingOrderCode) {
+        try {
+            GhnCancelOrderApiResponse response = restClient.post()
+                    .uri("/v2/switch-status/cancel")
+                    .body(new GhnCancelOrderRequest(List.of(shippingOrderCode)))
+                    .retrieve()
+                    .body(GhnCancelOrderApiResponse.class);
+
+            boolean success = response != null && response.data() != null && response.data().stream()
+                    .anyMatch(item -> shippingOrderCode.equals(item.orderCode()) && Boolean.TRUE.equals(item.result()));
+
+            if (!success) {
+                log.error("GHN Cancel Order API did not confirm success for order_code {}. Response: {}",
+                        shippingOrderCode, response);
+                throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE);
+            }
+        } catch (RestClientResponseException ex) {
+            log.error("GHN Cancel Order API error status {}: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE);
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (Exception e) {
+            log.error("Error cancelling order via GHN: {}", e.getMessage(), e);
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE);
+        }
+    }
+
+    /** Lấy trạng thái mới nhất của vận đơn theo mã đơn hàng hệ thống (client_order_code = Order.code) */
+    public GhnOrderDetailItem getOrderDetail(String clientOrderCode) {
+        try {
+            GhnOrderDetailApiResponse response = restClient.post()
+                    .uri("/v2/shipping-order/detail-by-client-code")
+                    .body(new GhnOrderDetailRequest(clientOrderCode))
+                    .retrieve()
+                    .body(GhnOrderDetailApiResponse.class);
+
+            if (response == null || response.data() == null) {
+                log.error("GHN Order Detail API returned no data for client_order_code {}. Response: {}",
+                        clientOrderCode, response);
+                throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE);
+            }
+            return response.data();
+        } catch (RestClientResponseException ex) {
+            log.error("GHN Order Detail API error status {}: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE);
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (Exception e) {
+            log.error("Error fetching order detail from GHN: {}", e.getMessage(), e);
+            throw BusinessException.of(ErrorCode.SERVICE_UNAVAILABLE);
         }
     }
 }

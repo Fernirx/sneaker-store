@@ -5,9 +5,12 @@ import com.fernirx.sneakerapi.product.service.ProductVariantService;
 import com.fernirx.sneakerapi.setting.service.SettingService;
 import com.fernirx.sneakerapi.shipping.dto.ParcelItem;
 import com.fernirx.sneakerapi.shipping.dto.command.CalculateShippingFeeCommand;
+import com.fernirx.sneakerapi.shipping.dto.command.CreateShipmentCommand;
 import com.fernirx.sneakerapi.shipping.dto.request.PreviewShippingFeeRequest;
 import com.fernirx.sneakerapi.shipping.dto.request.ShippingItemRequest;
 import com.fernirx.sneakerapi.shipping.dto.response.LocalityResponse;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentResult;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentStatusResult;
 import com.fernirx.sneakerapi.shipping.dto.response.ShippingFeeResponse;
 import com.fernirx.sneakerapi.shipping.provider.ShippingProvider;
 import com.fernirx.sneakerapi.shipping.service.ShippingService;
@@ -84,5 +87,20 @@ public class ShippingServiceImpl implements ShippingService {
             return new ShippingFeeResponse(BigDecimal.ZERO, null);
         }
         return shippingProvider.calculateShippingFee(request);
+    }
+
+    @Override
+    public ShipmentResult createShipment(CreateShipmentCommand command) {
+        return shippingProvider.createShipment(command);
+    }
+
+    @Override
+    public void cancelShipment(String shippingOrderCode) {
+        shippingProvider.cancelShipment(shippingOrderCode);
+    }
+
+    @Override
+    public ShipmentStatusResult getShipmentStatus(String clientOrderCode) {
+        return shippingProvider.getShipmentStatus(clientOrderCode);
     }
 }
