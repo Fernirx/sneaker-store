@@ -25,6 +25,7 @@ import com.fernirx.sneakerapi.order.entity.OrderItem;
 import com.fernirx.sneakerapi.order.entity.OrderStatusHistory;
 import com.fernirx.sneakerapi.order.enums.OrderPaymentStatus;
 import com.fernirx.sneakerapi.order.enums.OrderStatus;
+import com.fernirx.sneakerapi.order.enums.PaymentMethod;
 import com.fernirx.sneakerapi.order.mapper.OrderMapper;
 import com.fernirx.sneakerapi.order.repository.OrderItemRepository;
 import com.fernirx.sneakerapi.order.repository.OrderRepository;
@@ -36,6 +37,11 @@ import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
 import com.fernirx.sneakerapi.shipping.dto.ParcelItem;
 import com.fernirx.sneakerapi.shipping.dto.command.CalculateShippingFeeCommand;
+import com.fernirx.sneakerapi.shipping.dto.command.CreateShipmentCommand;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentResult;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentStatusResult;
+import com.fernirx.sneakerapi.shipping.entity.Shipment;
+import com.fernirx.sneakerapi.shipping.repository.ShipmentRepository;
 import com.fernirx.sneakerapi.shipping.service.ShippingService;
 import com.fernirx.sneakerapi.user.entity.User;
 import com.fernirx.sneakerapi.user.enums.OtpPurpose;
@@ -46,7 +52,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
@@ -63,6 +72,10 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
+    // Đã chuẩn hóa ở GhnProvider (22 trạng thái GHN -> 5 nhóm) nên chỉ cần so 2 giá trị cố định ở đây
+    private static final String GHN_CANCEL_STATUS = "cancel";
+    private static final String GHN_DELIVERED_STATUS = "delivered";
+
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
@@ -75,6 +88,8 @@ public class OrderServiceImpl implements OrderService {
     private final InventoryTransactionService inventoryTransactionService;
     private final OtpService otpService;
     private final ShippingService shippingService;
+    private final ShipmentRepository shipmentRepository;
+    private final PlatformTransactionManager transactionManager;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -208,7 +223,7 @@ public class OrderServiceImpl implements OrderService {
         cartService.clearSelectedItems(userId, guestToken);
 
         List<OrderItemResponse> itemResponses = savedItems.stream().map(orderMapper::toItemResponse).toList();
-        return orderMapper.toResponse(order, itemResponses);
+        return orderMapper.toResponse(order, itemResponses, null);
     }
 
     @Override
@@ -218,14 +233,15 @@ public class OrderServiceImpl implements OrderService {
         Page<Order> orders = userId != null
                 ? orderRepository.findByCustomer_User_Id(userId, pageable)
                 : orderRepository.findByGuestToken(guestToken, pageable);
-        return orders.map(order -> orderMapper.toResponse(order, mapItems(order)));
+        Map<Long, Shipment> shipmentsByOrderId = findShipmentsByOrders(orders.getContent());
+        return orders.map(order -> orderMapper.toResponse(order, mapItems(order), shipmentsByOrderId.get(order.getId())));
     }
 
     @Override
     @Transactional(readOnly = true)
     public OrderResponse getMyOrderDetail(Long orderId, Long userId, String guestToken) {
         Order order = findOwnedOrder(orderId, userId, guestToken);
-        return orderMapper.toResponse(order, mapItems(order));
+        return orderMapper.toResponse(order, mapItems(order), findShipment(order));
     }
 
     @Override
@@ -247,15 +263,16 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public Page<OrderInternalResponse> getAll(OrderFilterRequest filter, Pageable pageable) {
-        return orderRepository.findAll(OrderSpec.build(filter), pageable)
-                .map(order -> orderMapper.toInternalResponse(order, mapItems(order)));
+        Page<Order> orders = orderRepository.findAll(OrderSpec.build(filter), pageable);
+        Map<Long, Shipment> shipmentsByOrderId = findShipmentsByOrders(orders.getContent());
+        return orders.map(order -> orderMapper.toInternalResponse(order, mapItems(order), shipmentsByOrderId.get(order.getId())));
     }
 
     @Override
     @Transactional(readOnly = true)
     public OrderInternalResponse getById(Long id) {
         Order order = findById(id);
-        return orderMapper.toInternalResponse(order, mapItems(order));
+        return orderMapper.toInternalResponse(order, mapItems(order), findShipment(order));
     }
 
     @Override
@@ -272,7 +289,130 @@ public class OrderServiceImpl implements OrderService {
             changeStatus(id, request.status(), changedByUserId, request.note());
         }
         Order order = findById(id);
-        return orderMapper.toInternalResponse(order, mapItems(order));
+        return orderMapper.toInternalResponse(order, mapItems(order), findShipment(order));
+    }
+
+    @Override
+    // Tách khỏi transaction lớp @Transactional mặc định: lời gọi GHN tạo vận đơn là I/O mạng,
+    // không được giữ transaction DB trong lúc chờ (tránh lặp lại tech debt đã biết ở luồng tính phí ship)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public OrderInternalResponse createShipment(Long orderId, Long changedByUserId) {
+        Order order = findById(orderId);
+
+        Optional<Shipment> existing = shipmentRepository.findByOrder_Id(orderId);
+        if (existing.isPresent()) {
+            return buildInternalResponse(orderId);
+        }
+
+        if (order.getStatus() != OrderStatus.CONFIRMED) {
+            throw BusinessException.bad("label.order");
+        }
+
+        List<ParcelItem> items = orderItemRepository.findAllByOrder(order).stream()
+                .map(ParcelItem::from)
+                .toList();
+
+        Long codAmount;
+        Integer paymentTypeId;
+        if (order.getPaymentMethod() == PaymentMethod.COD) {
+            // payment_type_id=2: GHN tự cộng thêm phí ship vào lúc thu hộ -> cod_amount không được gồm shippingFee
+            codAmount = order.getTotalAmount().subtract(order.getShippingFee()).longValue();
+            paymentTypeId = 2;
+        } else {
+            // Đã thanh toán online (VNPay) -> không thu hộ gì thêm, shop tự trả phí ship cho GHN
+            codAmount = 0L;
+            paymentTypeId = 1;
+        }
+
+        CreateShipmentCommand command = new CreateShipmentCommand(
+                order.getRecipientName(),
+                order.getRecipientPhone(),
+                order.getShippingStreet(),
+                order.getShippingWard(),
+                order.getShippingDistrict(),
+                order.getShippingProvince(),
+                order.getCode(),
+                codAmount,
+                paymentTypeId,
+                order.getNote(),
+                items
+        );
+
+        ShipmentResult result = shippingService.createShipment(command);
+
+        Shipment shipment = new Shipment();
+        shipment.setOrder(order);
+        shipment.setShippingOrderCode(result.shippingOrderCode());
+        shipment.setExpectedDeliveryAt(result.expectedDeliveryAt());
+        shipmentRepository.save(shipment);
+
+        changeStatus(orderId, OrderStatus.SHIPPING, changedByUserId,
+                "Đã tạo vận đơn GHN, mã: " + result.shippingOrderCode());
+
+        return buildInternalResponse(orderId);
+    }
+
+    @Override
+    // Tách khỏi transaction lớp: lời gọi GHN hủy vận đơn là I/O mạng, cùng lý do với createShipment
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public OrderInternalResponse cancelShipment(Long orderId, Long changedByUserId) {
+        Order order = findById(orderId);
+        Shipment shipment = shipmentRepository.findByOrder_Id(orderId)
+                .orElseThrow(() -> BusinessException.notFound("label.order"));
+
+        if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELLED) {
+            throw BusinessException.bad("label.order");
+        }
+
+        shippingService.cancelShipment(shipment.getShippingOrderCode());
+
+        shipmentRepository.delete(shipment);
+        changeStatus(orderId, OrderStatus.CONFIRMED, changedByUserId,
+                "Đã hủy vận đơn GHN, mã: " + shipment.getShippingOrderCode());
+
+        return buildInternalResponse(orderId);
+    }
+
+    @Override
+    // Tách khỏi transaction lớp: lời gọi GHN lấy trạng thái là I/O mạng, cùng lý do với createShipment/cancelShipment
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public OrderInternalResponse syncShipmentStatus(Long orderId, Long changedByUserId) {
+        Order order = findById(orderId);
+        Shipment shipment = shipmentRepository.findByOrder_Id(orderId)
+                .orElseThrow(() -> BusinessException.notFound("label.order"));
+
+        if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELLED) {
+            return buildInternalResponse(orderId);
+        }
+
+        ShipmentStatusResult result = shippingService.getShipmentStatus(order.getCode());
+
+        shipment.setStatus(result.status());
+        if (result.expectedDeliveryAt() != null) {
+            shipment.setExpectedDeliveryAt(result.expectedDeliveryAt());
+        }
+        shipment.setDeliveredAt(result.deliveredAt());
+        shipment.setSyncedAt(LocalDateTime.now());
+        shipmentRepository.save(shipment);
+
+        if (GHN_CANCEL_STATUS.equals(result.status())) {
+            // cancelOrder tự no-op nếu order đã CANCELLED/DELIVERED, đồng thời hoàn kho + release coupon + revoke điểm
+            cancelOrder(orderId, "GHN báo trạng thái: " + result.status());
+        } else if (GHN_DELIVERED_STATUS.equals(result.status())) {
+            // COD: GHN giao hàng thành công nghĩa là đã thu tiền khách -> đánh dấu đã thanh toán.
+            // VNPay: đã PAID từ trước (lúc IPN), set lại ở đây là no-op, không ảnh hưởng gì.
+            if (order.getPaymentStatus() != OrderPaymentStatus.PAID) {
+                order.setPaymentStatus(OrderPaymentStatus.PAID);
+                orderRepository.save(order);
+            }
+            if (order.getStatus() != OrderStatus.DELIVERED) {
+                changeStatus(orderId, OrderStatus.DELIVERED, changedByUserId, "GHN báo đã giao thành công");
+            }
+        } else if (order.getStatus() != OrderStatus.SHIPPING) {
+            changeStatus(orderId, OrderStatus.SHIPPING, changedByUserId, "Đồng bộ trạng thái GHN: " + result.status());
+        }
+
+        return buildInternalResponse(orderId);
     }
 
     @Override
@@ -375,6 +515,31 @@ public class OrderServiceImpl implements OrderService {
     private List<OrderStatusHistoryResponse> mapHistory(Order order) {
         return orderStatusHistoryRepository.findByOrderOrderByCreatedAtAsc(order).stream()
                 .map(orderMapper::toHistoryResponse).toList();
+    }
+
+    private Shipment findShipment(Order order) {
+        return shipmentRepository.findByOrder_Id(order.getId()).orElse(null);
+    }
+
+    private Map<Long, Shipment> findShipmentsByOrders(List<Order> orders) {
+        List<Long> orderIds = orders.stream().map(Order::getId).toList();
+        return shipmentRepository.findAllByOrder_IdIn(orderIds).stream()
+                .collect(Collectors.toMap(s -> s.getOrder().getId(), Function.identity()));
+    }
+
+    /**
+     * Dùng cho các method chạy ngoài transaction lớp (NOT_SUPPORTED - createShipment/cancelShipment/syncShipmentStatus):
+     * OrderMapper cần lazy-load Order.customer.user (field customerEmail) nên bắt buộc phải có session/transaction
+     * thật khi build response cuối cùng. Không gọi qua "this.xxx()" (self-invocation bỏ qua proxy AOP, @Transactional
+     * sẽ không có tác dụng) nên dùng TransactionTemplate mở transaction trực tiếp qua transaction manager.
+     */
+    private OrderInternalResponse buildInternalResponse(Long orderId) {
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.setReadOnly(true);
+        return transactionTemplate.execute(status -> {
+            Order order = findById(orderId);
+            return orderMapper.toInternalResponse(order, mapItems(order), findShipment(order));
+        });
     }
 
     private Order findOwnedOrder(Long orderId, Long userId, String guestToken) {

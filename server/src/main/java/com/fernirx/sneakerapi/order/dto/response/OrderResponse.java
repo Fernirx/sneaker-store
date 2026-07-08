@@ -3,6 +3,7 @@ package com.fernirx.sneakerapi.order.dto.response;
 import com.fernirx.sneakerapi.order.enums.OrderPaymentStatus;
 import com.fernirx.sneakerapi.order.enums.OrderStatus;
 import com.fernirx.sneakerapi.order.enums.PaymentMethod;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,5 +29,6 @@ public record OrderResponse(
         String note,
         LocalDateTime expiredAt,
         LocalDateTime createdAt,
-        List<OrderItemResponse> items
+        List<OrderItemResponse> items,
+        ShipmentResponse shipment
 ) {}

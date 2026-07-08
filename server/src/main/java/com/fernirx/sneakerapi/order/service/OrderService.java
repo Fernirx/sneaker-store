@@ -31,6 +31,9 @@ public interface OrderService {
     OrderInternalResponse getById(Long id);
     List<OrderStatusHistoryResponse> getHistory(Long id);
     OrderInternalResponse updateStatus(Long id, UpdateOrderStatusRequest request, Long changedByUserId);
+    OrderInternalResponse createShipment(Long orderId, Long changedByUserId);
+    OrderInternalResponse cancelShipment(Long orderId, Long changedByUserId);
+    OrderInternalResponse syncShipmentStatus(Long orderId, Long changedByUserId);
 
     // Cross-module (Payment, Scheduler, Review)
     Order findEntityById(Long id);

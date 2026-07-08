@@ -62,4 +62,34 @@ public class InternalOrderController {
         OrderInternalResponse response = orderService.updateStatus(id, request, userDetails.getId());
         return ResponseEntity.ok(SuccessResponse.of(response));
     }
+
+    @PostMapping("/{id}/shipment")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
+    @Operation(summary = "Tạo vận đơn GHN cho đơn hàng (chỉ khi đơn đã CONFIRMED)")
+    public ResponseEntity<SuccessResponse<OrderInternalResponse>> createShipment(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id) {
+        OrderInternalResponse response = orderService.createShipment(id, userDetails.getId());
+        return ResponseEntity.ok(SuccessResponse.of(response));
+    }
+
+    @DeleteMapping("/{id}/shipment")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
+    @Operation(summary = "Hủy vận đơn GHN của đơn hàng (đơn quay lại trạng thái CONFIRMED)")
+    public ResponseEntity<SuccessResponse<OrderInternalResponse>> cancelShipment(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id) {
+        OrderInternalResponse response = orderService.cancelShipment(id, userDetails.getId());
+        return ResponseEntity.ok(SuccessResponse.of(response));
+    }
+
+    @PostMapping("/{id}/shipment/sync")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
+    @Operation(summary = "Đồng bộ trạng thái vận đơn GHN mới nhất cho đơn hàng")
+    public ResponseEntity<SuccessResponse<OrderInternalResponse>> syncShipmentStatus(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id) {
+        OrderInternalResponse response = orderService.syncShipmentStatus(id, userDetails.getId());
+        return ResponseEntity.ok(SuccessResponse.of(response));
+    }
 }

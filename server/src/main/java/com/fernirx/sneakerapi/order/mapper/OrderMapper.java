@@ -7,6 +7,8 @@ import com.fernirx.sneakerapi.order.dto.response.OrderStatusHistoryResponse;
 import com.fernirx.sneakerapi.order.entity.Order;
 import com.fernirx.sneakerapi.order.entity.OrderItem;
 import com.fernirx.sneakerapi.order.entity.OrderStatusHistory;
+import com.fernirx.sneakerapi.shipping.dto.response.ShipmentResponse;
+import com.fernirx.sneakerapi.shipping.entity.Shipment;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -25,13 +27,24 @@ public interface OrderMapper {
 
     OrderStatusHistoryResponse toHistoryResponse(OrderStatusHistory history);
 
-    @Mapping(target = "items", source = "items")
-    OrderResponse toResponse(Order order, List<OrderItemResponse> items);
+    ShipmentResponse toShipmentResponse(Shipment shipment);
 
+    @Mapping(target = "id", source = "order.id")
+    @Mapping(target = "status", source = "order.status")
+    @Mapping(target = "createdAt", source = "order.createdAt")
+    @Mapping(target = "items", source = "items")
+    @Mapping(target = "shipment", source = "shipment")
+    OrderResponse toResponse(Order order, List<OrderItemResponse> items, Shipment shipment);
+
+    @Mapping(target = "id", source = "order.id")
+    @Mapping(target = "status", source = "order.status")
+    @Mapping(target = "createdAt", source = "order.createdAt")
+    @Mapping(target = "updatedAt", source = "order.updatedAt")
     @Mapping(target = "customerEmail",
             expression = "java(order.getCustomer() != null ? order.getCustomer().getUser().getEmail() : null)")
     @Mapping(target = "assignedToId",
             expression = "java(order.getAssignedTo() != null ? order.getAssignedTo().getId() : null)")
     @Mapping(target = "items", source = "items")
-    OrderInternalResponse toInternalResponse(Order order, List<OrderItemResponse> items);
+    @Mapping(target = "shipment", source = "shipment")
+    OrderInternalResponse toInternalResponse(Order order, List<OrderItemResponse> items, Shipment shipment);
 }
