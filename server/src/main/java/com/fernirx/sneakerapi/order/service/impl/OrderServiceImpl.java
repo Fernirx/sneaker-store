@@ -32,6 +32,8 @@ import com.fernirx.sneakerapi.order.repository.OrderRepository;
 import com.fernirx.sneakerapi.order.repository.OrderSpec;
 import com.fernirx.sneakerapi.order.repository.OrderStatusHistoryRepository;
 import com.fernirx.sneakerapi.order.service.OrderService;
+import com.fernirx.sneakerapi.notification.event.OrderCancelledEvent;
+import com.fernirx.sneakerapi.notification.event.OrderCreatedEvent;
 import com.fernirx.sneakerapi.product.dto.response.StockChangeResult;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
@@ -48,6 +50,7 @@ import com.fernirx.sneakerapi.user.enums.OtpPurpose;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -90,6 +93,7 @@ public class OrderServiceImpl implements OrderService {
     private final ShippingService shippingService;
     private final ShipmentRepository shipmentRepository;
     private final PlatformTransactionManager transactionManager;
+    private final ApplicationEventPublisher eventPublisher;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -221,6 +225,8 @@ public class OrderServiceImpl implements OrderService {
         }
 
         cartService.clearSelectedItems(userId, guestToken);
+
+        eventPublisher.publishEvent(new OrderCreatedEvent(order.getId(), order.getCode()));
 
         List<OrderItemResponse> itemResponses = savedItems.stream().map(orderMapper::toItemResponse).toList();
         return orderMapper.toResponse(order, itemResponses, null);
@@ -490,6 +496,8 @@ public class OrderServiceImpl implements OrderService {
 
         couponService.releaseUsage(order.getId());
         changeStatus(orderId, OrderStatus.CANCELLED, null, reason);
+
+        eventPublisher.publishEvent(new OrderCancelledEvent(order.getId(), order.getCode(), reason));
     }
 
     // ---- Private helpers ----

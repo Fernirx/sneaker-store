@@ -1,6 +1,8 @@
 package com.fernirx.sneakerapi.product.service.impl;
 
 import com.fernirx.sneakerapi.common.exception.BusinessException;
+import com.fernirx.sneakerapi.notification.event.LowStockEvent;
+import com.fernirx.sneakerapi.notification.event.OutOfStockEvent;
 import com.fernirx.sneakerapi.product.assembler.ProductAssembler;
 import com.fernirx.sneakerapi.product.dto.request.CreateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.request.UpdateVariantRequest;
@@ -15,6 +17,7 @@ import com.fernirx.sneakerapi.product.repository.ProductVariantRepository;
 import com.fernirx.sneakerapi.product.repository.ProductVariantSpec;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final ProductRepository productRepository;
     private final ProductVariantMapper productVariantMapper;
     private final ProductAssembler productAssembler;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -161,7 +165,25 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         }
         int newStock = productVariantRepository.findStockQuantityById(variantId)
                 .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
+
+        publishStockThresholdEvent(variantId, newStock);
+
         return new StockChangeResult(variantId, newStock + quantity, newStock);
+    }
+
+    private void publishStockThresholdEvent(Long variantId, int newStock) {
+        if (newStock > 0) {
+            ProductVariant variant = productVariantRepository.findById(variantId).orElse(null);
+            if (variant != null && newStock <= variant.getMinStockLevel()) {
+                eventPublisher.publishEvent(new LowStockEvent(
+                        variantId, variant.getProduct().getName(), variant.getSku(), newStock, variant.getMinStockLevel()));
+            }
+        } else if (newStock == 0) {
+            ProductVariant variant = productVariantRepository.findById(variantId).orElse(null);
+            if (variant != null) {
+                eventPublisher.publishEvent(new OutOfStockEvent(variantId, variant.getProduct().getName(), variant.getSku()));
+            }
+        }
     }
 
     @Override

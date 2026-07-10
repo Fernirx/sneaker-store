@@ -17,8 +17,10 @@ import com.fernirx.sneakerapi.coupon.repository.CouponRepository;
 import com.fernirx.sneakerapi.coupon.repository.CouponSpec;
 import com.fernirx.sneakerapi.coupon.repository.CouponUsageRepository;
 import com.fernirx.sneakerapi.coupon.service.CouponService;
+import com.fernirx.sneakerapi.notification.event.CouponCreatedEvent;
 import com.fernirx.sneakerapi.order.entity.Order;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,7 @@ public class CouponServiceImpl implements CouponService {
     private final CouponRepository couponRepository;
     private final CouponUsageRepository couponUsageRepository;
     private final CouponMapper couponMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -87,7 +90,9 @@ public class CouponServiceImpl implements CouponService {
         coupon.setStartDate(request.startDate());
         coupon.setEndDate(request.endDate());
         coupon.setActive(true);
-        return couponMapper.toInternalResponse(couponRepository.save(coupon));
+        Coupon saved = couponRepository.save(coupon);
+        eventPublisher.publishEvent(new CouponCreatedEvent(saved.getId(), saved.getCode()));
+        return couponMapper.toInternalResponse(saved);
     }
 
     @Override

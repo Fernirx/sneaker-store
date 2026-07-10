@@ -3,6 +3,8 @@ package com.fernirx.sneakerapi.product.service.impl;
 import com.fernirx.sneakerapi.brand.entity.Brand;
 import com.fernirx.sneakerapi.brand.repository.BrandRepository;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
+import com.fernirx.sneakerapi.notification.event.ProductOnSaleEvent;
+import com.fernirx.sneakerapi.notification.event.ProductPublishedEvent;
 import com.fernirx.sneakerapi.product.assembler.ProductAssembler;
 import com.fernirx.sneakerapi.product.dto.request.CreateProductRequest;
 import com.fernirx.sneakerapi.product.dto.request.InternalProductFilterRequest;
@@ -23,6 +25,7 @@ import com.fernirx.sneakerapi.product.repository.ProductVariantRepository;
 import com.fernirx.sneakerapi.product.service.ProductService;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,6 +47,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final BrandRepository brandRepository;
     private final Slugify slugify;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ─── Public ──────────────────────────────────────────────────────────────
 
@@ -165,6 +169,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductInternalResponse updateProduct(Long id, UpdateProductRequest request) {
         Product product = findByIdWithBrand(id);
+        boolean wasActive = Boolean.TRUE.equals(product.getActive());
+        boolean wasOnSale = Boolean.TRUE.equals(product.getOnSale());
 
         if (request.brandId() != null && !request.brandId().equals(product.getBrand().getId())) {
             Brand brand = brandRepository.findById(request.brandId())
@@ -172,7 +178,7 @@ public class ProductServiceImpl implements ProductService {
             product.setBrand(brand);
         }
 
-        if (Boolean.TRUE.equals(request.active()) && !Boolean.TRUE.equals(product.getActive())) {
+        if (Boolean.TRUE.equals(request.active()) && !wasActive) {
             if (!productVariantRepository.existsByProductIdAndActiveTrue(id)) {
                 throw BusinessException.bad("label.product.publish_no_variants");
             }
@@ -185,7 +191,16 @@ public class ProductServiceImpl implements ProductService {
         }
 
         productMapper.updateProduct(request, product);
-        return productAssembler.toInternalResponse(productRepository.save(product), null);
+        Product saved = productRepository.save(product);
+
+        if (!wasActive && Boolean.TRUE.equals(saved.getActive())) {
+            eventPublisher.publishEvent(new ProductPublishedEvent(saved.getId(), saved.getName(), saved.getSlug()));
+        }
+        if (!wasOnSale && Boolean.TRUE.equals(saved.getOnSale())) {
+            eventPublisher.publishEvent(new ProductOnSaleEvent(saved.getId(), saved.getName(), saved.getSlug()));
+        }
+
+        return productAssembler.toInternalResponse(saved, null);
     }
 
     @Override
