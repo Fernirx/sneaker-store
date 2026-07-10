@@ -5,11 +5,29 @@ import Link from 'next/link';
 import clientAxios from '@/lib/axios/clientAxios';
 import { avatarUrl } from '@/lib/cloudinaryUrl';
 import { useCart } from '@/contexts/CartContext';
+import { useNotificationUnreadCount } from '@/hooks/useNotificationUnreadCount';
 
 interface Props {
   isLoggedIn: boolean;
   firstName?: string;
   avatarPublicId?: string;
+}
+
+function NotificationBellLink() {
+  const unreadCount = useNotificationUnreadCount('/api/notifications');
+  return (
+    <Link href="/notifications" title="Thông báo"
+      className="relative p-2.5 rounded-full text-ink-2 hover:text-ink hover:bg-paper transition-colors">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      {unreadCount > 0 && (
+        <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </span>
+      )}
+    </Link>
+  );
 }
 
 export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }: Props) {
@@ -59,6 +77,8 @@ export default function HeaderActions({ isLoggedIn, firstName, avatarPublicId }:
 
       {isLoggedIn ? (
         <>
+          <NotificationBellLink />
+
           <Link href="/orders" title="Đơn hàng"
             className="p-2.5 rounded-full text-ink-2 hover:text-ink hover:bg-paper transition-colors">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
