@@ -11,7 +11,7 @@ import org.springframework.validation.annotation.Validated;
 public class OrderProperties {
     /** Thời gian tối đa để thanh toán trước khi đơn tự hủy (phút) */
     @Positive
-    private int expireMinutes = 15;
+    private int expireMinutes = 10;
 
     /** Số lần thanh toán thất bại tối đa trước khi đơn tự hủy */
     @Positive

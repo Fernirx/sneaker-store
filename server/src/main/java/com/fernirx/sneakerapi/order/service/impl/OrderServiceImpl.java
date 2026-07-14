@@ -471,6 +471,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public void flagLatePayment(Long orderId, String note) {
+        Order order = findById(orderId);
+        String existing = order.getAdminNote();
+        order.setAdminNote(existing == null || existing.isBlank() ? note : existing + "\n" + note);
+        orderRepository.save(order);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<Order> findDeliveredOrderForProduct(Long userId, Long productId) {
         List<Order> orders = orderItemRepository.findOrdersForProductByStatus(

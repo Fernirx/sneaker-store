@@ -42,5 +42,6 @@ public interface OrderService {
     void changeStatus(Long orderId, OrderStatus newStatus, Long changedByUserId, String note);
     void cancelOrder(Long orderId, String reason);
     void markAsPaid(Long orderId);
+    void flagLatePayment(Long orderId, String note);
     Optional<Order> findDeliveredOrderForProduct(Long userId, Long productId);
 }

@@ -94,7 +94,14 @@ public class PaymentServiceImpl implements PaymentService {
         if ("00".equals(responseCode)) {
             payment.setStatus(PaymentStatus.SUCCESS);
             paymentRepository.save(payment);
-            orderService.markAsPaid(order.getId());
+            if (order.getStatus() == OrderStatus.PENDING) {
+                orderService.markAsPaid(order.getId());
+            } else {
+                orderService.flagLatePayment(order.getId(),
+                        "Đã nhận thanh toán VNPay (mã GD " + params.get("vnp_TransactionNo")
+                                + ") sau khi đơn đã chuyển trạng thái " + order.getStatus()
+                                + " — cần đối soát/hoàn tiền thủ công.");
+            }
         } else {
             payment.setStatus(PaymentStatus.FAILED);
             paymentRepository.save(payment);
