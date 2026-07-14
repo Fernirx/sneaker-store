@@ -11,6 +11,7 @@ import { parseApiError } from '@/lib/parseApiError';
 import ReviewsPanel from './ReviewsPanel';
 import CommentsPanel from './CommentsPanel';
 import ImageUnavailable from '@/components/ImageUnavailable';
+import RichText from '@/components/RichText';
 
 const GENDER_LABEL: Record<string, string> = {
   MEN: 'Nam', WOMEN: 'Nữ', UNISEX: 'Unisex', KIDS: 'Trẻ em',
@@ -425,9 +426,7 @@ export default function ProductDetailClient({
       {product.description && (
         <section className="py-12 border-t border-line mt-10">
           <h2 className="font-display font-black text-base uppercase tracking-wider text-ink mb-4">Mô tả sản phẩm</h2>
-          <div className="text-sm text-muted leading-relaxed whitespace-pre-line max-w-3xl">
-            {product.description}
-          </div>
+          <RichText html={product.description} className="text-sm text-muted leading-relaxed max-w-3xl" />
         </section>
       )}
 

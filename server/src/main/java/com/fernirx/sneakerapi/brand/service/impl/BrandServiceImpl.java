@@ -13,6 +13,7 @@ import com.fernirx.sneakerapi.brand.service.BrandService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
+import org.owasp.html.PolicyFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class BrandServiceImpl implements BrandService {
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
     private final Slugify slugify;
+    private final PolicyFactory richTextHtmlPolicy;
 
     @Override
     @Transactional(readOnly = true)
@@ -65,7 +67,7 @@ public class BrandServiceImpl implements BrandService {
         Brand brand = new Brand();
         brand.setName(request.name());
         brand.setSlug(slug);
-        brand.setDescription(request.description());
+        brand.setDescription(request.description() != null ? richTextHtmlPolicy.sanitize(request.description()) : null);
         brand.setLogoPublicId(request.logoPublicId());
         brand.setActive(true);
         return brandMapper.toInternalResponse(brandRepository.save(brand));
@@ -80,6 +82,9 @@ public class BrandServiceImpl implements BrandService {
             }
         }
         brandMapper.updateBrand(request, brand);
+        if (request.description() != null) {
+            brand.setDescription(richTextHtmlPolicy.sanitize(request.description()));
+        }
         return brandMapper.toInternalResponse(brandRepository.save(brand));
     }
 

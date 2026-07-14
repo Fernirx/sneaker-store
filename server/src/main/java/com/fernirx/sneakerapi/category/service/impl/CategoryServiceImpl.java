@@ -13,6 +13,7 @@ import com.fernirx.sneakerapi.category.service.CategoryService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
+import org.owasp.html.PolicyFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
     private final Slugify slugify;
+    private final PolicyFactory richTextHtmlPolicy;
 
     @Override
     @Transactional(readOnly = true)
@@ -66,7 +68,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = new Category();
         category.setName(request.name());
         category.setSlug(slug);
-        category.setDescription(request.description());
+        category.setDescription(request.description() != null ? richTextHtmlPolicy.sanitize(request.description()) : null);
         category.setImagePublicId(request.imagePublicId());
         category.setDisplayOrder(request.displayOrder());
         category.setActive(true);
@@ -86,6 +88,9 @@ public class CategoryServiceImpl implements CategoryService {
             }
         }
         categoryMapper.updateCategory(request, category);
+        if (request.description() != null) {
+            category.setDescription(richTextHtmlPolicy.sanitize(request.description()));
+        }
         categoryRepository.save(category);
         return categoryMapper.toInternalResponse(categoryRepository.findById(id).orElseThrow());
     }

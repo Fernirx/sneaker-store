@@ -5,6 +5,7 @@ import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
 import Modal from '@/components/admin/Modal';
 import ImageUpload from '@/components/admin/ImageUpload';
+import TiptapEditor from '@/components/admin/TiptapEditor';
 
 interface ParentOption {
   id: number;
@@ -111,12 +112,7 @@ export default function CreateCategoryModal({
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Mô tả</label>
-          <textarea
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            rows={2}
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink resize-none"
-          />
+          <TiptapEditor value={description} onChange={setDescription} />
         </div>
 
         <div>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
-import TiptapEditor from './TiptapEditor';
+import TiptapEditor from '@/components/admin/TiptapEditor';
 import CustomerPicker from './CustomerPicker';
 import type { NotificationType } from '../../_components/types';
 

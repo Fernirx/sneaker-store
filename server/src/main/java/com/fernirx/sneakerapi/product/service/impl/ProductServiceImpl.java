@@ -25,6 +25,7 @@ import com.fernirx.sneakerapi.product.repository.ProductVariantRepository;
 import com.fernirx.sneakerapi.product.service.ProductService;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
+import org.owasp.html.PolicyFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +49,7 @@ public class ProductServiceImpl implements ProductService {
     private final BrandRepository brandRepository;
     private final Slugify slugify;
     private final ApplicationEventPublisher eventPublisher;
+    private final PolicyFactory richTextHtmlPolicy;
 
     // ─── Public ──────────────────────────────────────────────────────────────
 
@@ -151,7 +153,7 @@ public class ProductServiceImpl implements ProductService {
         product.setCode(request.code());
         product.setName(request.name());
         product.setSlug(generateUniqueSlug(request.name()));
-        product.setDescription(request.description());
+        product.setDescription(request.description() != null ? richTextHtmlPolicy.sanitize(request.description()) : null);
         product.setGender(request.gender());
         product.setUpperMaterial(request.upperMaterial());
         product.setSoleType(request.soleType());
@@ -191,6 +193,9 @@ public class ProductServiceImpl implements ProductService {
         }
 
         productMapper.updateProduct(request, product);
+        if (request.description() != null) {
+            product.setDescription(richTextHtmlPolicy.sanitize(request.description()));
+        }
         Product saved = productRepository.save(product);
 
         if (!wasActive && Boolean.TRUE.equals(saved.getActive())) {

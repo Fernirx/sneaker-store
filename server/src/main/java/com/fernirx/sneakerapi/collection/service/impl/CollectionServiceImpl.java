@@ -13,6 +13,7 @@ import com.fernirx.sneakerapi.collection.service.CollectionService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
+import org.owasp.html.PolicyFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class CollectionServiceImpl implements CollectionService {
     private final CollectionRepository collectionRepository;
     private final CollectionMapper collectionMapper;
     private final Slugify slugify;
+    private final PolicyFactory richTextHtmlPolicy;
 
     @Override
     @Transactional(readOnly = true)
@@ -66,7 +68,7 @@ public class CollectionServiceImpl implements CollectionService {
         Collection collection = new Collection();
         collection.setName(request.name());
         collection.setSlug(slug);
-        collection.setDescription(request.description());
+        collection.setDescription(request.description() != null ? richTextHtmlPolicy.sanitize(request.description()) : null);
         collection.setImagePublicId(request.imagePublicId());
         collection.setLaunchDate(request.launchDate());
         collection.setEndDate(request.endDate());
@@ -84,6 +86,9 @@ public class CollectionServiceImpl implements CollectionService {
             }
         }
         collectionMapper.updateCollection(request, collection);
+        if (request.description() != null) {
+            collection.setDescription(richTextHtmlPolicy.sanitize(request.description()));
+        }
         collectionRepository.save(collection);
         return collectionMapper.toInternalResponse(collectionRepository.findById(id).orElseThrow());
     }

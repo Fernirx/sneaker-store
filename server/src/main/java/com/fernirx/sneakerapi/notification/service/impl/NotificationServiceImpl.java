@@ -42,7 +42,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final UserRoleRepository userRoleRepository;
     private final CustomerRepository customerRepository;
     private final SseEmitterRegistry sseEmitterRegistry;
-    private final PolicyFactory notificationHtmlPolicy;
+    private final PolicyFactory richTextHtmlPolicy;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -133,7 +133,7 @@ public class NotificationServiceImpl implements NotificationService {
                 ? customerRepository.findAllById(request.targetCustomerIds()).stream().map(c -> c.getUser().getId()).toList()
                 : null;
 
-        String safeHtml = notificationHtmlPolicy.sanitize(request.message());
+        String safeHtml = richTextHtmlPolicy.sanitize(request.message());
         CreateNotificationCommand command = new CreateNotificationCommand(
                 request.type(),
                 request.targetType(),

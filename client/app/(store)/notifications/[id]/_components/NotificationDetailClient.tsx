@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import clientAxios from '@/lib/axios/clientAxios';
+import RichText from '@/components/RichText';
 import { formatDateTime, TYPE_LABELS, type NotificationResponse } from '../../_components/types';
 
 function DetailSkeleton() {
@@ -61,18 +62,8 @@ export default function NotificationDetailClient({ notificationId }: { notificat
 
       <h1 className="font-display font-black text-2xl uppercase tracking-tight mb-6">{notification.title}</h1>
 
-      {/* Nội dung đã được sanitize phía server (owasp-java-html-sanitizer) trước khi lưu - an toàn để render trực tiếp */}
-      <div
-        className="text-[14px] leading-relaxed text-ink-2
-          [&_p]:mb-3 [&_h1]:font-display [&_h1]:font-black [&_h1]:text-xl [&_h1]:mb-3 [&_h1]:mt-5
-          [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-lg [&_h2]:mb-2 [&_h2]:mt-4
-          [&_h3]:font-bold [&_h3]:text-base [&_h3]:mb-2 [&_h3]:mt-3
-          [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3
-          [&_img]:rounded-sm [&_img]:my-4 [&_img]:max-w-full
-          [&_a]:text-accent [&_a]:underline
-          [&_table]:border [&_table]:border-line [&_table]:mb-3 [&_td]:border [&_td]:border-line [&_td]:p-2 [&_th]:border [&_th]:border-line [&_th]:p-2 [&_th]:bg-paper"
-        dangerouslySetInnerHTML={{ __html: notification.message }}
-      />
+      {/* Marketing (createMarketing) đã sanitize phía server; thông báo hệ thống tự sinh (create) hiện KHÔNG qua sanitize - xem AUDIT_FINDINGS_20260710_NOTIFICATION.md mục B.1 */}
+      <RichText html={notification.message} className="text-[14px] leading-relaxed text-ink-2" />
 
       {notification.link && (
         <Link

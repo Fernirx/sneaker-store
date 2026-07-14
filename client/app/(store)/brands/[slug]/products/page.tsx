@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { publicAxios } from '@/lib/axios/serverAxios';
 import { brandUrl } from '@/lib/cloudinaryUrl';
+import RichText from '@/components/RichText';
 import SlugProductsClient from '../../../_components/SlugProductsClient';
 import { type PageData } from '../../../products/_components/types';
 
@@ -73,7 +74,7 @@ export default async function BrandProductsPage({ params, searchParams }: Props)
             <div>
               <h1 className="font-display font-black text-2xl uppercase tracking-tight">{brand.name}</h1>
               {brand.description && (
-                <p className="text-sm text-muted mt-1 max-w-lg">{brand.description}</p>
+                <RichText html={brand.description} className="text-sm text-muted mt-1 max-w-lg" />
               )}
             </div>
           </div>

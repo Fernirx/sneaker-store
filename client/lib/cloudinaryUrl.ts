@@ -28,6 +28,6 @@ export function reviewUrl(publicId: string, w = 300, h = 300) {
   return base(publicId, `w_${w},h_${h},c_fill,q_auto,f_auto`);
 }
 
-export function notificationUrl(publicId: string, w = 800) {
+export function contentImageUrl(publicId: string, w = 800) {
   return base(publicId, `w_${w},c_scale,q_auto,f_auto`);
 }

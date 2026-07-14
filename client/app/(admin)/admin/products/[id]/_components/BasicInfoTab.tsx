@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
+import TiptapEditor from '@/components/admin/TiptapEditor';
 import {
   type ProductRow,
   GENDER_OPTIONS, CLOSURE_OPTIONS, SHAFT_OPTIONS,
@@ -117,8 +118,7 @@ export default function BasicInfoTab({
       {/* Description */}
       <div>
         <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Mô tả</label>
-        <textarea value={form.description} onChange={e => set('description', e.target.value)} disabled={ro}
-          rows={4} className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink resize-none disabled:bg-paper" />
+        <TiptapEditor value={form.description} onChange={html => set('description', html)} editable={!ro} />
       </div>
 
       {/* Upper material + Sole type */}

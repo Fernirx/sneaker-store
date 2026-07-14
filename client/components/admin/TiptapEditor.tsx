@@ -8,9 +8,9 @@ import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import clientAxios from '@/lib/axios/clientAxios';
-import { notificationUrl } from '@/lib/cloudinaryUrl';
+import { contentImageUrl } from '@/lib/cloudinaryUrl';
 
 function ToolbarButton({ active, onClick, label, children }: { active?: boolean; onClick: () => void; label: string; children: React.ReactNode }) {
   return (
@@ -27,11 +27,12 @@ function ToolbarButton({ active, onClick, label, children }: { active?: boolean;
   );
 }
 
-export default function TiptapEditor({ value, onChange }: { value: string; onChange: (html: string) => void }) {
+export default function TiptapEditor({ value, onChange, editable = true }: { value: string; onChange: (html: string) => void; editable?: boolean }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
+    editable,
     extensions: [
       StarterKit.configure({ link: false }),
       Link.configure({ openOnClick: false, autolink: true }),
@@ -50,6 +51,10 @@ export default function TiptapEditor({ value, onChange }: { value: string; onCha
     },
   });
 
+  useEffect(() => {
+    editor?.setEditable(editable);
+  }, [editable, editor]);
+
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -57,9 +62,9 @@ export default function TiptapEditor({ value, onChange }: { value: string; onCha
     try {
       const form = new FormData();
       form.append('file', file);
-      form.append('folder', 'notifications');
+      form.append('folder', 'content');
       const { data } = await clientAxios.post('/api/upload', form);
-      editor.chain().focus().setImage({ src: notificationUrl(data.publicId) }).run();
+      editor.chain().focus().setImage({ src: contentImageUrl(data.publicId) }).run();
     } catch {
       // im lặng bỏ qua - toolbar không có chỗ hiển thị lỗi riêng, admin thấy ảnh không chèn được thì thử lại
     }
@@ -81,18 +86,20 @@ export default function TiptapEditor({ value, onChange }: { value: string; onCha
 
   return (
     <div className="border border-line rounded-sm overflow-hidden">
-      <div className="flex flex-wrap gap-1.5 p-2 border-b border-line bg-paper">
-        <ToolbarButton label="Đậm" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>B</ToolbarButton>
-        <ToolbarButton label="Nghiêng" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><i>I</i></ToolbarButton>
-        <ToolbarButton label="Tiêu đề" active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</ToolbarButton>
-        <ToolbarButton label="Danh sách" active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}>• List</ToolbarButton>
-        <ToolbarButton label="Danh sách số" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. List</ToolbarButton>
-        <ToolbarButton label="Liên kết" active={editor.isActive('link')} onClick={setLink}>Link</ToolbarButton>
-        <ToolbarButton label="Chèn ảnh / banner" onClick={() => fileInputRef.current?.click()}>Ảnh</ToolbarButton>
-        <ToolbarButton label="Chèn bảng" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>Bảng</ToolbarButton>
-      </div>
+      {editable && (
+        <div className="flex flex-wrap gap-1.5 p-2 border-b border-line bg-paper">
+          <ToolbarButton label="Đậm" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>B</ToolbarButton>
+          <ToolbarButton label="Nghiêng" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><i>I</i></ToolbarButton>
+          <ToolbarButton label="Tiêu đề" active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</ToolbarButton>
+          <ToolbarButton label="Danh sách" active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}>• List</ToolbarButton>
+          <ToolbarButton label="Danh sách số" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. List</ToolbarButton>
+          <ToolbarButton label="Liên kết" active={editor.isActive('link')} onClick={setLink}>Link</ToolbarButton>
+          <ToolbarButton label="Chèn ảnh / banner" onClick={() => fileInputRef.current?.click()}>Ảnh</ToolbarButton>
+          <ToolbarButton label="Chèn bảng" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>Bảng</ToolbarButton>
+        </div>
+      )}
       <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageUpload} />
-      <EditorContent editor={editor} />
+      <EditorContent editor={editor} className={!editable ? 'bg-paper' : undefined} />
     </div>
   );
 }

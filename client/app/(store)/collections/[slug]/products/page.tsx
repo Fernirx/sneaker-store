@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { publicAxios } from '@/lib/axios/serverAxios';
 import { collectionUrl } from '@/lib/cloudinaryUrl';
+import RichText from '@/components/RichText';
 import SlugProductsClient from '../../../_components/SlugProductsClient';
 import { type PageData } from '../../../products/_components/types';
 
@@ -73,7 +74,7 @@ export default async function CollectionProductsPage({ params, searchParams }: P
           </nav>
           <h1 className="font-display font-black text-2xl uppercase tracking-tight">{name}</h1>
           {description && (
-            <p className="text-sm text-muted mt-1 max-w-lg">{description}</p>
+            <RichText html={description} className="text-sm text-muted mt-1 max-w-lg" />
           )}
         </div>
       </div>
