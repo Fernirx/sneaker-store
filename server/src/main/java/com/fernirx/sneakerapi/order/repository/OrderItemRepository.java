@@ -20,4 +20,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             "AND oi.variant.product.id = :productId ORDER BY oi.order.createdAt DESC")
     List<Order> findOrdersForProductByStatus(@Param("userId") Long userId, @Param("productId") Long productId,
                                               @Param("status") OrderStatus status, Pageable pageable);
+
+    @Query("SELECT oi.productCode, oi.productName, SUM(oi.quantity) AS totalQty FROM OrderItem oi " +
+            "WHERE oi.order.status <> com.fernirx.sneakerapi.order.enums.OrderStatus.CANCELLED " +
+            "GROUP BY oi.productCode, oi.productName ORDER BY totalQty DESC")
+    List<Object[]> findTopSellingProducts(Pageable pageable);
 }

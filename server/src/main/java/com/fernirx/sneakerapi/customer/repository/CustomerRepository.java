@@ -4,8 +4,11 @@ import com.fernirx.sneakerapi.customer.entity.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSpecificationExecutor<Customer> {
     Optional<Customer> findByUserId(Long userId);
+
+    long countByCreatedAtGreaterThanEqual(LocalDateTime from);
 }

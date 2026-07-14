@@ -1,6 +1,7 @@
 package com.fernirx.sneakerapi.product.repository;
 
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -41,4 +42,13 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     @Modifying
     @Query("UPDATE ProductVariant v SET v.stockQuantity = v.stockQuantity + :quantity WHERE v.id = :id")
     int increaseStockAtomic(@Param("id") Long id, @Param("quantity") int quantity);
+
+    @Query("SELECT COUNT(v) FROM ProductVariant v WHERE v.active = true AND v.stockQuantity > 0 AND v.stockQuantity <= v.minStockLevel")
+    long countLowStock();
+
+    @Query("SELECT COUNT(v) FROM ProductVariant v WHERE v.active = true AND v.stockQuantity = 0")
+    long countOutOfStock();
+
+    @Query("SELECT v FROM ProductVariant v JOIN FETCH v.product WHERE v.active = true AND v.stockQuantity <= v.minStockLevel ORDER BY v.stockQuantity ASC")
+    List<ProductVariant> findLowStockVariants(Pageable pageable);
 }
