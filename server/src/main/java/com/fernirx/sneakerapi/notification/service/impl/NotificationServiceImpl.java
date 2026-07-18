@@ -99,8 +99,10 @@ public class NotificationServiceImpl implements NotificationService {
         if (command.targetType() == NotificationTargetType.USER && recipientUserIds.size() == 1) {
             notification.setTargetUser(entityManager.getReference(User.class, recipientUserIds.get(0)));
         }
-        notification.setTitle(command.title());
-        notification.setMessage(command.message());
+        // Sanitize tập trung tại điểm ghi DB duy nhất - bảo vệ mọi nguồn gọi create() hiện tại (event
+        // listener, message ghép chuỗi tự động) lẫn tương lai, không phụ thuộc từng caller tự sanitize.
+        notification.setTitle(richTextHtmlPolicy.sanitize(command.title()));
+        notification.setMessage(richTextHtmlPolicy.sanitize(command.message()));
         notification.setImagePublicId(command.imagePublicId());
         notification.setLink(command.link());
         notification.setActive(true);
@@ -133,14 +135,14 @@ public class NotificationServiceImpl implements NotificationService {
                 ? customerRepository.findAllById(request.targetCustomerIds()).stream().map(c -> c.getUser().getId()).toList()
                 : null;
 
-        String safeHtml = richTextHtmlPolicy.sanitize(request.message());
+        // Không sanitize ở đây nữa - create() giờ tự sanitize title+message cho mọi caller (xem create()).
         CreateNotificationCommand command = new CreateNotificationCommand(
                 request.type(),
                 request.targetType(),
                 null,
                 targetUserIds,
                 request.title(),
-                safeHtml,
+                request.message(),
                 request.imagePublicId(),
                 request.link()
         );

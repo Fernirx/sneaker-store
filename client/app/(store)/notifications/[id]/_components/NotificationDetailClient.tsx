@@ -62,7 +62,7 @@ export default function NotificationDetailClient({ notificationId }: { notificat
 
       <h1 className="font-display font-black text-2xl uppercase tracking-tight mb-6">{notification.title}</h1>
 
-      {/* Marketing (createMarketing) đã sanitize phía server; thông báo hệ thống tự sinh (create) hiện KHÔNG qua sanitize - xem AUDIT_FINDINGS_20260710_NOTIFICATION.md mục B.1 */}
+      {/* Server sanitize title+message cho mọi nguồn (NotificationServiceImpl.create()) trước khi lưu DB. */}
       <RichText html={notification.message} className="text-[14px] leading-relaxed text-ink-2" />
 
       {notification.link && (
