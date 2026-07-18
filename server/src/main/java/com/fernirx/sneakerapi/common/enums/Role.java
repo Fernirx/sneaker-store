@@ -6,5 +6,4 @@ public enum Role {
     ROLE_SALE,
     ROLE_WAREHOUSE,
     ROLE_MARKETING,
-    ROLE_TECHNICIAN,
 }
