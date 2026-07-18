@@ -82,4 +82,12 @@ public class InternalReturnRequestController {
         ReturnRequestInternalResponse response = returnRequestService.process(id, userDetails.getId(), request);
         return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.return.processed"), response));
     }
+
+    @PatchMapping("/{id}/retry-shipment")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
+    @Operation(summary = "Thử tạo lại vận đơn GHN cho hàng đổi (khi lần tạo trước đó thất bại)")
+    public ResponseEntity<SuccessResponse<ReturnRequestInternalResponse>> retryExchangeShipment(@PathVariable Long id) {
+        ReturnRequestInternalResponse response = returnRequestService.retryExchangeShipment(id);
+        return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.return.shipment_retried"), response));
+    }
 }

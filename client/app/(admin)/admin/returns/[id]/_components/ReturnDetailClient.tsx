@@ -96,6 +96,20 @@ export default function ReturnDetailClient({
     }
   }
 
+  async function handleRetryShipment() {
+    setBusy(true); setError('');
+    try {
+      const { data } = await clientAxios.patch(`/api/admin/returns/${item.id}/retry-shipment`);
+      setItem(data.data);
+    } catch (err) {
+      setError(parseApiError(err).general);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const needsShipmentRetry = item.status === 'COMPLETED' && item.resolutionType === 'EXCHANGE' && !item.exchangeShippingOrderCode;
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2 text-sm">
@@ -154,6 +168,12 @@ export default function ReturnDetailClient({
                 Không đạt
               </button>
             </>
+          )}
+          {needsShipmentRetry && canWarehouse && (
+            <button onClick={handleRetryShipment} disabled={busy}
+              className="bg-accent text-white text-sm font-bold px-4 py-2 rounded-sm hover:bg-accent-700 disabled:opacity-50 transition-colors">
+              {busy ? 'Đang thử lại...' : 'Thử tạo lại vận đơn'}
+            </button>
           )}
         </div>
       </div>

@@ -202,9 +202,10 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
     }
 
     @Override
-    // Tách khỏi transaction lớp: nhánh EXCHANGE gọi GHN tạo vận đơn (I/O mạng) - không được giữ transaction DB
-    // trong lúc chờ, cùng lý do với OrderServiceImpl.createShipment. Toàn bộ mutation DB thật sự chạy trong
-    // 1 TransactionTemplate riêng SAU KHI lời gọi mạng (nếu có) đã thành công.
+    // Tách khỏi transaction lớp: nhánh EXCHANGE gọi GHN tạo vận đơn (I/O mạng, không thể rollback).
+    // Nguyên tắc: mutation DB (trừ/tăng kho, set COMPLETED) LUÔN chạy và commit XONG trước, GHN chỉ được
+    // gọi SAU KHI nghiệp vụ đã chắc chắn thành công - tránh việc GHN tạo vận đơn thật rồi mới phát hiện
+    // hết hàng/lỗi DB (từng là root cause của race condition tạo vận đơn trùng khi retry).
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public ReturnRequestInternalResponse process(Long id, Long processedByUserId, ProcessReturnRequest request) {
         ReturnRequest returnRequest = findById(id);
@@ -221,39 +222,37 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
             return buildInternalResponseInNewTransaction(id);
         }
 
-        List<ReturnRequestItem> items = returnRequestItemRepository.findAllByReturnRequest(returnRequest);
+        // Bước 1+2: trừ/tăng kho + set COMPLETED, commit thật trong transaction riêng. Nếu hết hàng/lỗi
+        // ở đây, GHN CHƯA từng được gọi - an toàn tuyệt đối, không có gì cần dọn dẹp.
+        runInNewTransaction(() -> completeReturnWithoutShipment(id, processedByUserId, request));
 
-        String shippingOrderCode = null;
-        LocalDateTime expectedDeliveryAt = null;
-        if (returnRequest.getResolutionType() == ReturnResolutionType.EXCHANGE) {
-            List<ParcelItem> parcelItems = items.stream()
-                    .filter(item -> item.getExchangeVariant() != null)
-                    .map(item -> ParcelItem.from(item.getExchangeVariant(), item.getQuantity()))
-                    .toList();
-            Order order = returnRequest.getOrder();
-            CreateShipmentCommand command = new CreateShipmentCommand(
-                    order.getRecipientName(), order.getRecipientPhone(),
-                    order.getShippingStreet(), order.getShippingWard(), order.getShippingDistrict(), order.getShippingProvince(),
-                    returnRequest.getCode(), 0L, 1,
-                    "Gửi hàng đổi cho yêu cầu đổi trả #" + returnRequest.getCode(),
-                    parcelItems
-            );
-            ShipmentResult result = shippingService.createShipment(command);
-            shippingOrderCode = result.shippingOrderCode();
-            expectedDeliveryAt = result.expectedDeliveryAt();
+        // Bước 3: chỉ sau khi bước trên đã commit, mới thử tạo vận đơn GHN cho nhánh EXCHANGE.
+        ReturnRequest committed = findById(id);
+        if (committed.getResolutionType() == ReturnResolutionType.EXCHANGE) {
+            tryCreateExchangeShipment(committed);
         }
 
-        String finalShippingOrderCode = shippingOrderCode;
-        LocalDateTime finalExpectedDeliveryAt = expectedDeliveryAt;
-        runInNewTransaction(() -> completeReturn(id, processedByUserId, request, finalShippingOrderCode, finalExpectedDeliveryAt));
+        return buildInternalResponseInNewTransaction(id);
+    }
 
+    @Override
+    // Bước 4: retry thủ công (giống nguyên tắc đã chốt cho OrderServiceImpl.createShipment - lỗi thì để
+    // admin bấm thử lại, không tự động). Chỉ cho phép khi COMPLETED + EXCHANGE + chưa có vận đơn.
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public ReturnRequestInternalResponse retryExchangeShipment(Long id) {
+        ReturnRequest returnRequest = findById(id);
+        if (returnRequest.getStatus() != ReturnStatus.COMPLETED
+                || returnRequest.getResolutionType() != ReturnResolutionType.EXCHANGE
+                || returnRequest.getExchangeShippingOrderCode() != null) {
+            throw BusinessException.of(ErrorCode.RETURN_INVALID_STATUS, "label.return_request");
+        }
+        tryCreateExchangeShipment(returnRequest);
         return buildInternalResponseInNewTransaction(id);
     }
 
     // ---- Private helpers ----
 
-    private void completeReturn(Long id, Long processedByUserId, ProcessReturnRequest request,
-                                 String shippingOrderCode, LocalDateTime expectedDeliveryAt) {
+    private void completeReturnWithoutShipment(Long id, Long processedByUserId, ProcessReturnRequest request) {
         ReturnRequest returnRequest = findById(id);
         List<ReturnRequestItem> items = returnRequestItemRepository.findAllByReturnRequest(returnRequest);
 
@@ -285,12 +284,53 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
             // Đổi hàng (EXCHANGE) không đổi tổng chi tiêu của khách nên KHÔNG thu hồi điểm loyalty - chỉ REFUND mới gọi.
             customerService.revokePartial(returnRequest.getCustomer().getId(), returnRequest.getOrder().getId(),
                     returnRequest.getId(), totalRefund);
-        } else {
-            returnRequest.setExchangeShippingOrderCode(shippingOrderCode);
-            returnRequest.setExchangeExpectedDeliveryAt(expectedDeliveryAt);
         }
 
         returnRequestRepository.save(returnRequest);
+    }
+
+    // Gọi GHN tạo vận đơn cho hàng đổi - LUÔN chạy sau khi completeReturnWithoutShipment đã commit.
+    // Idempotent: nếu đã có exchangeShippingOrderCode thì bỏ qua, không gọi GHN lại (khớp pattern
+    // OrderServiceImpl.createShipment). Lỗi GHN không ném ngược lên caller - return request đã COMPLETED
+    // hợp lệ, chỉ còn khâu vận chuyển vật lý; lý do lỗi được ghi vào adminNote để admin thấy và tự bấm
+    // "thử lại" (retryExchangeShipment) sau, đúng nguyên tắc "lỗi thì để admin retry" đã áp dụng cho
+    // module shipping gốc.
+    private void tryCreateExchangeShipment(ReturnRequest returnRequest) {
+        if (returnRequest.getExchangeShippingOrderCode() != null) {
+            return;
+        }
+        List<ReturnRequestItem> items = returnRequestItemRepository.findAllByReturnRequest(returnRequest);
+        List<ParcelItem> parcelItems = items.stream()
+                .filter(item -> item.getExchangeVariant() != null)
+                .map(item -> ParcelItem.from(item.getExchangeVariant(), item.getQuantity()))
+                .toList();
+        Order order = returnRequest.getOrder();
+        CreateShipmentCommand command = new CreateShipmentCommand(
+                order.getRecipientName(), order.getRecipientPhone(),
+                order.getShippingStreet(), order.getShippingWard(), order.getShippingDistrict(), order.getShippingProvince(),
+                returnRequest.getCode(), 0L, 1,
+                "Gửi hàng đổi cho yêu cầu đổi trả #" + returnRequest.getCode(),
+                parcelItems
+        );
+
+        Long returnRequestId = returnRequest.getId();
+        try {
+            ShipmentResult result = shippingService.createShipment(command);
+            runInNewTransaction(() -> {
+                ReturnRequest managed = findById(returnRequestId);
+                managed.setExchangeShippingOrderCode(result.shippingOrderCode());
+                managed.setExchangeExpectedDeliveryAt(result.expectedDeliveryAt());
+                returnRequestRepository.save(managed);
+            });
+        } catch (Exception e) {
+            String failureNote = "[Tạo vận đơn GHN thất bại, cần bấm thử lại] " + e.getMessage();
+            runInNewTransaction(() -> {
+                ReturnRequest managed = findById(returnRequestId);
+                String existingNote = managed.getAdminNote();
+                managed.setAdminNote(existingNote != null ? existingNote + "\n" + failureNote : failureNote);
+                returnRequestRepository.save(managed);
+            });
+        }
     }
 
     private ReturnRequestItem buildItem(ReturnRequest returnRequest, Order order, ReturnResolutionType resolutionType,
