@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 public class MailServiceImpl implements MailService {
@@ -37,6 +41,18 @@ public class MailServiceImpl implements MailService {
         Context context = buildOtpContext(username, otpCode, expiryMinutes);
         String html = templateEngine.process("mail/guest-order-otp", context);
         mailProvider.send(to, MessageUtil.getMessage("mail.guest_order.subject"), html);
+    }
+
+    @Override
+    @Async
+    public void sendOrderConfirmation(String to, String recipientName, String orderCode, BigDecimal totalAmount, String orderUrl) {
+        Context context = new Context();
+        context.setVariable("recipientName", recipientName);
+        context.setVariable("orderCode", orderCode);
+        context.setVariable("totalAmountFormatted", NumberFormat.getInstance(new Locale("vi", "VN")).format(totalAmount) + "đ");
+        context.setVariable("orderUrl", orderUrl);
+        String html = templateEngine.process("mail/order-confirmation", context);
+        mailProvider.send(to, MessageUtil.getMessage("mail.order_confirmation.subject", orderCode), html);
     }
 
     private Context buildOtpContext(String username, String otpCode, int expiryMinutes) {

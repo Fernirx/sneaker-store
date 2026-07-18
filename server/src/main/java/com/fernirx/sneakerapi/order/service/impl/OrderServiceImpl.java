@@ -226,7 +226,8 @@ public class OrderServiceImpl implements OrderService {
 
         cartService.clearSelectedItems(userId, guestToken);
 
-        eventPublisher.publishEvent(new OrderCreatedEvent(order.getId(), order.getCode()));
+        eventPublisher.publishEvent(new OrderCreatedEvent(
+                order.getId(), order.getCode(), email, request.recipientName(), totalAmount, isGuest ? guestToken : null));
 
         List<OrderItemResponse> itemResponses = savedItems.stream().map(orderMapper::toItemResponse).toList();
         return orderMapper.toResponse(order, itemResponses, null);

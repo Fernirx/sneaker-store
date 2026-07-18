@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="#{mail.order_confirmation.subject(${orderCode})}">Xác nhận đơn hàng</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 480px; margin: 40px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .header { background: #111; padding: 28px 32px; }
+    .header h1 { color: #fff; margin: 0; font-size: 20px; letter-spacing: 1px; }
+    .body { padding: 32px; color: #333; }
+    .body p { margin: 0 0 16px; line-height: 1.6; }
+    .order-box { text-align: center; margin: 28px 0; }
+    .order-code { display: inline-block; font-size: 24px; font-weight: 700; letter-spacing: 2px; color: #111; background: #f4f4f4; padding: 12px 24px; border-radius: 8px; }
+    .total { font-size: 15px; color: #333; margin-top: 12px; font-weight: 600; }
+    .cta-box { text-align: center; margin: 28px 0; }
+    .cta { display: inline-block; background: #111; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 600; font-size: 14px; }
+    .footer { background: #f9f9f9; padding: 16px 32px; font-size: 12px; color: #aaa; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>SNEAKER STORE</h1>
+  </div>
+  <div class="body">
+    <p th:text="#{mail.order_confirmation.greeting(${recipientName})}">Xin chào,</p>
+    <p th:text="#{mail.order_confirmation.body(${orderCode})}">Cảm ơn bạn đã đặt hàng.</p>
+    <div class="order-box">
+      <div class="order-code" th:text="${orderCode}">ORD000000</div>
+      <div class="total" th:text="#{mail.order_confirmation.total(${totalAmountFormatted})}">Tổng tiền: 0đ</div>
+    </div>
+    <div class="cta-box">
+      <a class="cta" th:href="${orderUrl}" th:text="#{mail.order_confirmation.cta}">Xem chi tiết đơn hàng</a>
+    </div>
+  </div>
+  <div class="footer">
+    <span th:text="#{mail.order_confirmation.footer}">© 2025 Sneaker Store.</span>
+  </div>
+</div>
+</body>
+</html>
