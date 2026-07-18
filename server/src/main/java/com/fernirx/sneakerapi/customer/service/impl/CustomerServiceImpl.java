@@ -8,6 +8,7 @@ import com.fernirx.sneakerapi.customer.dto.response.CustomerResponse;
 import com.fernirx.sneakerapi.customer.entity.Customer;
 import com.fernirx.sneakerapi.customer.entity.PointTransaction;
 import com.fernirx.sneakerapi.customer.enums.MembershipTier;
+import com.fernirx.sneakerapi.customer.enums.PointReferenceType;
 import com.fernirx.sneakerapi.customer.enums.PointTransactionType;
 import com.fernirx.sneakerapi.customer.mapper.CustomerMapper;
 import com.fernirx.sneakerapi.customer.repository.CustomerRepository;
@@ -104,16 +105,18 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
 
-        if (pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, orderId, PointTransactionType.EARN)) {
+        if (pointTransactionRepository.existsByCustomerAndReferenceTypeAndReferenceIdAndType(
+                customer, PointReferenceType.ORDER, orderId, PointTransactionType.EARN)) {
             return;
         }
 
         long earnedPoints = earnedAmount.divideToIntegralValue(settingService.getStoreSetting().pointsPerAmount()).longValue();
-        
+
         PointTransaction tx = new PointTransaction();
         tx.setCustomer(customer);
         tx.setAmount(earnedPoints);
         tx.setType(PointTransactionType.EARN);
+        tx.setReferenceType(PointReferenceType.ORDER);
         tx.setReferenceId(orderId);
         tx.setNote("Tích điểm từ đơn hàng #" + orderId);
         pointTransactionRepository.save(tx);
@@ -136,11 +139,13 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
 
-        if (pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, orderId, PointTransactionType.REVOKE)) {
+        if (pointTransactionRepository.existsByCustomerAndReferenceTypeAndReferenceIdAndType(
+                customer, PointReferenceType.ORDER, orderId, PointTransactionType.REVOKE)) {
             return;
         }
 
-        if (!pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, orderId, PointTransactionType.EARN)) {
+        if (!pointTransactionRepository.existsByCustomerAndReferenceTypeAndReferenceIdAndType(
+                customer, PointReferenceType.ORDER, orderId, PointTransactionType.EARN)) {
             return;
         }
 
@@ -150,6 +155,7 @@ public class CustomerServiceImpl implements CustomerService {
         tx.setCustomer(customer);
         tx.setAmount(revokedPoints);
         tx.setType(PointTransactionType.REVOKE);
+        tx.setReferenceType(PointReferenceType.ORDER);
         tx.setReferenceId(orderId);
         tx.setNote("Thu hồi điểm do hủy/trả đơn hàng #" + orderId);
         pointTransactionRepository.save(tx);
@@ -172,10 +178,12 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
 
-        if (!pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, orderId, PointTransactionType.EARN)) {
+        if (!pointTransactionRepository.existsByCustomerAndReferenceTypeAndReferenceIdAndType(
+                customer, PointReferenceType.ORDER, orderId, PointTransactionType.EARN)) {
             return;
         }
-        if (pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, returnRequestId, PointTransactionType.REVOKE)) {
+        if (pointTransactionRepository.existsByCustomerAndReferenceTypeAndReferenceIdAndType(
+                customer, PointReferenceType.RETURN_REQUEST, returnRequestId, PointTransactionType.REVOKE)) {
             return;
         }
 
@@ -185,6 +193,7 @@ public class CustomerServiceImpl implements CustomerService {
         tx.setCustomer(customer);
         tx.setAmount(revokedPoints);
         tx.setType(PointTransactionType.REVOKE);
+        tx.setReferenceType(PointReferenceType.RETURN_REQUEST);
         tx.setReferenceId(returnRequestId);
         tx.setNote("Thu hồi điểm do đổi/trả một phần đơn hàng #" + orderId);
         pointTransactionRepository.save(tx);

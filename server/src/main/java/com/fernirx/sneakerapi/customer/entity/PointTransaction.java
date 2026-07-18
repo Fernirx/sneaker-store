@@ -1,6 +1,7 @@
 package com.fernirx.sneakerapi.customer.entity;
 
 import com.fernirx.sneakerapi.common.entity.BaseAuditEntity;
+import com.fernirx.sneakerapi.customer.enums.PointReferenceType;
 import com.fernirx.sneakerapi.customer.enums.PointTransactionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -31,6 +32,11 @@ public class PointTransaction extends BaseAuditEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
     private PointTransactionType type;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reference_type", nullable = false, length = 20)
+    private PointReferenceType referenceType;
 
     @Column(name = "reference_id")
     private Long referenceId;
