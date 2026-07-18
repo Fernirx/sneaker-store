@@ -35,3 +35,7 @@ export function contentImageUrl(publicId: string, w = 800) {
 export function returnUrl(publicId: string, w = 300, h = 300) {
   return base(publicId, `w_${w},h_${h},c_fill,q_auto,f_auto`);
 }
+
+export function bannerUrl(publicId: string, w = 1600, h = 500) {
+  return base(publicId, `w_${w},h_${h},c_fill,q_auto,f_auto`);
+}

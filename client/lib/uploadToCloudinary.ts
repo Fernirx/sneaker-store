@@ -1,7 +1,7 @@
 import type { UploadApiResponse } from 'cloudinary';
 import cloudinary from './cloudinary';
 
-export type UploadFolder = 'avatars' | 'products' | 'brands' | 'collections' | 'categories' | 'reviews' | 'content' | 'returns';
+export type UploadFolder = 'avatars' | 'products' | 'brands' | 'collections' | 'categories' | 'reviews' | 'content' | 'returns' | 'banners';
 
 const MAX_BYTES: Record<UploadFolder, number> = {
   avatars: 1 * 1024 * 1024,
@@ -12,6 +12,7 @@ const MAX_BYTES: Record<UploadFolder, number> = {
   reviews: 1 * 1024 * 1024,
   content: 1 * 1024 * 1024,
   returns: 1 * 1024 * 1024,
+  banners: 2 * 1024 * 1024,
 };
 
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];

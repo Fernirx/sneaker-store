@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { publicAxios } from '@/lib/axios/serverAxios';
-import { brandUrl, collectionUrl } from '@/lib/cloudinaryUrl';
+import { brandUrl, collectionUrl, bannerUrl } from '@/lib/cloudinaryUrl';
 import ProductCard from './products/_components/ProductCard';
 import { type PageData, type ProductResponse } from './products/_components/types';
 
@@ -18,6 +18,13 @@ interface HomeCollection {
   imagePublicId: string | null;
 }
 
+interface HomeBanner {
+  id: number;
+  title: string;
+  imagePublicId: string | null;
+  linkUrl: string | null;
+}
+
 function SectionHeader({ title, href, viewAllLabel }: { title: string; href: string; viewAllLabel: string }) {
   return (
     <div className="flex items-center justify-between mb-5">
@@ -30,11 +37,12 @@ function SectionHeader({ title, href, viewAllLabel }: { title: string; href: str
 }
 
 export default async function HomePage() {
-  const [newArrivalsRes, onSaleRes, collectionsRes, brandsRes] = await Promise.allSettled([
+  const [newArrivalsRes, onSaleRes, collectionsRes, brandsRes, bannersRes] = await Promise.allSettled([
     publicAxios.get<PageData>('/products?newArrival=true&size=8&sort=createdAt,desc'),
     publicAxios.get<PageData>('/products?onSale=true&size=8&sort=createdAt,desc'),
     publicAxios.get<{ data: HomeCollection[] }>('/collections?page=0&size=4&sort=launchDate,desc'),
     publicAxios.get<{ data: HomeBrand[] }>('/brands?page=0&size=10&sort=name,asc'),
+    publicAxios.get<{ data: HomeBanner[] }>('/banners'),
   ]);
 
   const newArrivals: ProductResponse[] =
@@ -45,6 +53,8 @@ export default async function HomePage() {
     collectionsRes.status === 'fulfilled' ? collectionsRes.value.data.data : [];
   const brands: HomeBrand[] =
     brandsRes.status === 'fulfilled' ? brandsRes.value.data.data : [];
+  const banners: HomeBanner[] =
+    bannersRes.status === 'fulfilled' ? bannersRes.value.data.data : [];
 
   return (
     <>
@@ -69,6 +79,31 @@ BỨT TỐC.`}
           </div>
         </div>
       </section>
+
+      {/* Banners */}
+      {banners.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 pt-8">
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1">
+            {banners.map(b => (
+              <Link
+                key={b.id}
+                href={b.linkUrl || '#'}
+                className="group relative shrink-0 w-full snap-start aspect-[16/5] rounded-sm overflow-hidden bg-paper border border-line block"
+              >
+                {b.imagePublicId ? (
+                  <img
+                    src={bannerUrl(b.imagePublicId, 1600, 500)}
+                    alt={b.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted text-sm">{b.title}</div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* New Arrivals */}
       {newArrivals.length > 0 && (
