@@ -24,25 +24,23 @@ export default async function Footer() {
       title: "Về STRIDE",
       items: [
         { label: "Giới thiệu", href: '/about' },
-        { label: "Tuyển dụng", href: '/careers' },
-        { label: "Tin tức", href: '/news' },
+        { label: "Liên hệ", href: '/about#contact' },
       ],
     },
     {
       title: "Hỗ trợ",
       items: [
-        { label: "Hướng dẫn mua hàng", href: '/help/buying' },
-        { label: "Đổi trả & Bảo hành", href: '/help/returns' },
-        { label: "Tra cứu đơn hàng", href: '/help/tracking' },
-        { label: "Liên hệ", href: '/contact' },
+        { label: "Hướng dẫn mua hàng", href: '/help#buying' },
+        { label: "Đổi trả & Bảo hành", href: '/help#returns' },
+        { label: "Tra cứu đơn hàng", href: '/orders' },
       ],
     },
     {
       title: "Chính sách",
       items: [
-        { label: "Điều khoản dịch vụ", href: '/legal/terms' },
-        { label: "Bảo mật thông tin", href: '/legal/privacy' },
-        { label: "Chính sách Cookie", href: '/legal/cookies' },
+        { label: "Điều khoản dịch vụ", href: '/legal#terms' },
+        { label: "Bảo mật thông tin", href: '/legal#privacy' },
+        { label: "Chính sách Cookie", href: '/legal#cookies' },
       ],
     },
   ];
