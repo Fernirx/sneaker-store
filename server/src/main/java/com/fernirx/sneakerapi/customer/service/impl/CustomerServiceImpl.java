@@ -165,6 +165,41 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.save(customer);
     }
 
+    @Override
+    public void revokePartial(Long customerId, Long orderId, Long returnRequestId, BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) return;
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> BusinessException.notFound("label.customer"));
+
+        if (!pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, orderId, PointTransactionType.EARN)) {
+            return;
+        }
+        if (pointTransactionRepository.existsByCustomerAndReferenceIdAndType(customer, returnRequestId, PointTransactionType.REVOKE)) {
+            return;
+        }
+
+        long revokedPoints = amount.divideToIntegralValue(settingService.getStoreSetting().pointsPerAmount()).longValue();
+
+        PointTransaction tx = new PointTransaction();
+        tx.setCustomer(customer);
+        tx.setAmount(revokedPoints);
+        tx.setType(PointTransactionType.REVOKE);
+        tx.setReferenceId(returnRequestId);
+        tx.setNote("Thu hồi điểm do đổi/trả một phần đơn hàng #" + orderId);
+        pointTransactionRepository.save(tx);
+
+        customer.setLoyaltyPoints(Math.max(0, customer.getLoyaltyPoints() - revokedPoints));
+        customer.setTotalSpent(customer.getTotalSpent().subtract(amount).max(BigDecimal.ZERO));
+
+        MembershipTier naturalTier = resolveTier(customer.getTotalSpent());
+        if (naturalTier.ordinal() < customer.getMembershipTier().ordinal()) {
+            customer.setMembershipTier(naturalTier);
+        }
+
+        customerRepository.save(customer);
+    }
+
     private MembershipTier resolveTier(BigDecimal totalSpent) {
         StoreSettingResponse storeSetting = settingService.getStoreSetting();
         if (totalSpent.compareTo(storeSetting.platinumThreshold()) >= 0) return MembershipTier.PLATINUM;

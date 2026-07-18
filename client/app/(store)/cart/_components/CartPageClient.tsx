@@ -281,7 +281,7 @@ function OrderSummary({
       {/* ── Policy accordion ── */}
       <div className="border border-line rounded-sm overflow-hidden bg-white">
         <FaqItem title={"Chính sách bảo hành"} body={"Sản phẩm chính hãng 100%, được bảo hành theo chính sách của nhà sản xuất. Liên hệ STRIDE để được hỗ trợ trong vòng 30 ngày kể từ ngày nhận hàng."} />
-        <FaqItem title={"Chính sách đổi trả"}   body={"Đổi trả miễn phí trong 30 ngày với sản phẩm còn nguyên vẹn, đầy đủ hộp và phụ kiện. Không áp dụng cho sản phẩm đã qua sử dụng hoặc đang khuyến mãi."} />
+        <FaqItem title={"Chính sách đổi trả"}   body={"Đổi trả miễn phí trong 30 ngày kể từ khi nhận hàng, với sản phẩm còn nguyên vẹn, đầy đủ hộp và phụ kiện (kiểm tra khi nhận lại hàng). Xem chi tiết và tạo yêu cầu tại trang chi tiết đơn hàng."} />
       </div>
 
       {/* ── Clear cart ── */}

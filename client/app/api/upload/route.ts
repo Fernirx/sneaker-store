@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadToCloudinary, deleteFromCloudinary, type UploadFolder } from '@/lib/uploadToCloudinary';
 
-const ALLOWED_FOLDERS: UploadFolder[] = ['avatars', 'products', 'brands', 'collections', 'categories', 'reviews', 'content'];
+const ALLOWED_FOLDERS: UploadFolder[] = ['avatars', 'products', 'brands', 'collections', 'categories', 'reviews', 'content', 'returns'];
 
 export async function POST(req: NextRequest) {
   try {

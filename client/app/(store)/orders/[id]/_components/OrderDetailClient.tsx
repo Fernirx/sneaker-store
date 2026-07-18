@@ -10,6 +10,7 @@ import {
   formatDateTime, STATUS_COLORS, STATUS_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_METHOD_LABELS, SHIPMENT_STATUS_LABELS,
   type OrderResponse, type OrderStatusHistoryResponse, type OrderStatus,
 } from '../../_components/types';
+import ReturnRequestSection from './ReturnRequestSection';
 
 function StatusBadge({ status }: { status: OrderStatus }) {
   return (
@@ -228,6 +229,14 @@ export default function OrderDetailClient({ orderId }: { orderId: number }) {
               ))}
             </div>
           </section>
+        )}
+
+        {/* Return/Exchange */}
+        {order.status === 'DELIVERED' && (
+          <ReturnRequestSection
+            orderId={order.id}
+            deliveredAt={history.find(h => h.newStatus === 'DELIVERED')?.createdAt ?? null}
+          />
         )}
 
         {/* Cancel */}

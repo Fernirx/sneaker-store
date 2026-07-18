@@ -21,4 +21,11 @@ public interface CustomerService {
     void deleteCustomer(Long id);
     void earnFromOrder(Long customerId, Long orderId, BigDecimal earnedAmount);
     void revokeFromOrder(Long customerId, Long orderId, BigDecimal revokedAmount);
+
+    /**
+     * Thu hồi điểm một phần khi đổi/trả hàng (không phải hủy cả đơn). Khác revokeFromOrder: idempotency
+     * theo returnRequestId (không phải orderId) để không đụng độ với hủy đơn toàn phần hoặc nhiều lần
+     * trả một phần trên cùng 1 đơn - vẫn yêu cầu đơn đã từng earn điểm (kiểm tra theo orderId).
+     */
+    void revokePartial(Long customerId, Long orderId, Long returnRequestId, BigDecimal amount);
 }

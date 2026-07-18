@@ -36,7 +36,13 @@ public enum ErrorCode {
     COUPON_USAGE_LIMIT("COUPON_USAGE_LIMIT", "error.coupon.usage_limit", HttpStatus.BAD_REQUEST),
 
     /* ================== REVIEW ================== */
-    REVIEW_NOT_ELIGIBLE("REVIEW_NOT_ELIGIBLE", "error.review.not_eligible", HttpStatus.FORBIDDEN);
+    REVIEW_NOT_ELIGIBLE("REVIEW_NOT_ELIGIBLE", "error.review.not_eligible", HttpStatus.FORBIDDEN),
+
+    /* ================== RETURN ================== */
+    RETURN_NOT_ELIGIBLE("RETURN_NOT_ELIGIBLE", "error.return.not_eligible", HttpStatus.FORBIDDEN),
+    RETURN_INVALID_STATUS("RETURN_INVALID_STATUS", "error.return.invalid_status", HttpStatus.BAD_REQUEST),
+    RETURN_QUANTITY_EXCEEDED("RETURN_QUANTITY_EXCEEDED", "error.return.quantity_exceeded", HttpStatus.BAD_REQUEST),
+    RETURN_VARIANT_INVALID("RETURN_VARIANT_INVALID", "error.return.variant_invalid", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String messageKey;
