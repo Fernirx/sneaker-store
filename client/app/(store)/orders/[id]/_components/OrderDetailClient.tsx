@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
-import { guestHeaders } from '@/lib/guestToken';
+import { guestHeaders, saveGuestToken } from '@/lib/guestToken';
 import { formatPrice } from '../../../products/_components/types';
 import {
   formatDateTime, STATUS_COLORS, STATUS_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_METHOD_LABELS, SHIPMENT_STATUS_LABELS,
@@ -30,7 +30,20 @@ function OrderDetailSkeleton() {
   );
 }
 
-export default function OrderDetailClient({ orderId }: { orderId: number }) {
+export default function OrderDetailClient({
+  orderId,
+  isLoggedIn,
+  orderTokenFromUrl,
+}: {
+  orderId: number;
+  isLoggedIn: boolean;
+  orderTokenFromUrl: string | null;
+}) {
+  // Khách vãng lai mở đơn qua link trong email xác nhận (kèm ?orderToken=) - lưu vào localStorage
+  // ngay trong render (trước mọi effect) để guestHeaders() ở effect load() bên dưới dùng được luôn,
+  // không cần đợi thêm 1 vòng effect. saveGuestToken tự bỏ qua nếu token rỗng/không hợp lệ.
+  if (orderTokenFromUrl) saveGuestToken(orderTokenFromUrl);
+
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [history, setHistory] = useState<OrderStatusHistoryResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -236,6 +249,7 @@ export default function OrderDetailClient({ orderId }: { orderId: number }) {
           <ReturnRequestSection
             orderId={order.id}
             deliveredAt={history.find(h => h.newStatus === 'DELIVERED')?.createdAt ?? null}
+            isLoggedIn={isLoggedIn}
           />
         )}
 

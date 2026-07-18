@@ -15,23 +15,45 @@ const RETURN_WINDOW_DAYS = 30;
 export default function ReturnRequestSection({
   orderId,
   deliveredAt,
+  isLoggedIn,
 }: {
   orderId: number;
   deliveredAt: string | null;
+  isLoggedIn: boolean;
 }) {
   const [returns, setReturns] = useState<ReturnRequestResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isLoggedIn);
   const [modalOpen, setModalOpen] = useState(false);
 
   const load = useCallback(() => {
+    if (!isLoggedIn) return;
     setLoading(true);
     clientAxios.get(`/api/me/returns?orderId=${orderId}`)
       .then(({ data }) => setReturns(data.data ?? []))
       .catch(() => setReturns([]))
       .finally(() => setLoading(false));
-  }, [orderId]);
+  }, [orderId, isLoggedIn]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Đổi/trả trực tuyến chỉ dành cho khách đã đăng nhập (đơn khách vãng lai không có Customer nên
+  // không thể tạo return_requests - xem quyết định). Khách vãng lai muốn đổi/trả liên hệ hotline/email.
+  if (!isLoggedIn) {
+    return (
+      <section className="border border-line rounded-sm overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-line bg-line-2">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink">{"Đổi/trả hàng"}</h2>
+        </div>
+        <div className="p-5">
+          <p className="text-[13px] text-muted">
+            {"Để tạo yêu cầu đổi/trả cho đơn hàng đặt không cần tài khoản, vui lòng liên hệ "}
+            <Link href="/help#returns" className="underline hover:text-ink">{"hotline hoặc email hỗ trợ"}</Link>
+            {"."}
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   if (loading) return null;
 
