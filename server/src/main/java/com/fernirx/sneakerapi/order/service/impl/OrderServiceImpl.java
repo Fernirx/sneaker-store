@@ -4,6 +4,7 @@ import com.fernirx.sneakerapi.auth.service.OtpService;
 import com.fernirx.sneakerapi.cart.dto.response.CartItemResponse;
 import com.fernirx.sneakerapi.cart.dto.response.CartResponse;
 import com.fernirx.sneakerapi.cart.service.CartService;
+import com.fernirx.sneakerapi.common.enums.ErrorCode;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.coupon.dto.response.CouponApplyResult;
 import com.fernirx.sneakerapi.coupon.service.CouponService;
@@ -64,9 +65,13 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -78,6 +83,17 @@ public class OrderServiceImpl implements OrderService {
     // Đã chuẩn hóa ở GhnProvider (22 trạng thái GHN -> 5 nhóm) nên chỉ cần so 2 giá trị cố định ở đây
     private static final String GHN_CANCEL_STATUS = "cancel";
     private static final String GHN_DELIVERED_STATUS = "delivered";
+
+    // State machine hợp lệ của Order - áp dụng cho MỌI đường chuyển trạng thái (kể cả nội bộ), không chỉ
+    // endpoint chung. DELIVERED/CANCELLED là trạng thái cuối, không map = không cho chuyển tiếp.
+    private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS = new EnumMap<>(OrderStatus.class);
+    static {
+        ALLOWED_TRANSITIONS.put(OrderStatus.PENDING, EnumSet.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED));
+        ALLOWED_TRANSITIONS.put(OrderStatus.CONFIRMED, EnumSet.of(OrderStatus.SHIPPING, OrderStatus.CANCELLED));
+        ALLOWED_TRANSITIONS.put(OrderStatus.SHIPPING, EnumSet.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.CONFIRMED));
+        ALLOWED_TRANSITIONS.put(OrderStatus.DELIVERED, EnumSet.noneOf(OrderStatus.class));
+        ALLOWED_TRANSITIONS.put(OrderStatus.CANCELLED, EnumSet.noneOf(OrderStatus.class));
+    }
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -289,10 +305,19 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderInternalResponse updateStatus(Long id, UpdateOrderStatusRequest request, Long changedByUserId) {
+    public OrderInternalResponse updateStatus(Long id, UpdateOrderStatusRequest request, Long changedByUserId, Collection<String> callerRoles) {
         if (request.status() == OrderStatus.CANCELLED) {
             cancelOrder(id, StringUtils.hasText(request.note()) ? request.note() : "Admin hủy đơn");
         } else {
+            Order current = findById(id);
+            // Xác nhận đơn (PENDING -> CONFIRMED) là quyết định CSKH (xác nhận với khách, đặc biệt đơn COD
+            // không qua VNPay) - WAREHOUSE chỉ nên xử lý từ CONFIRMED trở đi, không có căn cứ nghiệp vụ để
+            // tự xác nhận đơn. Chỉ chặn đúng transition này, không ảnh hưởng các transition khác của WAREHOUSE
+            // (tạo/hủy vận đơn, đồng bộ GHN vẫn qua endpoint riêng, không đụng tới).
+            if (current.getStatus() == OrderStatus.PENDING && request.status() == OrderStatus.CONFIRMED
+                    && !callerRoles.contains("ROLE_ADMIN") && !callerRoles.contains("ROLE_SALE")) {
+                throw BusinessException.of(ErrorCode.ACCESS_DENIED);
+            }
             changeStatus(id, request.status(), changedByUserId, request.note());
         }
         Order order = findById(id);
@@ -443,6 +468,13 @@ public class OrderServiceImpl implements OrderService {
     public void changeStatus(Long orderId, OrderStatus newStatus, Long changedByUserId, String note) {
         Order order = findById(orderId);
         OrderStatus oldStatus = order.getStatus();
+        // State machine: chỉ cho phép đúng các cặp chuyển tiếp hợp lệ, bất kể ai/luồng nào gọi vào đây
+        // (kể cả nội bộ createShipment/cancelShipment/syncShipmentStatus) - chặn bước nhảy vô lý về nghiệp
+        // vụ như PENDING->DELIVERED hay "hồi sinh" đơn đã DELIVERED/CANCELLED. Cho phép no-op (gọi lại đúng
+        // status hiện tại, vd chỉ để cập nhật note) vì đây không phải 1 transition thật.
+        if (oldStatus != newStatus && !ALLOWED_TRANSITIONS.getOrDefault(oldStatus, EnumSet.noneOf(OrderStatus.class)).contains(newStatus)) {
+            throw BusinessException.bad("label.order");
+        }
         order.setStatus(newStatus);
         orderRepository.save(order);
 

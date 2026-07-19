@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +33,7 @@ public interface OrderService {
     Page<OrderInternalResponse> getAll(OrderFilterRequest filter, Pageable pageable);
     OrderInternalResponse getById(Long id);
     List<OrderStatusHistoryResponse> getHistory(Long id);
-    OrderInternalResponse updateStatus(Long id, UpdateOrderStatusRequest request, Long changedByUserId);
+    OrderInternalResponse updateStatus(Long id, UpdateOrderStatusRequest request, Long changedByUserId, Collection<String> callerRoles);
     OrderInternalResponse createShipment(Long orderId, Long changedByUserId);
     OrderInternalResponse cancelShipment(Long orderId, Long changedByUserId);
     OrderInternalResponse syncShipmentStatus(Long orderId, Long changedByUserId);
