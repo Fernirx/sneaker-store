@@ -8,10 +8,7 @@ import com.fernirx.sneakerapi.inventory.enums.InventoryTransactionType;
 import com.fernirx.sneakerapi.inventory.service.InventoryTransactionService;
 import com.fernirx.sneakerapi.order.entity.Order;
 import com.fernirx.sneakerapi.order.entity.OrderItem;
-import com.fernirx.sneakerapi.order.entity.OrderStatusHistory;
 import com.fernirx.sneakerapi.order.enums.OrderStatus;
-import com.fernirx.sneakerapi.order.repository.OrderItemRepository;
-import com.fernirx.sneakerapi.order.repository.OrderStatusHistoryRepository;
 import com.fernirx.sneakerapi.order.service.OrderService;
 import com.fernirx.sneakerapi.product.dto.response.StockChangeResult;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
@@ -71,8 +68,6 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
     private final ReturnRequestImageRepository returnRequestImageRepository;
     private final ReturnRequestMapper returnRequestMapper;
     private final OrderService orderService;
-    private final OrderItemRepository orderItemRepository;
-    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final ProductVariantService productVariantService;
     private final InventoryTransactionService inventoryTransactionService;
     private final ShippingService shippingService;
@@ -89,7 +84,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         if (order.getStatus() != OrderStatus.DELIVERED) {
             return List.of();
         }
-        return orderItemRepository.findAllByOrder(order).stream().map(this::toEligibleResponse).toList();
+        return orderService.findItemsByOrder(order).stream().map(this::toEligibleResponse).toList();
     }
 
     @Override
@@ -98,9 +93,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         if (order.getStatus() != OrderStatus.DELIVERED) {
             throw BusinessException.of(ErrorCode.RETURN_NOT_ELIGIBLE, "label.return_request");
         }
-        LocalDateTime deliveredAt = orderStatusHistoryRepository
-                .findTopByOrder_IdAndNewStatusOrderByCreatedAtDesc(order.getId(), OrderStatus.DELIVERED)
-                .map(OrderStatusHistory::getCreatedAt)
+        LocalDateTime deliveredAt = orderService.findDeliveredAt(order.getId())
                 .orElseThrow(() -> BusinessException.notFound("label.order"));
         if (deliveredAt.isBefore(LocalDateTime.now().minusDays(RETURN_WINDOW_DAYS))) {
             throw BusinessException.of(ErrorCode.RETURN_NOT_ELIGIBLE, "label.return_request");
@@ -335,8 +328,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
 
     private ReturnRequestItem buildItem(ReturnRequest returnRequest, Order order, ReturnResolutionType resolutionType,
                                          ReturnItemRequest itemRequest) {
-        OrderItem orderItem = orderItemRepository.findById(itemRequest.orderItemId())
-                .orElseThrow(() -> BusinessException.notFound("label.order.item"));
+        OrderItem orderItem = orderService.findItemById(itemRequest.orderItemId());
         if (!orderItem.getOrder().getId().equals(order.getId())) {
             throw BusinessException.of(ErrorCode.RETURN_QUANTITY_EXCEEDED, "label.order.item");
         }

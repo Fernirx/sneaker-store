@@ -488,6 +488,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<OrderItem> findItemsByOrder(Order order) {
+        return orderItemRepository.findAllByOrder(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderItem findItemById(Long orderItemId) {
+        return orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> BusinessException.notFound("label.order.item"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<LocalDateTime> findDeliveredAt(Long orderId) {
+        return orderStatusHistoryRepository
+                .findTopByOrder_IdAndNewStatusOrderByCreatedAtDesc(orderId, OrderStatus.DELIVERED)
+                .map(OrderStatusHistory::getCreatedAt);
+    }
+
+    @Override
     public void cancelOrder(Long orderId, String reason) {
         Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> BusinessException.notFound("label.order"));
