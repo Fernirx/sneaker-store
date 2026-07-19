@@ -22,14 +22,14 @@ public class InternalStoreSettingController {
     private final SettingService settingService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xem chính sách giá/ưu đãi")
     public ResponseEntity<SuccessResponse<StoreSettingResponse>> get() {
         return ResponseEntity.ok(SuccessResponse.of(settingService.getStoreSetting()));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Khởi tạo chính sách giá/ưu đãi (chỉ 1 lần)")
     public ResponseEntity<SuccessResponse<StoreSettingResponse>> create(
             @Valid @RequestBody CreateStoreSettingRequest request) {
@@ -41,7 +41,7 @@ public class InternalStoreSettingController {
     }
 
     @PatchMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cập nhật chính sách giá/ưu đãi")
     public ResponseEntity<SuccessResponse<StoreSettingResponse>> update(
             @Valid @RequestBody UpdateStoreSettingRequest request) {
