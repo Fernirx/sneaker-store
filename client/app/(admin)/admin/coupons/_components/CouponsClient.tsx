@@ -14,10 +14,10 @@ type Filters = { search: string; active: string; discountType: string };
 
 export default function CouponsClient({
   initialData,
-  isAdmin,
+  canWrite,
 }: {
   initialData: PageData;
-  isAdmin: boolean;
+  canWrite: boolean;
 }) {
   const [pageData, setPageData]         = useState<PageData>(initialData);
   const [filters, setFilters]           = useState<Filters>({ search: '', active: '', discountType: '' });
@@ -64,13 +64,13 @@ export default function CouponsClient({
     }, 350);
   }
 
-  const colCount = isAdmin ? 8 : 7;
+  const colCount = canWrite ? 8 : 7;
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="font-display font-black text-xl uppercase tracking-tight">Coupon</h1>
-        {isAdmin && (
+        {canWrite && (
           <button
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
@@ -121,7 +121,7 @@ export default function CouponsClient({
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đã dùng</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Hết hạn</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              {isAdmin && <th className="px-4 py-3 w-24" />}
+              {canWrite && <th className="px-4 py-3 w-24" />}
             </tr>
           </thead>
           <tbody>
@@ -169,7 +169,7 @@ export default function CouponsClient({
                       {coupon.active ? 'Hoạt động' : 'Ẩn'}
                     </span>
                   </td>
-                  {isAdmin && (
+                  {canWrite && (
                     <td className="px-4 py-3">
                       <div className="flex gap-3 justify-end">
                         <button

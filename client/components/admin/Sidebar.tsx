@@ -117,17 +117,23 @@ export default function Sidebar({ roles }: { roles: string[] }) {
           </div>
         )}
 
-        <div className="pt-4">
-          <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
-            Marketing
-          </p>
-          <div className="space-y-0.5">
-            <NavItem href="/admin/coupons" label="Coupon" icon={ICONS.coupons} active={isActive('/admin/coupons')} />
-            <NavItem href="/admin/notifications/marketing" label="Soạn thông báo" icon={ICONS.marketingCompose} active={isActive('/admin/notifications/marketing')} />
-            <NavItem href="/admin/settings/store" label="Chính sách giá" icon={ICONS.pricingSetting} active={isActive('/admin/settings/store')} />
-            <NavItem href="/admin/banners" label="Banner" icon={ICONS.banners} active={isActive('/admin/banners')} />
+        {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_SALE', 'ROLE_MARKETING']) && (
+          <div className="pt-4">
+            <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+              Marketing
+            </p>
+            <div className="space-y-0.5">
+              <NavItem href="/admin/coupons" label="Coupon" icon={ICONS.coupons} active={isActive('/admin/coupons')} />
+              {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_MARKETING']) && (
+                <NavItem href="/admin/notifications/marketing" label="Soạn thông báo" icon={ICONS.marketingCompose} active={isActive('/admin/notifications/marketing')} />
+              )}
+              {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_MARKETING']) && (
+                <NavItem href="/admin/settings/store" label="Chính sách giá" icon={ICONS.pricingSetting} active={isActive('/admin/settings/store')} />
+              )}
+              <NavItem href="/admin/banners" label="Banner" icon={ICONS.banners} active={isActive('/admin/banners')} />
+            </div>
           </div>
-        </div>
+        )}
       </nav>
     </aside>
   );
