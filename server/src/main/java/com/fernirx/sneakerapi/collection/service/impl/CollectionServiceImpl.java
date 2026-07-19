@@ -105,7 +105,11 @@ public class CollectionServiceImpl implements CollectionService {
 
     @Override
     public void deleteCollection(Long id) {
-        collectionRepository.delete(findById(id));
+        Collection collection = findById(id);
+        if (!collection.getProductCollections().isEmpty()) {
+            throw BusinessException.inUse("label.collection");
+        }
+        collectionRepository.delete(collection);
     }
 
     private String generateUniqueSlug(String name) {
