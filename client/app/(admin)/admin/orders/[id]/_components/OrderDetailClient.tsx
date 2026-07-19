@@ -27,6 +27,11 @@ export default function OrderDetailClient({
   const [order, setOrder] = useState(initialOrder);
   const [activeTab, setActiveTab] = useState<TabKey>('info');
 
+  // Payment chỉ ADMIN/SALE xem được (dữ liệu tài chính, không thuộc nghiệp vụ kho vận) - WAREHOUSE
+  // xem được Order rộng hơn Payment nên phải tự lọc tab ở đây, tránh hiện tab rồi bị BE từ chối.
+  const canViewPayments = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_SALE');
+  const tabs = TABS.filter(t => t.key !== 'payments' || canViewPayments);
+
   return (
     <div className="space-y-5">
       {/* Breadcrumb */}
@@ -41,7 +46,7 @@ export default function OrderDetailClient({
 
       {/* Tab bar */}
       <div className="border-b border-line flex gap-0">
-        {TABS.map(t => (
+        {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
