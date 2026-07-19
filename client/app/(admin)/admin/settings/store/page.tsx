@@ -7,6 +7,7 @@ import StoreSettingClient, { type StoreSetting } from './_components/StoreSettin
 export default async function StoreSettingPage() {
   const session = await getSession();
   if (!session) redirect('/login');
+  if (!session.roles.includes('ROLE_ADMIN')) redirect('/login');
 
   let initialData: StoreSetting | null = null;
   try {

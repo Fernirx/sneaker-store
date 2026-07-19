@@ -131,7 +131,7 @@ export default function Sidebar({ roles }: { roles: string[] }) {
               {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_MARKETING']) && (
                 <NavItem href="/admin/notifications/marketing" label="Soạn thông báo" icon={ICONS.marketingCompose} active={isActive('/admin/notifications/marketing')} />
               )}
-              {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_MARKETING']) && (
+              {hasAnyRole(roles, ['ROLE_ADMIN']) && (
                 <NavItem href="/admin/settings/store" label="Chính sách giá" icon={ICONS.pricingSetting} active={isActive('/admin/settings/store')} />
               )}
               <NavItem href="/admin/banners" label="Banner" icon={ICONS.banners} active={isActive('/admin/banners')} />
