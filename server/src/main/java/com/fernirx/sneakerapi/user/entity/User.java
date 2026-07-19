@@ -55,7 +55,11 @@ public class User extends BaseAuditEntity {
     @OneToMany(mappedBy = "user")
     private Set<UserRole> userRoles = new LinkedHashSet<>();
 
-    @OneToOne(mappedBy = "user")
+    // cascade REMOVE: khi soft-delete User (xem @SQLDelete), Hibernate cascade sang Customer.remove() -
+    // Customer tự có @SQLDelete riêng nên đây cũng là soft-delete (UPDATE deleted_at), không xóa cứng.
+    // Đảm bảo 2 lifecycle User/Customer luôn đồng bộ trong cùng 1 transaction, tránh Customer "mồ côi"
+    // vẫn hiển thị bình thường trong khi User đã bị ẩn.
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
     private Customer customer;
 
     @OneToMany(mappedBy = "createdBy")
