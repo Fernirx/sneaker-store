@@ -16,7 +16,7 @@ export default async function OrderDetailPage({
   try {
     const api = await createServerAxios();
     const { data } = await api.get(`/internal/orders/${id}`);
-    return <OrderDetailClient order={data.data as OrderInternalResponse} />;
+    return <OrderDetailClient order={data.data as OrderInternalResponse} roles={session.roles} />;
   } catch {
     redirect('/admin/orders');
   }

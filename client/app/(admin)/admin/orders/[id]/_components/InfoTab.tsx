@@ -20,10 +20,20 @@ function Row({ label, value, mono }: { label: string; value: React.ReactNode; mo
 export default function InfoTab({
   order,
   onUpdated,
+  roles,
 }: {
   order: OrderInternalResponse;
   onUpdated: (order: OrderInternalResponse) => void;
+  roles: string[];
 }) {
+  const canManageShipment = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_WAREHOUSE');
+  const canConfirmOrder   = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_SALE');
+  // Xác nhận đơn (PENDING -> CONFIRMED) là quyết định CSKH, WAREHOUSE không có quyền này (BE chặn) -
+  // ẩn luôn option để không cho chọn 1 hành động chắc chắn sẽ bị từ chối.
+  const statusOptions = STATUS_OPTIONS.filter(
+    s => !(s.value === 'CONFIRMED' && order.status === 'PENDING' && !canConfirmOrder)
+  );
+
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [note, setNote]     = useState('');
   const [saving, setSaving] = useState(false);
@@ -158,28 +168,30 @@ export default function InfoTab({
               label="Đồng bộ lần cuối"
               value={order.shipment.syncedAt ? formatDateTime(order.shipment.syncedAt) : 'Chưa đồng bộ'}
             />
-            <div className="flex items-center gap-3 pt-1">
-              {(order.status === 'SHIPPING' || order.status === 'CONFIRMED') && (
-                <button
-                  onClick={handleSyncShipment}
-                  disabled={syncingShipment}
-                  className="border border-line text-ink font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-bg-subtle transition-colors disabled:opacity-40"
-                >
-                  {syncingShipment ? 'Đang đồng bộ...' : 'Làm mới trạng thái GHN'}
-                </button>
-              )}
-              {(order.status === 'SHIPPING' || order.status === 'CONFIRMED') && (
-                <button
-                  onClick={handleCancelShipment}
-                  disabled={cancelingShipment}
-                  className="border border-danger text-danger font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-danger-bg transition-colors disabled:opacity-40"
-                >
-                  {cancelingShipment ? 'Đang hủy...' : 'Hủy vận đơn'}
-                </button>
-              )}
-            </div>
+            {canManageShipment && (
+              <div className="flex items-center gap-3 pt-1">
+                {(order.status === 'SHIPPING' || order.status === 'CONFIRMED') && (
+                  <button
+                    onClick={handleSyncShipment}
+                    disabled={syncingShipment}
+                    className="border border-line text-ink font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-bg-subtle transition-colors disabled:opacity-40"
+                  >
+                    {syncingShipment ? 'Đang đồng bộ...' : 'Làm mới trạng thái GHN'}
+                  </button>
+                )}
+                {(order.status === 'SHIPPING' || order.status === 'CONFIRMED') && (
+                  <button
+                    onClick={handleCancelShipment}
+                    disabled={cancelingShipment}
+                    className="border border-danger text-danger font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-danger-bg transition-colors disabled:opacity-40"
+                  >
+                    {cancelingShipment ? 'Đang hủy...' : 'Hủy vận đơn'}
+                  </button>
+                )}
+              </div>
+            )}
           </>
-        ) : (
+        ) : canManageShipment ? (
           <div className="flex items-center gap-3">
             <button
               onClick={handleCreateShipment}
@@ -192,6 +204,8 @@ export default function InfoTab({
               <span className="text-xs text-muted">Chỉ tạo được khi đơn đã "Đã xác nhận".</span>
             )}
           </div>
+        ) : (
+          <p className="text-xs text-muted">Chưa có vận đơn.</p>
         )}
         {shipmentError && <p className="text-xs text-danger">{shipmentError}</p>}
       </div>
@@ -208,7 +222,7 @@ export default function InfoTab({
               onChange={e => setStatus(e.target.value as OrderStatus)}
               className="border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
             >
-              {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              {statusOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
           <div className="flex-1 min-w-[200px]">

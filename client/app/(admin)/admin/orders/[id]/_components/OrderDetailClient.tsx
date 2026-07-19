@@ -17,7 +17,13 @@ const TABS = [
 
 type TabKey = typeof TABS[number]['key'];
 
-export default function OrderDetailClient({ order: initialOrder }: { order: OrderInternalResponse }) {
+export default function OrderDetailClient({
+  order: initialOrder,
+  roles,
+}: {
+  order: OrderInternalResponse;
+  roles: string[];
+}) {
   const [order, setOrder] = useState(initialOrder);
   const [activeTab, setActiveTab] = useState<TabKey>('info');
 
@@ -51,7 +57,7 @@ export default function OrderDetailClient({ order: initialOrder }: { order: Orde
       </div>
 
       {/* Tab content */}
-      {activeTab === 'info'     && <InfoTab order={order} onUpdated={setOrder} />}
+      {activeTab === 'info'     && <InfoTab order={order} onUpdated={setOrder} roles={roles} />}
       {activeTab === 'items'    && <ItemsTab order={order} />}
       {activeTab === 'history'  && <HistoryTab orderId={order.id} />}
       {activeTab === 'payments' && <PaymentsTab orderId={order.id} />}
