@@ -25,7 +25,7 @@ public class InternalProductVariantController {
     private final ProductVariantService productVariantService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING', 'WAREHOUSE')")
     @Operation(summary = "Danh sách variant theo màu")
     public ResponseEntity<SuccessResponse<List<ProductVariantGroupResponse>>> getVariants(
             @PathVariable Long productId) {

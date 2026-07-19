@@ -28,7 +28,7 @@ public class InternalProductController {
     private final ProductService productService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING', 'WAREHOUSE')")
     @Operation(summary = "Danh sách sản phẩm")
     public ResponseEntity<PageResponse<ProductInternalResponse>> getAll(
             @ParameterObject @ModelAttribute InternalProductFilterRequest filter,
@@ -37,7 +37,7 @@ public class InternalProductController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING', 'WAREHOUSE')")
     @Operation(summary = "Chi tiết sản phẩm")
     public ResponseEntity<SuccessResponse<ProductInternalResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(productService.getInternalById(id)));

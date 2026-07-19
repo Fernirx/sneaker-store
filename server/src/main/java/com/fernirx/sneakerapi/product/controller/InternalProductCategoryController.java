@@ -24,7 +24,7 @@ public class InternalProductCategoryController {
     private final ProductCategoryService productCategoryService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING', 'WAREHOUSE')")
     @Operation(summary = "Danh sách danh mục của sản phẩm")
     public ResponseEntity<SuccessResponse<List<CategoryBriefResponse>>> getCategories(
             @PathVariable Long productId) {

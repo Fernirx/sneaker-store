@@ -28,7 +28,9 @@ public class InternalCategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    // WAREHOUSE cần đọc danh sách danh mục vì tab "Danh mục" ở trang chi tiết Product hiển thị đầy đủ
+    // checklist (kể cả với người chỉ xem) - không thể tách riêng, xem SECURITY_AUTHORIZATION_AUDIT.
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING', 'WAREHOUSE')")
     @Operation(summary = "Danh sách danh mục")
     public ResponseEntity<PageResponse<CategoryInternalResponse>> getInternalCategories(
             @ParameterObject @ModelAttribute CategoryFilterRequest filter,

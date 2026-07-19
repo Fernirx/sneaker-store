@@ -28,7 +28,9 @@ public class InternalBrandController {
     private final BrandService brandService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    // WAREHOUSE cần đọc danh sách thương hiệu vì trang danh sách Product dùng làm bộ lọc theo brand -
+    // không thể tách riêng, xem SECURITY_AUTHORIZATION_AUDIT.
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING', 'WAREHOUSE')")
     @Operation(summary = "Danh sách thương hiệu")
     public ResponseEntity<PageResponse<BrandInternalResponse>> getInternalBrands(
             @ParameterObject @ModelAttribute BrandFilterRequest filter,
