@@ -12,8 +12,11 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -22,12 +25,17 @@ import java.util.Set;
 @Entity
 @Table(name = "customers", uniqueConstraints = {@UniqueConstraint(name = "user_id_UNIQUE",
         columnNames = {"user_id"})})
+@SQLDelete(sql = "UPDATE customers SET deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class Customer extends BaseAuditEntity {
     @NotNull
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @ColumnDefault("'0'")
     @Column(name = "loyalty_points", columnDefinition = "int UNSIGNED not null")

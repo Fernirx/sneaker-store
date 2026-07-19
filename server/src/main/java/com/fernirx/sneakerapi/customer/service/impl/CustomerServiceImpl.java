@@ -1,6 +1,5 @@
 package com.fernirx.sneakerapi.customer.service.impl;
 
-import com.fernirx.sneakerapi.common.enums.ErrorCode;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.customer.dto.request.UpdateCustomerRequest;
 import com.fernirx.sneakerapi.customer.dto.request.CustomerFilterRequest;
@@ -27,8 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @Transactional
@@ -96,18 +93,10 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public void deleteCustomer(Long id) {
+        // Soft-delete (xem @SQLDelete trên Customer entity) - Order/PointTransaction vẫn giữ nguyên liên
+        // kết đầy đủ để đối soát/khôi phục sau này, không cần pre-check chặn như hard-delete trước đây.
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
-        // Không cho xóa cứng nếu đã có dữ liệu nghiệp vụ gắn với khách hàng này - Order.customer_id RESTRICT
-        // (sẽ ném lỗi FK thô nếu không chặn ở đây), PointTransaction.customer_id CASCADE (sẽ âm thầm mất
-        // lịch sử tích/trừ điểm nếu không chặn). Đây là dữ liệu giao dịch/lịch sử, không phải hồ sơ tạm -
-        // muốn ngừng cho khách hoạt động thì khóa tài khoản (User.active=false), không xóa Customer.
-        List<String> reasons = new ArrayList<>();
-        if (!customer.getOrders().isEmpty()) reasons.add("đơn hàng");
-        if (!customer.getPointTransactions().isEmpty()) reasons.add("lịch sử tích điểm");
-        if (!reasons.isEmpty()) {
-            throw BusinessException.of(ErrorCode.IN_USE_REASONS, "label.customer", String.join(", ", reasons));
-        }
         customerRepository.delete(customer);
     }
 
