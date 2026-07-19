@@ -30,7 +30,7 @@ public class InternalUserController {
     private final UserService userService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Danh sách người dùng")
     public ResponseEntity<PageResponse<UserInternalResponse>> getUsers(
             @ParameterObject @ModelAttribute UserFilterRequest filter,
@@ -39,7 +39,7 @@ public class InternalUserController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Chi tiết người dùng")
     public ResponseEntity<SuccessResponse<UserInternalResponse>> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(userService.getUserById(id)));
