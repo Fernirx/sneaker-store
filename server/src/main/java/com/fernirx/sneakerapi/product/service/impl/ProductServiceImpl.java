@@ -2,6 +2,7 @@ package com.fernirx.sneakerapi.product.service.impl;
 
 import com.fernirx.sneakerapi.brand.entity.Brand;
 import com.fernirx.sneakerapi.brand.repository.BrandRepository;
+import com.fernirx.sneakerapi.common.enums.ErrorCode;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.notification.event.ProductOnSaleEvent;
 import com.fernirx.sneakerapi.notification.event.ProductPublishedEvent;
@@ -32,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -212,6 +214,17 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.product"));
+        // Product tự cascade xóa Variant/Image của chính nó, nhưng Variant lại bị OrderItem/InventoryTransaction/
+        // PurchaseItem/StockAdjustmentItem RESTRICT (không có @OnDelete) - nếu không chặn trước, xóa Product có
+        // 1 variant đã từng phát sinh dữ liệu ở các module đó sẽ vỡ transaction giữa chừng với lỗi FK thô.
+        List<String> reasons = new ArrayList<>();
+        if (productVariantRepository.existsOrderItemByProductId(id)) reasons.add("đơn hàng");
+        if (productVariantRepository.existsInventoryTransactionByProductId(id)) reasons.add("lịch sử biến động kho");
+        if (productVariantRepository.existsPurchaseItemByProductId(id)) reasons.add("phiếu nhập hàng");
+        if (productVariantRepository.existsStockAdjustmentItemByProductId(id)) reasons.add("phiếu điều chỉnh kho");
+        if (!reasons.isEmpty()) {
+            throw BusinessException.of(ErrorCode.IN_USE_REASONS, "label.product", String.join(", ", reasons));
+        }
         productRepository.delete(product);
     }
 

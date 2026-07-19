@@ -1,5 +1,6 @@
 package com.fernirx.sneakerapi.product.service.impl;
 
+import com.fernirx.sneakerapi.common.enums.ErrorCode;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.notification.event.LowStockEvent;
 import com.fernirx.sneakerapi.notification.event.OutOfStockEvent;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -149,6 +151,17 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public void deleteVariant(Long productId, Long variantId) {
         findProduct(productId);
         ProductVariant variant = findVariant(productId, variantId);
+        // Pre-check nghiệp vụ trước khi xóa cứng - OrderItem/InventoryTransaction/PurchaseItem/
+        // StockAdjustmentItem đều RESTRICT variant_id (không @OnDelete), nếu không chặn ở đây DB sẽ ném lỗi
+        // khóa ngoại thô thay vì thông báo nghiệp vụ rõ ràng.
+        List<String> reasons = new ArrayList<>();
+        if (productVariantRepository.existsOrderItemByVariantId(variantId)) reasons.add("đơn hàng");
+        if (productVariantRepository.existsInventoryTransactionByVariantId(variantId)) reasons.add("lịch sử biến động kho");
+        if (productVariantRepository.existsPurchaseItemByVariantId(variantId)) reasons.add("phiếu nhập hàng");
+        if (productVariantRepository.existsStockAdjustmentItemByVariantId(variantId)) reasons.add("phiếu điều chỉnh kho");
+        if (!reasons.isEmpty()) {
+            throw BusinessException.of(ErrorCode.IN_USE_REASONS, "label.product.variant", String.join(", ", reasons));
+        }
         productVariantRepository.delete(variant);
         productVariantRepository.flush();
         syncProductPrices(variant.getProduct());

@@ -25,6 +25,7 @@ public enum ErrorCode {
     NOT_FOUND("NOT_FOUND", "error.bus.not_found", HttpStatus.NOT_FOUND),
     ALREADY_EXISTS("ALREADY_EXISTS", "error.bus.already_exists", HttpStatus.CONFLICT),
     IN_USE("IN_USE", "error.bus.in_use", HttpStatus.CONFLICT),
+    IN_USE_REASONS("IN_USE_REASONS", "error.bus.in_use_reasons", HttpStatus.CONFLICT),
 
     /* ================== RATE LIMIT & SPAM ================== */
     LIMIT_EXCEEDED("LIMIT_EXCEEDED", "error.bus.limit_exceeded", HttpStatus.TOO_MANY_REQUESTS),
