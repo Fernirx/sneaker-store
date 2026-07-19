@@ -66,7 +66,9 @@ export default function Sidebar({ roles }: { roles: string[] }) {
               Tài khoản
             </p>
             <div className="space-y-0.5">
-              <NavItem href="/admin/users"     label="Người dùng" icon={ICONS.users}     active={isActive('/admin/users')} />
+              {hasAnyRole(roles, ['ROLE_ADMIN']) && (
+                <NavItem href="/admin/users" label="Người dùng" icon={ICONS.users} active={isActive('/admin/users')} />
+              )}
               <NavItem href="/admin/customers" label="Khách hàng" icon={ICONS.customers} active={isActive('/admin/customers')} />
             </div>
           </div>
