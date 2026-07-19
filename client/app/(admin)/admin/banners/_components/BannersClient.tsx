@@ -11,10 +11,12 @@ type Filters = { search: string; active: string };
 
 export default function BannersClient({
   initialData,
-  isAdmin,
+  canCreateDelete,
+  canUpdate,
 }: {
   initialData: PageData;
-  isAdmin: boolean;
+  canCreateDelete: boolean;
+  canUpdate: boolean;
 }) {
   const [pageData, setPageData] = useState<PageData>(initialData);
   const [filters, setFilters] = useState<Filters>({ search: '', active: '' });
@@ -68,13 +70,14 @@ export default function BannersClient({
     setCurrentPage(0);
   }
 
-  const colCount = isAdmin ? 6 : 5;
+  const showActionCol = canCreateDelete || canUpdate;
+  const colCount = showActionCol ? 6 : 5;
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="font-display font-black text-xl uppercase tracking-tight">Banner</h1>
-        {isAdmin && (
+        {canCreateDelete && (
           <button
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
@@ -112,7 +115,7 @@ export default function BannersClient({
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Bắt đầu</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Kết thúc</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              {isAdmin && <th className="px-4 py-3 w-24" />}
+              {showActionCol && <th className="px-4 py-3 w-24" />}
             </tr>
           </thead>
           <tbody>
@@ -134,21 +137,25 @@ export default function BannersClient({
                       {b.active ? 'Hoạt động' : 'Ẩn'}
                     </span>
                   </td>
-                  {isAdmin && (
+                  {showActionCol && (
                     <td className="px-4 py-3">
                       <div className="flex gap-3 justify-end">
-                        <button
-                          onClick={() => setEditTarget(b)}
-                          className="text-xs font-bold text-muted hover:text-ink transition-colors"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(b)}
-                          className="text-xs font-bold text-danger hover:opacity-75 transition-opacity"
-                        >
-                          Xóa
-                        </button>
+                        {canUpdate && (
+                          <button
+                            onClick={() => setEditTarget(b)}
+                            className="text-xs font-bold text-muted hover:text-ink transition-colors"
+                          >
+                            Sửa
+                          </button>
+                        )}
+                        {canCreateDelete && (
+                          <button
+                            onClick={() => setDeleteTarget(b)}
+                            className="text-xs font-bold text-danger hover:opacity-75 transition-opacity"
+                          >
+                            Xóa
+                          </button>
+                        )}
                       </div>
                     </td>
                   )}

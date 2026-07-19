@@ -13,7 +13,8 @@ export default async function BannersPage() {
     return (
       <BannersClient
         initialData={data}
-        isAdmin={session.roles.includes('ROLE_ADMIN')}
+        canCreateDelete={session.roles.includes('ROLE_ADMIN')}
+        canUpdate={session.roles.includes('ROLE_ADMIN') || session.roles.includes('ROLE_MARKETING')}
       />
     );
   } catch {
