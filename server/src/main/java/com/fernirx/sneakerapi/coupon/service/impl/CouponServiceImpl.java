@@ -104,7 +104,14 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     public void delete(Long id) {
-        couponRepository.delete(findById(id));
+        Coupon coupon = findById(id);
+        // Coupon vẫn là dữ liệu cấu hình có thể xóa nếu chưa phát sinh nghiệp vụ, nhưng đã được áp dụng
+        // vào đơn hàng thì trở thành dữ liệu lịch sử (đối soát tài chính) - chặn xóa để bảo toàn audit,
+        // chỉ cho vô hiệu hóa (active=false) thay vì xóa.
+        if (couponUsageRepository.existsByCoupon_Id(id)) {
+            throw BusinessException.of(ErrorCode.IN_USE_REASONS, "label.coupon", "lịch sử sử dụng");
+        }
+        couponRepository.delete(coupon);
     }
 
     @Override

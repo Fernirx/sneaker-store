@@ -23,9 +23,11 @@ import java.time.LocalDateTime;
                 columnList = "coupon_id, phone")}, uniqueConstraints = {@UniqueConstraint(name = "order_id_UNIQUE",
         columnNames = {"order_id"})})
 public class CouponUsage extends BaseEntity {
+    // Không CASCADE - coupon đã có lịch sử sử dụng là dữ liệu đối soát tài chính, không được xóa âm thầm
+    // theo Coupon. CouponServiceImpl.delete() tự chặn ở tầng service trước; RESTRICT ở đây là lớp bảo vệ
+    // thứ 2 tại DB.
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "coupon_id", nullable = false)
     private Coupon coupon;
 
