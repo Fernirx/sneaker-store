@@ -81,7 +81,9 @@ export default function Sidebar({ roles }: { roles: string[] }) {
           <div className="space-y-0.5">
             <NavItem href="/admin/brands"      label="Thương hiệu"   icon={ICONS.brands}      active={isActive('/admin/brands')} />
             <NavItem href="/admin/categories"  label="Danh mục"      icon={ICONS.categories}  active={isActive('/admin/categories')} />
-            <NavItem href="/admin/collections" label="Bộ sưu tập"    icon={ICONS.collections} active={isActive('/admin/collections')} />
+            {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_SALE', 'ROLE_MARKETING']) && (
+              <NavItem href="/admin/collections" label="Bộ sưu tập"    icon={ICONS.collections} active={isActive('/admin/collections')} />
+            )}
             <NavItem href="/admin/products"    label="Sản phẩm"      icon={ICONS.products}    active={isActive('/admin/products')} />
           </div>
         </div>
