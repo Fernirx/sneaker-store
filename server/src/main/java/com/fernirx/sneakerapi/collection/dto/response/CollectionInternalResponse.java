@@ -17,5 +17,6 @@ public record CollectionInternalResponse(
         LocalDate launchDate,
         LocalDate endDate,
         Boolean active,
+        int productCount,
         LocalDateTime createdAt
 ) {}

@@ -8,6 +8,7 @@ export interface CategoryRow {
   active: boolean;
   parentId: number | null;
   parentName: string | null;
+  productCount: number;
   createdAt: string;
 }
 

@@ -7,6 +7,7 @@ export interface CollectionRow {
   launchDate: string | null;
   endDate: string | null;
   active: boolean;
+  productCount: number;
   createdAt: string;
 }
 

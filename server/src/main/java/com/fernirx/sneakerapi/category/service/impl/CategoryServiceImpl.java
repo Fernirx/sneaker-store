@@ -107,11 +107,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void deleteCategory(Long id) {
-        Category category = findById(id);
-        if (!category.getProductCategories().isEmpty()) {
-            throw BusinessException.inUse("label.category");
-        }
-        categoryRepository.delete(category);
+        categoryRepository.delete(findById(id));
     }
 
     private String generateUniqueSlug(String name) {

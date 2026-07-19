@@ -37,7 +37,11 @@ export default function DeleteCollectionModal({
         <p className="text-sm">
           Bạn có chắc muốn xóa bộ sưu tập <span className="font-bold">{collection.name}</span>?
         </p>
-        <p className="text-xs text-muted">Xóa sẽ cascade xóa các liên kết sản phẩm và bản dịch.</p>
+        {collection.productCount > 0 && (
+          <p className="text-xs text-danger">
+            Bộ sưu tập này đang được gán cho <span className="font-bold">{collection.productCount}</span> sản phẩm — xóa sẽ gỡ bộ sưu tập này khỏi tất cả sản phẩm đó.
+          </p>
+        )}
         <div className="flex justify-end gap-2 pt-1">
           <button
             onClick={onClose}

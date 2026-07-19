@@ -37,7 +37,11 @@ export default function DeleteCategoryModal({
         <p className="text-sm">
           Bạn có chắc muốn xóa danh mục <span className="font-bold">{category.name}</span>?
         </p>
-        <p className="text-xs text-muted">Xóa sẽ cascade xóa các danh mục con và liên kết sản phẩm.</p>
+        {category.productCount > 0 && (
+          <p className="text-xs text-danger">
+            Danh mục này đang được gán cho <span className="font-bold">{category.productCount}</span> sản phẩm — xóa sẽ gỡ danh mục này khỏi tất cả sản phẩm đó.
+          </p>
+        )}
         <div className="flex justify-end gap-2 pt-1">
           <button
             onClick={onClose}

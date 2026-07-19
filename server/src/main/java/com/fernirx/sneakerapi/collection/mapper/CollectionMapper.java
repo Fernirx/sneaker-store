@@ -14,6 +14,7 @@ public interface CollectionMapper {
 
     CollectionResponse toResponse(Collection collection);
 
+    @Mapping(target = "productCount", expression = "java(collection.getProductCollections().size())")
     CollectionInternalResponse toInternalResponse(Collection collection);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
