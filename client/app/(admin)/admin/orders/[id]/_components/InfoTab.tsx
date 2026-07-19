@@ -116,6 +116,10 @@ export default function InfoTab({
     .filter(Boolean)
     .join(', ');
 
+  // Vận đơn đã hủy (status='cancel') là dữ liệu lịch sử, không phải vận đơn đang áp dụng - vẫn hiện read-only
+  // để đối soát nhưng không coi là "đã có vận đơn" (BE giờ giữ lại row thay vì xóa khi hủy).
+  const isShipmentActive = !!order.shipment && order.shipment.status !== 'cancel';
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <div className="bg-white border border-line rounded-sm p-5 space-y-3">
@@ -155,18 +159,18 @@ export default function InfoTab({
         <h3 className="font-display font-bold text-xs uppercase tracking-wide text-muted mb-2">
           Vận chuyển (GHN)
         </h3>
-        {order.shipment ? (
+        {isShipmentActive ? (
           <>
-            <Row label="Mã vận đơn" value={order.shipment.shippingOrderCode ?? '—'} mono />
-            {order.shipment.status && (
-              <Row label="Trạng thái GHN" value={SHIPMENT_STATUS_LABELS[order.shipment.status] ?? order.shipment.status} />
+            <Row label="Mã vận đơn" value={order.shipment!.shippingOrderCode ?? '—'} mono />
+            {order.shipment!.status && (
+              <Row label="Trạng thái GHN" value={SHIPMENT_STATUS_LABELS[order.shipment!.status] ?? order.shipment!.status} />
             )}
-            {order.shipment.expectedDeliveryAt && (
-              <Row label="Dự kiến giao" value={formatDateTime(order.shipment.expectedDeliveryAt)} />
+            {order.shipment!.expectedDeliveryAt && (
+              <Row label="Dự kiến giao" value={formatDateTime(order.shipment!.expectedDeliveryAt)} />
             )}
             <Row
               label="Đồng bộ lần cuối"
-              value={order.shipment.syncedAt ? formatDateTime(order.shipment.syncedAt) : 'Chưa đồng bộ'}
+              value={order.shipment!.syncedAt ? formatDateTime(order.shipment!.syncedAt) : 'Chưa đồng bộ'}
             />
             {canManageShipment && (
               <div className="flex items-center gap-3 pt-1">
@@ -191,21 +195,31 @@ export default function InfoTab({
               </div>
             )}
           </>
-        ) : canManageShipment ? (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleCreateShipment}
-              disabled={creatingShipment || order.status !== 'CONFIRMED'}
-              className="bg-ink text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-ink/80 transition-colors disabled:opacity-40"
-            >
-              {creatingShipment ? 'Đang tạo...' : 'Tạo vận đơn GHN'}
-            </button>
-            {order.status !== 'CONFIRMED' && (
-              <span className="text-xs text-muted">Chỉ tạo được khi đơn đã "Đã xác nhận".</span>
-            )}
-          </div>
         ) : (
-          <p className="text-xs text-muted">Chưa có vận đơn.</p>
+          <>
+            {order.shipment && (
+              <div className="pb-1 space-y-3 opacity-70">
+                <Row label="Vận đơn trước đó" value={order.shipment.shippingOrderCode ?? '—'} mono />
+                <Row label="Trạng thái GHN" value={SHIPMENT_STATUS_LABELS[order.shipment.status ?? ''] ?? order.shipment.status ?? '—'} />
+              </div>
+            )}
+            {canManageShipment ? (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleCreateShipment}
+                  disabled={creatingShipment || order.status !== 'CONFIRMED'}
+                  className="bg-ink text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-ink/80 transition-colors disabled:opacity-40"
+                >
+                  {creatingShipment ? 'Đang tạo...' : 'Tạo vận đơn GHN'}
+                </button>
+                {order.status !== 'CONFIRMED' && (
+                  <span className="text-xs text-muted">Chỉ tạo được khi đơn đã "Đã xác nhận".</span>
+                )}
+              </div>
+            ) : (
+              !order.shipment && <p className="text-xs text-muted">Chưa có vận đơn.</p>
+            )}
+          </>
         )}
         {shipmentError && <p className="text-xs text-danger">{shipmentError}</p>}
       </div>

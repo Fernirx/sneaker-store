@@ -331,8 +331,10 @@ public class OrderServiceImpl implements OrderService {
     public OrderInternalResponse createShipment(Long orderId, Long changedByUserId) {
         Order order = findById(orderId);
 
-        Optional<Shipment> existing = shipmentRepository.findByOrder_Id(orderId);
-        if (existing.isPresent()) {
+        // Chỉ coi là "đã có vận đơn đang hoạt động" nếu dòng shipment mới nhất CHƯA bị hủy - dòng đã hủy
+        // (status = cancel) là lịch sử, không chặn việc tạo vận đơn mới cho cùng đơn hàng.
+        Optional<Shipment> existing = shipmentRepository.findFirstByOrder_IdOrderByIdDesc(orderId);
+        if (existing.isPresent() && !GHN_CANCEL_STATUS.equals(existing.get().getStatus())) {
             return buildInternalResponse(orderId);
         }
 
@@ -389,7 +391,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public OrderInternalResponse cancelShipment(Long orderId, Long changedByUserId) {
         Order order = findById(orderId);
-        Shipment shipment = shipmentRepository.findByOrder_Id(orderId)
+        Shipment shipment = shipmentRepository.findFirstByOrder_IdOrderByIdDesc(orderId)
                 .orElseThrow(() -> BusinessException.notFound("label.order"));
 
         if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELLED) {
@@ -398,7 +400,11 @@ public class OrderServiceImpl implements OrderService {
 
         shippingService.cancelShipment(shipment.getShippingOrderCode());
 
-        shipmentRepository.delete(shipment);
+        // Không xóa row - Shipment là dữ liệu vận chuyển/lịch sử phục vụ đối soát, không phải dữ liệu tạm.
+        // Chỉ đổi status = cancel, giữ nguyên mã vận đơn/thời điểm tạo/toàn bộ dữ liệu đã đồng bộ trước đó.
+        // Nếu WAREHOUSE tạo vận đơn mới sau đó, createShipment() sẽ tạo 1 dòng mới thay vì ghi đè dòng này.
+        shipment.setStatus(GHN_CANCEL_STATUS);
+        shipmentRepository.save(shipment);
         changeStatus(orderId, OrderStatus.CONFIRMED, changedByUserId,
                 "Đã hủy vận đơn GHN, mã: " + shipment.getShippingOrderCode());
 
@@ -410,7 +416,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public OrderInternalResponse syncShipmentStatus(Long orderId, Long changedByUserId) {
         Order order = findById(orderId);
-        Shipment shipment = shipmentRepository.findByOrder_Id(orderId)
+        Shipment shipment = shipmentRepository.findFirstByOrder_IdOrderByIdDesc(orderId)
                 .orElseThrow(() -> BusinessException.notFound("label.order"));
 
         if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELLED) {
@@ -588,13 +594,15 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private Shipment findShipment(Order order) {
-        return shipmentRepository.findByOrder_Id(order.getId()).orElse(null);
+        return shipmentRepository.findFirstByOrder_IdOrderByIdDesc(order.getId()).orElse(null);
     }
 
     private Map<Long, Shipment> findShipmentsByOrders(List<Order> orders) {
         List<Long> orderIds = orders.stream().map(Order::getId).toList();
+        // 1 order có thể có nhiều dòng shipment lịch sử - giữ lại dòng id lớn nhất (mới nhất) mỗi order.
         return shipmentRepository.findAllByOrder_IdIn(orderIds).stream()
-                .collect(Collectors.toMap(s -> s.getOrder().getId(), Function.identity()));
+                .collect(Collectors.toMap(s -> s.getOrder().getId(), Function.identity(),
+                        (a, b) -> a.getId() > b.getId() ? a : b));
     }
 
     /**

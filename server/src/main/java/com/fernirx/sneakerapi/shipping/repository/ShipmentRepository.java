@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
-    Optional<Shipment> findByOrder_Id(Long orderId);
+    // Mỗi đơn hàng có thể có nhiều dòng shipment theo thời gian (lịch sử các lần tạo/hủy vận đơn) - dòng
+    // mới nhất (id lớn nhất) là dòng đang áp dụng cho đơn hàng hiện tại.
+    Optional<Shipment> findFirstByOrder_IdOrderByIdDesc(Long orderId);
     List<Shipment> findAllByOrder_IdIn(List<Long> orderIds);
 }

@@ -18,12 +18,11 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "shipments", indexes = {
-        @Index(name = "idx_shipments_order_code",
-                columnList = "shipping_order_code")}, uniqueConstraints = {@UniqueConstraint(name = "order_id_UNIQUE",
-        columnNames = {"order_id"})})
+        @Index(name = "idx_shipments_order_code", columnList = "shipping_order_code"),
+        @Index(name = "idx_shipments_order_id", columnList = "order_id")})
 public class Shipment extends BaseAuditEntity {
     @NotNull
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
