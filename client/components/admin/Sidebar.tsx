@@ -60,15 +60,17 @@ export default function Sidebar({ roles }: { roles: string[] }) {
         <NavItem href="/admin/notifications" label="Thông báo" icon={ICONS.notifications} active={isActive('/admin/notifications') && !isActive('/admin/notifications/marketing')} />
         <NavItem href="/admin/profile"   label="Trang cá nhân" icon={ICONS.profile} active={isActive('/admin/profile')} />
 
-        <div className="pt-4">
-          <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
-            Tài khoản
-          </p>
-          <div className="space-y-0.5">
-            <NavItem href="/admin/users"     label="Người dùng" icon={ICONS.users}     active={isActive('/admin/users')} />
-            <NavItem href="/admin/customers" label="Khách hàng" icon={ICONS.customers} active={isActive('/admin/customers')} />
+        {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_SALE']) && (
+          <div className="pt-4">
+            <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+              Tài khoản
+            </p>
+            <div className="space-y-0.5">
+              <NavItem href="/admin/users"     label="Người dùng" icon={ICONS.users}     active={isActive('/admin/users')} />
+              <NavItem href="/admin/customers" label="Khách hàng" icon={ICONS.customers} active={isActive('/admin/customers')} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="pt-4">
           <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
