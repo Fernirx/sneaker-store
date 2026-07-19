@@ -26,6 +26,10 @@ const ICONS = {
   banners: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="1"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M2 16l5-5 4 4 3-3 6 6"/></svg>,
 };
 
+function hasAnyRole(roles: string[], required: string[]) {
+  return required.some(r => roles.includes(r));
+}
+
 function NavItem({ href, label, icon, active }: { href: string; label: string; icon: React.ReactNode; active: boolean }) {
   return (
     <Link href={href}
@@ -37,7 +41,7 @@ function NavItem({ href, label, icon, active }: { href: string; label: string; i
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ roles }: { roles: string[] }) {
   const pathname = usePathname();
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + '/');
@@ -98,16 +102,18 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <div className="pt-4">
-          <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
-            Kho
-          </p>
-          <div className="space-y-0.5">
-            <NavItem href="/admin/suppliers" label="Nhà cung cấp" icon={ICONS.suppliers} active={isActive('/admin/suppliers')} />
-            <NavItem href="/admin/purchases" label="Phiếu nhập hàng" icon={ICONS.purchases} active={isActive('/admin/purchases')} />
-            <NavItem href="/admin/stock-adjustments" label="Điều chỉnh kho" icon={ICONS.adjustments} active={isActive('/admin/stock-adjustments')} />
+        {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_WAREHOUSE']) && (
+          <div className="pt-4">
+            <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
+              Kho
+            </p>
+            <div className="space-y-0.5">
+              <NavItem href="/admin/suppliers" label="Nhà cung cấp" icon={ICONS.suppliers} active={isActive('/admin/suppliers')} />
+              <NavItem href="/admin/purchases" label="Phiếu nhập hàng" icon={ICONS.purchases} active={isActive('/admin/purchases')} />
+              <NavItem href="/admin/stock-adjustments" label="Điều chỉnh kho" icon={ICONS.adjustments} active={isActive('/admin/stock-adjustments')} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="pt-4">
           <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
