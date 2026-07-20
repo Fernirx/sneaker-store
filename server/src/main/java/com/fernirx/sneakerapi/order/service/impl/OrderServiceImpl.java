@@ -337,6 +337,13 @@ public class OrderServiceImpl implements OrderService {
                     && !callerRoles.contains("ROLE_ADMIN") && !callerRoles.contains("ROLE_SALE")) {
                 throw BusinessException.of(ErrorCode.ACCESS_DENIED);
             }
+            // Đường "chính đạo" để đạt DELIVERED là đồng bộ GHN thật (syncShipmentStatus, ADMIN+WAREHOUSE,
+            // chỉ set khi GHN xác nhận đã giao) - endpoint chung này chỉ giữ lại cho ADMIN như 1 lối thoát
+            // hiếm khi cần (GHN lỗi/không đồng bộ được), không cho SALE/WAREHOUSE tự đánh dấu thủ công vì
+            // sẽ kích hoạt earnFromOrder (cộng điểm thật) + mở cửa sổ đổi/trả cho đơn chưa chắc đã giao.
+            if (request.status() == OrderStatus.DELIVERED && !callerRoles.contains("ROLE_ADMIN")) {
+                throw BusinessException.of(ErrorCode.ACCESS_DENIED);
+            }
             changeStatus(id, request.status(), changedByUserId, request.note());
         }
         Order order = findById(id);

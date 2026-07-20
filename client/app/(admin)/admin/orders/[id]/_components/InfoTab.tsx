@@ -28,10 +28,14 @@ export default function InfoTab({
 }) {
   const canManageShipment = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_WAREHOUSE');
   const canConfirmOrder   = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_SALE');
+  const canForceDeliver   = roles.includes('ROLE_ADMIN');
   // Xác nhận đơn (PENDING -> CONFIRMED) là quyết định CSKH, WAREHOUSE không có quyền này (BE chặn) -
-  // ẩn luôn option để không cho chọn 1 hành động chắc chắn sẽ bị từ chối.
+  // ẩn luôn option để không cho chọn 1 hành động chắc chắn sẽ bị từ chối. Tương tự, đánh dấu DELIVERED thủ
+  // công qua dropdown này chỉ dành cho ADMIN (lối thoát hiếm khi GHN lỗi) - đường chính đạo là nút "Làm mới
+  // trạng thái GHN" (canManageShipment), SALE/WAREHOUSE không được tự set DELIVERED không qua GHN xác nhận.
   const statusOptions = STATUS_OPTIONS.filter(
     s => !(s.value === 'CONFIRMED' && order.status === 'PENDING' && !canConfirmOrder)
+      && !(s.value === 'DELIVERED' && !canForceDeliver)
   );
 
   const [status, setStatus] = useState<OrderStatus>(order.status);
