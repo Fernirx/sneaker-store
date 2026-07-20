@@ -46,6 +46,7 @@ public class CouponServiceImpl implements CouponService {
         Coupon coupon = couponRepository.findByCodeIgnoreCase(request.code())
                 .orElseThrow(() -> BusinessException.notFound("label.coupon"));
         validate(coupon, request.orderAmount());
+        validateUserUsageLimit(coupon, request.email(), request.phone());
         BigDecimal discountAmount = calculateDiscount(coupon, request.orderAmount());
         BigDecimal finalAmount = request.orderAmount().subtract(discountAmount);
         return new CouponPreviewResponse(

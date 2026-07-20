@@ -193,7 +193,7 @@ function CheckoutSkeleton() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) {
+export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: boolean; userEmail?: string }) {
   const router = useRouter();
   const { cart, loading } = useCart();
 
@@ -390,6 +390,10 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
       const { data } = await clientAxios.post('/api/coupons/preview', {
         code: couponInput.trim(),
         orderAmount: totalAmount,
+        // Có email/phone thì BE check luôn giới hạn dùng theo khách hàng ở bước preview - tránh hiện "áp
+        // dụng thành công" rồi bị từ chối lúc bấm Đặt hàng thật. Có thể chưa có nếu khách guest chưa nhập.
+        email: isLoggedIn ? userEmail : (guestEmail.trim() || undefined),
+        phone: form.recipientPhone.trim() || undefined,
       });
       setCouponCode(data.data.code);
       setCouponDiscount(data.data.discountAmount);
