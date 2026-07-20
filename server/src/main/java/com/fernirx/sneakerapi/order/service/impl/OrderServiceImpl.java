@@ -52,6 +52,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -120,7 +121,18 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponse createOrder(Long userId, String guestToken, CreateOrderRequest request) {
+    public OrderResponse createOrder(Long userId, String guestToken, String idempotencyKey, CreateOrderRequest request) {
+        if (!StringUtils.hasText(idempotencyKey)) {
+            throw BusinessException.bad("label.idempotency_key");
+        }
+        // Đã xử lý trước đó (retry sau timeout/mất mạng, hoặc double-click chậm hơn request đầu) -> trả lại
+        // đúng đơn cũ thay vì tạo mới. Chặn race thật sự đồng thời bằng unique constraint DB, xem dưới.
+        Optional<Order> existingOrder = orderRepository.findByIdempotencyKey(idempotencyKey);
+        if (existingOrder.isPresent()) {
+            Order existing = existingOrder.get();
+            return orderMapper.toResponse(existing, mapItems(existing), findShipment(existing));
+        }
+
         boolean isGuest = userId == null;
         Customer customer = null;
         String email;
@@ -188,6 +200,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCustomer(customer);
         order.setGuestToken(isGuest ? guestToken : null);
         order.setCode(generateOrderCode());
+        order.setIdempotencyKey(idempotencyKey);
         order.setStatus(OrderStatus.PENDING);
         order.setPaymentStatus(OrderPaymentStatus.UNPAID);
         order.setPaymentMethod(request.paymentMethod());
@@ -204,7 +217,13 @@ public class OrderServiceImpl implements OrderService {
         order.setCouponCode(couponResult != null ? couponResult.code() : null);
         order.setNote(request.note());
         order.setExpiredAt(LocalDateTime.now().plusMinutes(orderProperties.getExpireMinutes()));
-        order = orderRepository.save(order);
+        try {
+            order = orderRepository.saveAndFlush(order);
+        } catch (DataIntegrityViolationException e) {
+            // 2 request cùng idempotency-key lọt qua check phía trên gần như đồng thời (race thật sự) -
+            // unique constraint DB chặn insert trùng. Chưa có side-effect nào (trừ kho/coupon) chạy tới đây.
+            throw BusinessException.alreadyExists("label.order");
+        }
 
         List<OrderItem> savedItems = new ArrayList<>();
         for (ResolvedItem ri : resolvedItems) {

@@ -197,6 +197,13 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
   const router = useRouter();
   const { cart, loading } = useCart();
 
+  // 1 UUID/phiên checkout, gửi lại y hệt ở mọi lần submit (kể cả bấm lại sau lỗi mạng) để BE nhận diện
+  // và trả lại đúng đơn cũ thay vì tạo trùng khi double-click/replay request.
+  const idempotencyKeyRef = useRef<string | null>(null);
+  if (idempotencyKeyRef.current === null) {
+    idempotencyKeyRef.current = crypto.randomUUID();
+  }
+
   const [form, setForm] = useState<ShippingForm>(EMPTY_FORM);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('VNPAY');
 
@@ -465,7 +472,7 @@ export default function CheckoutClient({ isLoggedIn }: { isLoggedIn: boolean }) 
           note: form.note.trim() || undefined,
           ...(isLoggedIn ? {} : { guestEmail: guestEmail.trim(), otpCode: otpCode.trim() }),
         },
-        { headers: guestHeaders() },
+        { headers: { ...guestHeaders(), 'Idempotency-Key': idempotencyKeyRef.current! } },
       );
       const order = orderRes.data;
 

@@ -40,8 +40,9 @@ public class OrderController {
     public ResponseEntity<SuccessResponse<OrderResponse>> createOrder(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestHeader(value = "X-Guest-Token", required = false) String guestToken,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody CreateOrderRequest request) {
-        OrderResponse response = orderService.createOrder(userId(userDetails), guestToken, request);
+        OrderResponse response = orderService.createOrder(userId(userDetails), guestToken, idempotencyKey, request);
         return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.order.created"), response));
     }
 

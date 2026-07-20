@@ -7,11 +7,16 @@ function guestHeader(req: NextRequest): Record<string, string> {
   return t ? { 'X-Guest-Token': t } : {};
 }
 
+function idempotencyHeader(req: NextRequest): Record<string, string> {
+  const k = req.headers.get('Idempotency-Key');
+  return k ? { 'Idempotency-Key': k } : {};
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const api = await createServerAxios();
-    const { data } = await api.post('/orders', body, { headers: guestHeader(req) });
+    const { data } = await api.post('/orders', body, { headers: { ...guestHeader(req), ...idempotencyHeader(req) } });
     return NextResponse.json(data);
   } catch (err) {
     if (axios.isAxiosError(err))

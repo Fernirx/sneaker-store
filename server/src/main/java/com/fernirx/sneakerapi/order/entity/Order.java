@@ -35,8 +35,9 @@ import java.util.Set;
         @Index(name = "idx_orders_assigned",
                 columnList = "assigned_to"),
         @Index(name = "idx_orders_created",
-                columnList = "created_at")}, uniqueConstraints = {@UniqueConstraint(name = "code_UNIQUE",
-        columnNames = {"code"})})
+                columnList = "created_at")}, uniqueConstraints = {
+        @UniqueConstraint(name = "code_UNIQUE", columnNames = {"code"}),
+        @UniqueConstraint(name = "uq_orders_idempotency_key", columnNames = {"idempotency_key"})})
 public class Order extends BaseAuditEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
@@ -50,6 +51,10 @@ public class Order extends BaseAuditEntity {
     @NotNull
     @Column(name = "code", nullable = false, length = 50)
     private String code;
+
+    @Size(max = 36)
+    @Column(name = "idempotency_key", length = 36)
+    private String idempotencyKey;
 
     @NotNull
     @ColumnDefault("'PENDING'")

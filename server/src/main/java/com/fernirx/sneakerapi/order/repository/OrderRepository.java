@@ -28,6 +28,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     Optional<Order> findByIdAndGuestToken(Long id, String guestToken);
 
+    Optional<Order> findByIdempotencyKey(String idempotencyKey);
+
     List<Order> findByPaymentMethodAndPaymentStatusAndStatusAndExpiredAtBefore(
             PaymentMethod paymentMethod, OrderPaymentStatus paymentStatus, OrderStatus status, LocalDateTime expiredBefore);
 

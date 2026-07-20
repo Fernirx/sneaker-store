@@ -23,7 +23,7 @@ public interface OrderService {
     void sendGuestOtp(String email);
 
     // Customer/guest facing
-    OrderResponse createOrder(Long userId, String guestToken, CreateOrderRequest request);
+    OrderResponse createOrder(Long userId, String guestToken, String idempotencyKey, CreateOrderRequest request);
     Page<OrderResponse> getMyOrders(Long userId, String guestToken, Pageable pageable);
     OrderResponse getMyOrderDetail(Long orderId, Long userId, String guestToken);
     List<OrderStatusHistoryResponse> getMyOrderHistory(Long orderId, Long userId, String guestToken);
