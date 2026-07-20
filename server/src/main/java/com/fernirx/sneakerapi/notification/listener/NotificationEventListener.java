@@ -10,6 +10,11 @@ import com.fernirx.sneakerapi.notification.event.OrderCreatedEvent;
 import com.fernirx.sneakerapi.notification.event.OutOfStockEvent;
 import com.fernirx.sneakerapi.notification.event.ProductOnSaleEvent;
 import com.fernirx.sneakerapi.notification.event.ProductPublishedEvent;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestApprovedEvent;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestCompletedEvent;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestCreatedEvent;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestInspectionFailedEvent;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestRejectedEvent;
 import com.fernirx.sneakerapi.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -91,11 +96,60 @@ public class NotificationEventListener {
         notifyAllCustomers(NotificationType.PRODUCT, title, message, "/products/" + event.slug());
     }
 
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onReturnRequestCreated(ReturnRequestCreatedEvent event) {
+        String title = "Yêu cầu đổi/trả mới #" + event.code();
+        String message = "Yêu cầu đổi/trả #" + event.code() + " vừa được tạo, cần duyệt.";
+        String link = "/admin/returns/" + event.returnRequestId();
+        notifyRole(NotificationType.RETURN, Role.ROLE_SALE, title, message, link);
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onReturnRequestApproved(ReturnRequestApprovedEvent event) {
+        String title = "Yêu cầu đổi/trả #" + event.code() + " đã được duyệt";
+        String message = "Yêu cầu đổi/trả #" + event.code() + " của bạn đã được duyệt. Vui lòng gửi trả hàng theo hướng dẫn.";
+        String link = "/returns/" + event.returnRequestId();
+        notifyUser(NotificationType.RETURN, event.customerUserId(), title, message, link);
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onReturnRequestRejected(ReturnRequestRejectedEvent event) {
+        String title = "Yêu cầu đổi/trả #" + event.code() + " bị từ chối";
+        String message = "Yêu cầu đổi/trả #" + event.code() + " của bạn đã bị từ chối. Lý do: " + event.reason();
+        String link = "/returns/" + event.returnRequestId();
+        notifyUser(NotificationType.RETURN, event.customerUserId(), title, message, link);
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onReturnRequestInspectionFailed(ReturnRequestInspectionFailedEvent event) {
+        String title = "Yêu cầu đổi/trả #" + event.code() + " không đạt kiểm tra";
+        String message = "Hàng gửi trả cho yêu cầu #" + event.code() + " không đạt yêu cầu kiểm tra. Lý do: " + event.reason();
+        String link = "/returns/" + event.returnRequestId();
+        notifyUser(NotificationType.RETURN, event.customerUserId(), title, message, link);
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onReturnRequestCompleted(ReturnRequestCompletedEvent event) {
+        String title = "Yêu cầu đổi/trả #" + event.code() + " đã hoàn tất";
+        String message = "Yêu cầu đổi/trả #" + event.code() + " của bạn đã hoàn tất.";
+        String link = "/returns/" + event.returnRequestId();
+        notifyUser(NotificationType.RETURN, event.customerUserId(), title, message, link);
+    }
+
     private void notifyRole(NotificationType type, Role role, String title, String message, String link) {
         notificationService.create(CreateNotificationCommand.toRole(type, role, title, message, link));
     }
 
     private void notifyAllCustomers(NotificationType type, String title, String message, String link) {
         notificationService.create(CreateNotificationCommand.toAllCustomers(type, title, message, link));
+    }
+
+    private void notifyUser(NotificationType type, Long userId, String title, String message, String link) {
+        notificationService.create(CreateNotificationCommand.toUser(type, userId, title, message, link));
     }
 }

@@ -1,4 +1,4 @@
-export type NotificationType = 'ORDER' | 'PAYMENT' | 'PROMOTION' | 'SYSTEM' | 'REVIEW' | 'INVENTORY' | 'PRODUCT';
+export type NotificationType = 'ORDER' | 'PAYMENT' | 'PROMOTION' | 'SYSTEM' | 'REVIEW' | 'INVENTORY' | 'PRODUCT' | 'RETURN';
 
 export interface NotificationResponse {
   id: number;
@@ -32,6 +32,7 @@ export const TYPE_LABELS: Record<NotificationType, string> = {
   REVIEW: 'Đánh giá',
   INVENTORY: 'Tồn kho',
   PRODUCT: 'Sản phẩm',
+  RETURN: 'Đổi/trả hàng',
 };
 
 export function formatDateTime(iso: string) {

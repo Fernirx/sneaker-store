@@ -8,4 +8,5 @@ public enum NotificationType {
     REVIEW,
     INVENTORY,
     PRODUCT,
+    RETURN,
 }

@@ -28,4 +28,8 @@ public record CreateNotificationCommand(
     public static CreateNotificationCommand toAllCustomers(NotificationType type, String title, String message, String link) {
         return new CreateNotificationCommand(type, NotificationTargetType.ALL, null, null, title, message, null, link);
     }
+
+    public static CreateNotificationCommand toUser(NotificationType type, Long userId, String title, String message, String link) {
+        return new CreateNotificationCommand(type, NotificationTargetType.USER, null, List.of(userId), title, message, null, link);
+    }
 }

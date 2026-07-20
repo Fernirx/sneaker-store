@@ -1,4 +1,4 @@
-export type NotificationType = 'ORDER' | 'PAYMENT' | 'PROMOTION' | 'SYSTEM' | 'REVIEW' | 'INVENTORY' | 'PRODUCT';
+export type NotificationType = 'ORDER' | 'PAYMENT' | 'PROMOTION' | 'SYSTEM' | 'REVIEW' | 'INVENTORY' | 'PRODUCT' | 'RETURN';
 export type NotificationTargetType = 'USER' | 'ROLE' | 'ALL';
 
 export interface NotificationResponse {
@@ -46,6 +46,7 @@ export const TYPE_LABELS: Record<NotificationType, string> = {
   REVIEW: 'Đánh giá',
   INVENTORY: 'Tồn kho',
   PRODUCT: 'Sản phẩm',
+  RETURN: 'Đổi/trả hàng',
 };
 
 export const TARGET_TYPE_LABELS: Record<NotificationTargetType, string> = {

@@ -10,6 +10,11 @@ import com.fernirx.sneakerapi.order.entity.Order;
 import com.fernirx.sneakerapi.order.entity.OrderItem;
 import com.fernirx.sneakerapi.order.enums.OrderStatus;
 import com.fernirx.sneakerapi.order.service.OrderService;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestApprovedEvent;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestCompletedEvent;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestCreatedEvent;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestInspectionFailedEvent;
+import com.fernirx.sneakerapi.notification.event.ReturnRequestRejectedEvent;
 import com.fernirx.sneakerapi.product.dto.response.StockChangeResult;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
@@ -42,6 +47,7 @@ import com.fernirx.sneakerapi.user.entity.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -75,6 +81,7 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
     private final ShippingService shippingService;
     private final CustomerService customerService;
     private final PlatformTransactionManager transactionManager;
+    private final ApplicationEventPublisher eventPublisher;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -122,6 +129,8 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
                 returnRequestImageRepository.save(image);
             }
         }
+
+        eventPublisher.publishEvent(new ReturnRequestCreatedEvent(returnRequest.getId(), returnRequest.getCode()));
 
         return buildResponse(returnRequest);
     }
@@ -174,6 +183,8 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         returnRequest.setApprovedBy(approvedByUserId != null ? entityManager.getReference(User.class, approvedByUserId) : null);
         returnRequest.setApprovedAt(LocalDateTime.now());
         returnRequest = returnRequestRepository.save(returnRequest);
+        eventPublisher.publishEvent(new ReturnRequestApprovedEvent(
+                returnRequest.getId(), returnRequest.getCode(), returnRequest.getCustomer().getUser().getId()));
         return buildInternalResponse(returnRequest);
     }
 
@@ -186,6 +197,8 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         returnRequest.setStatus(ReturnStatus.REJECTED);
         returnRequest.setRejectReason(request.rejectReason());
         returnRequest = returnRequestRepository.save(returnRequest);
+        eventPublisher.publishEvent(new ReturnRequestRejectedEvent(
+                returnRequest.getId(), returnRequest.getCode(), request.rejectReason(), returnRequest.getCustomer().getUser().getId()));
         return buildInternalResponse(returnRequest);
     }
 
@@ -216,6 +229,11 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
                 managed.setRejectReason(request.rejectReason());
                 managed.setAdminNote(request.adminNote());
                 returnRequestRepository.save(managed);
+                // Publish trong cùng block - đảm bảo AFTER_COMMIT gắn đúng vào transaction này (mở qua
+                // TransactionTemplate ở runInNewTransaction), không phải tạo notification trước khi
+                // ReturnRequest thật sự commit.
+                eventPublisher.publishEvent(new ReturnRequestInspectionFailedEvent(
+                        managed.getId(), managed.getCode(), request.rejectReason(), managed.getCustomer().getUser().getId()));
             });
             return buildInternalResponseInNewTransaction(id);
         }
@@ -285,6 +303,12 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         }
 
         returnRequestRepository.save(returnRequest);
+
+        // Publish trong cùng transaction (completeReturnWithoutShipment luôn chạy bên trong
+        // runInNewTransaction ở process()) - AFTER_COMMIT chỉ gắn đúng nếu publish trước khi transaction
+        // này commit, không phải sau khi đã rời khỏi block.
+        eventPublisher.publishEvent(new ReturnRequestCompletedEvent(
+                returnRequest.getId(), returnRequest.getCode(), returnRequest.getCustomer().getUser().getId()));
     }
 
     // Gọi GHN tạo vận đơn cho hàng đổi - LUÔN chạy sau khi completeReturnWithoutShipment đã commit.
