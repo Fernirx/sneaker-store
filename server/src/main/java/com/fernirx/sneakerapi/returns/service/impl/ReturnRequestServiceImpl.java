@@ -54,7 +54,9 @@ import org.springframework.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -165,6 +167,9 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
     public ReturnRequestInternalResponse approve(Long id, Long approvedByUserId) {
         ReturnRequest returnRequest = findById(id);
         requireStatus(returnRequest, ReturnStatus.PENDING);
+        if (returnRequest.getResolutionType() == ReturnResolutionType.EXCHANGE) {
+            validateExchangeStock(returnRequest);
+        }
         returnRequest.setStatus(ReturnStatus.APPROVED);
         returnRequest.setApprovedBy(approvedByUserId != null ? entityManager.getReference(User.class, approvedByUserId) : null);
         returnRequest.setApprovedAt(LocalDateTime.now());
@@ -394,6 +399,24 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
                 orderItem.getVariantSize(), orderItem.getVariantColor(), orderItem.getUnitPrice(),
                 orderItem.getQuantity(), maxReturnable, candidates
         );
+    }
+
+    // Advisory check - chỉ hỗ trợ SALE quyết định sớm (trước khi khách gửi trả hàng gốc đi), KHÔNG phải
+    // cơ chế giữ/reserve hàng. Tồn kho vẫn có thể đổi giữa lúc duyệt và lúc WAREHOUSE process() - decreaseStock()
+    // atomic ở completeReturnWithoutShipment() mới là lớp kiểm soát cuối cùng, không đổi gì ở luồng đó.
+    private void validateExchangeStock(ReturnRequest returnRequest) {
+        List<ReturnRequestItem> items = returnRequestItemRepository.findAllByReturnRequest(returnRequest);
+        // Gom theo exchangeVariant trước khi so với tồn kho - nhiều dòng trong cùng request có thể cùng
+        // chọn đổi sang 1 variant, check riêng lẻ từng dòng sẽ bỏ sót trường hợp cộng dồn vượt quá tồn kho.
+        Map<Long, Integer> requestedByVariantId = items.stream()
+                .filter(item -> item.getExchangeVariant() != null)
+                .collect(Collectors.groupingBy(item -> item.getExchangeVariant().getId(), Collectors.summingInt(ReturnRequestItem::getQuantity)));
+        for (Map.Entry<Long, Integer> entry : requestedByVariantId.entrySet()) {
+            ProductVariant variant = productVariantService.findActiveById(entry.getKey());
+            if (variant.getStockQuantity() < entry.getValue()) {
+                throw BusinessException.bad("label.product.stock");
+            }
+        }
     }
 
     private void requireStatus(ReturnRequest returnRequest, ReturnStatus expected) {
