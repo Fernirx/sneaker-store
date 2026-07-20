@@ -33,9 +33,12 @@ export default function InfoTab({
   // ẩn luôn option để không cho chọn 1 hành động chắc chắn sẽ bị từ chối. Tương tự, đánh dấu DELIVERED thủ
   // công qua dropdown này chỉ dành cho ADMIN (lối thoát hiếm khi GHN lỗi) - đường chính đạo là nút "Làm mới
   // trạng thái GHN" (canManageShipment), SALE/WAREHOUSE không được tự set DELIVERED không qua GHN xác nhận.
+  // Hủy đơn PENDING cũng là quyết định CSKH (đơn còn chưa bàn giao cho kho xử lý) - dùng chung
+  // canConfirmOrder vì đúng cùng bộ role (ADMIN/SALE) được thao tác trên đơn PENDING.
   const statusOptions = STATUS_OPTIONS.filter(
     s => !(s.value === 'CONFIRMED' && order.status === 'PENDING' && !canConfirmOrder)
       && !(s.value === 'DELIVERED' && !canForceDeliver)
+      && !(s.value === 'CANCELLED' && order.status === 'PENDING' && !canConfirmOrder)
   );
 
   const [status, setStatus] = useState<OrderStatus>(order.status);

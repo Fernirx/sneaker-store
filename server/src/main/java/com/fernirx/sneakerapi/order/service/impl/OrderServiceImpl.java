@@ -325,10 +325,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderInternalResponse updateStatus(Long id, UpdateOrderStatusRequest request, Long changedByUserId, Collection<String> callerRoles) {
+        Order current = findById(id);
         if (request.status() == OrderStatus.CANCELLED) {
+            // Hủy đơn PENDING là quyết định CSKH (đơn còn chưa được xác nhận/bàn giao cho kho xử lý) -
+            // WAREHOUSE chỉ nên hủy được từ CONFIRMED trở đi (sự cố đóng gói/vận chuyển thực tế), không có
+            // căn cứ nghiệp vụ để hủy 1 đơn còn đang chờ CSKH xác nhận.
+            if (current.getStatus() == OrderStatus.PENDING
+                    && !callerRoles.contains("ROLE_ADMIN") && !callerRoles.contains("ROLE_SALE")) {
+                throw BusinessException.of(ErrorCode.ACCESS_DENIED);
+            }
             cancelOrder(id, StringUtils.hasText(request.note()) ? request.note() : "Admin hủy đơn");
         } else {
-            Order current = findById(id);
             // Xác nhận đơn (PENDING -> CONFIRMED) là quyết định CSKH (xác nhận với khách, đặc biệt đơn COD
             // không qua VNPay) - WAREHOUSE chỉ nên xử lý từ CONFIRMED trở đi, không có căn cứ nghiệp vụ để
             // tự xác nhận đơn. Chỉ chặn đúng transition này, không ảnh hưởng các transition khác của WAREHOUSE
