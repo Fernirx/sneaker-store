@@ -400,14 +400,18 @@ public class OrderServiceImpl implements OrderService {
 
         ShipmentResult result = shippingService.createShipment(command);
 
-        Shipment shipment = new Shipment();
-        shipment.setOrder(order);
-        shipment.setShippingOrderCode(result.shippingOrderCode());
-        shipment.setExpectedDeliveryAt(result.expectedDeliveryAt());
-        shipmentRepository.save(shipment);
+        // Ghi DB (tạo shipment + đổi order sang SHIPPING + side-effect trong changeStatus) phải atomic -
+        // gộp vào 1 transaction thật qua runInNewTransaction() thay vì để mỗi lệnh ghi tự autocommit rời rạc.
+        runInNewTransaction(() -> {
+            Shipment shipment = new Shipment();
+            shipment.setOrder(entityManager.getReference(Order.class, orderId));
+            shipment.setShippingOrderCode(result.shippingOrderCode());
+            shipment.setExpectedDeliveryAt(result.expectedDeliveryAt());
+            shipmentRepository.save(shipment);
 
-        changeStatus(orderId, OrderStatus.SHIPPING, changedByUserId,
-                "Đã tạo vận đơn GHN, mã: " + result.shippingOrderCode());
+            changeStatus(orderId, OrderStatus.SHIPPING, changedByUserId,
+                    "Đã tạo vận đơn GHN, mã: " + result.shippingOrderCode());
+        });
 
         return buildInternalResponse(orderId);
     }
@@ -426,13 +430,23 @@ public class OrderServiceImpl implements OrderService {
 
         shippingService.cancelShipment(shipment.getShippingOrderCode());
 
-        // Không xóa row - Shipment là dữ liệu vận chuyển/lịch sử phục vụ đối soát, không phải dữ liệu tạm.
-        // Chỉ đổi status = cancel, giữ nguyên mã vận đơn/thời điểm tạo/toàn bộ dữ liệu đã đồng bộ trước đó.
-        // Nếu WAREHOUSE tạo vận đơn mới sau đó, createShipment() sẽ tạo 1 dòng mới thay vì ghi đè dòng này.
-        shipment.setStatus(GHN_CANCEL_STATUS);
-        shipmentRepository.save(shipment);
-        changeStatus(orderId, OrderStatus.CONFIRMED, changedByUserId,
-                "Đã hủy vận đơn GHN, mã: " + shipment.getShippingOrderCode());
+        Long shipmentId = shipment.getId();
+        String shippingOrderCode = shipment.getShippingOrderCode();
+        // Ghi DB (đổi shipment sang cancel + đổi order về CONFIRMED + side-effect trong changeStatus) phải
+        // atomic - gộp vào 1 transaction thật qua runInNewTransaction() thay vì để mỗi lệnh ghi tự autocommit
+        // rời rạc. Fetch lại shipment trong transaction mới thay vì tái dùng entity đã lấy ngoài NOT_SUPPORTED
+        // (đã ở trạng thái detached, không nằm trong persistence context nào).
+        runInNewTransaction(() -> {
+            // Không xóa row - Shipment là dữ liệu vận chuyển/lịch sử phục vụ đối soát, không phải dữ liệu tạm.
+            // Chỉ đổi status = cancel, giữ nguyên mã vận đơn/thời điểm tạo/toàn bộ dữ liệu đã đồng bộ trước đó.
+            // Nếu WAREHOUSE tạo vận đơn mới sau đó, createShipment() sẽ tạo 1 dòng mới thay vì ghi đè dòng này.
+            Shipment freshShipment = shipmentRepository.findById(shipmentId)
+                    .orElseThrow(() -> BusinessException.notFound("label.order"));
+            freshShipment.setStatus(GHN_CANCEL_STATUS);
+            shipmentRepository.save(freshShipment);
+            changeStatus(orderId, OrderStatus.CONFIRMED, changedByUserId,
+                    "Đã hủy vận đơn GHN, mã: " + shippingOrderCode);
+        });
 
         return buildInternalResponse(orderId);
     }
@@ -451,30 +465,42 @@ public class OrderServiceImpl implements OrderService {
 
         ShipmentStatusResult result = shippingService.getShipmentStatus(order.getCode());
 
-        shipment.setStatus(result.status());
-        if (result.expectedDeliveryAt() != null) {
-            shipment.setExpectedDeliveryAt(result.expectedDeliveryAt());
-        }
-        shipment.setDeliveredAt(result.deliveredAt());
-        shipment.setSyncedAt(LocalDateTime.now());
-        shipmentRepository.save(shipment);
+        Long shipmentId = shipment.getId();
+        // Ghi DB (đổi shipment + đổi order status/paymentStatus + side-effect trong changeStatus/cancelOrder:
+        // điểm loyalty, hoàn kho, release coupon) phải atomic - gộp vào 1 transaction thật qua
+        // runInNewTransaction() thay vì để mỗi lệnh ghi tự autocommit rời rạc như trước (self-invocation
+        // changeStatus()/cancelOrder() bên trong đây vẫn tham gia đúng transaction này). Fetch lại
+        // shipment/order trong transaction mới thay vì tái dùng entity đã lấy ngoài NOT_SUPPORTED (đã detached).
+        runInNewTransaction(() -> {
+            Shipment freshShipment = shipmentRepository.findById(shipmentId)
+                    .orElseThrow(() -> BusinessException.notFound("label.order"));
+            freshShipment.setStatus(result.status());
+            if (result.expectedDeliveryAt() != null) {
+                freshShipment.setExpectedDeliveryAt(result.expectedDeliveryAt());
+            }
+            freshShipment.setDeliveredAt(result.deliveredAt());
+            freshShipment.setSyncedAt(LocalDateTime.now());
+            shipmentRepository.save(freshShipment);
 
-        if (GHN_CANCEL_STATUS.equals(result.status())) {
-            // cancelOrder tự no-op nếu order đã CANCELLED/DELIVERED, đồng thời hoàn kho + release coupon + revoke điểm
-            cancelOrder(orderId, "GHN báo trạng thái: " + result.status());
-        } else if (GHN_DELIVERED_STATUS.equals(result.status())) {
-            // COD: GHN giao hàng thành công nghĩa là đã thu tiền khách -> đánh dấu đã thanh toán.
-            // VNPay: đã PAID từ trước (lúc IPN), set lại ở đây là no-op, không ảnh hưởng gì.
-            if (order.getPaymentStatus() != OrderPaymentStatus.PAID) {
-                order.setPaymentStatus(OrderPaymentStatus.PAID);
-                orderRepository.save(order);
+            Order freshOrder = findById(orderId);
+
+            if (GHN_CANCEL_STATUS.equals(result.status())) {
+                // cancelOrder tự no-op nếu order đã CANCELLED/DELIVERED, đồng thời hoàn kho + release coupon + revoke điểm
+                cancelOrder(orderId, "GHN báo trạng thái: " + result.status());
+            } else if (GHN_DELIVERED_STATUS.equals(result.status())) {
+                // COD: GHN giao hàng thành công nghĩa là đã thu tiền khách -> đánh dấu đã thanh toán.
+                // VNPay: đã PAID từ trước (lúc IPN), set lại ở đây là no-op, không ảnh hưởng gì.
+                if (freshOrder.getPaymentStatus() != OrderPaymentStatus.PAID) {
+                    freshOrder.setPaymentStatus(OrderPaymentStatus.PAID);
+                    orderRepository.save(freshOrder);
+                }
+                if (freshOrder.getStatus() != OrderStatus.DELIVERED) {
+                    changeStatus(orderId, OrderStatus.DELIVERED, changedByUserId, "GHN báo đã giao thành công");
+                }
+            } else if (freshOrder.getStatus() != OrderStatus.SHIPPING) {
+                changeStatus(orderId, OrderStatus.SHIPPING, changedByUserId, "Đồng bộ trạng thái GHN: " + result.status());
             }
-            if (order.getStatus() != OrderStatus.DELIVERED) {
-                changeStatus(orderId, OrderStatus.DELIVERED, changedByUserId, "GHN báo đã giao thành công");
-            }
-        } else if (order.getStatus() != OrderStatus.SHIPPING) {
-            changeStatus(orderId, OrderStatus.SHIPPING, changedByUserId, "Đồng bộ trạng thái GHN: " + result.status());
-        }
+        });
 
         return buildInternalResponse(orderId);
     }
@@ -644,6 +670,19 @@ public class OrderServiceImpl implements OrderService {
             Order order = findById(orderId);
             return orderMapper.toInternalResponse(order, mapItems(order), findShipment(order));
         });
+    }
+
+    /**
+     * Chạy trong 1 transaction thật mới, dùng cho các method NOT_SUPPORTED (createShipment/cancelShipment/
+     * syncShipmentStatus) sau khi lời gọi GHN (I/O mạng) đã xong. Self-invocation gọi changeStatus()/
+     * cancelOrder() bên trong action vẫn tham gia đúng transaction này dù bỏ qua AOP proxy, vì Spring Data
+     * JPA repository luôn dùng transaction đang mở trên thread hiện tại - nhờ vậy toàn bộ ghi DB (shipment +
+     * order status + side-effect: điểm loyalty/hoàn kho/coupon) trở thành 1 đơn vị atomic thay vì nhiều lệnh
+     * ghi rời rạc như trước.
+     */
+    private void runInNewTransaction(Runnable action) {
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.executeWithoutResult(status -> action.run());
     }
 
     private Order findOwnedOrder(Long orderId, Long userId, String guestToken) {
