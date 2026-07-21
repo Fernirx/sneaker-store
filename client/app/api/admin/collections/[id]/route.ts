@@ -21,13 +21,16 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   props: { params: Promise<{ id: string }> },
 ) {
   const { id } = await props.params;
+  const reassignTo = req.nextUrl.searchParams.get('reassignTo');
   try {
     const api = await createServerAxios();
-    const { data } = await api.delete(`/internal/collections/${id}`);
+    const { data } = await api.delete(`/internal/collections/${id}`, {
+      params: reassignTo ? { reassignTo } : undefined,
+    });
     return NextResponse.json(data);
   } catch (error) {
     if (axios.isAxiosError(error)) {

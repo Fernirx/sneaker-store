@@ -10,6 +10,7 @@ import com.fernirx.sneakerapi.brand.mapper.BrandMapper;
 import com.fernirx.sneakerapi.brand.repository.BrandRepository;
 import com.fernirx.sneakerapi.brand.repository.BrandSpec;
 import com.fernirx.sneakerapi.brand.service.BrandService;
+import com.fernirx.sneakerapi.product.service.ProductService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BrandServiceImpl implements BrandService {
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
+    private final ProductService productService;
     private final Slugify slugify;
     private final PolicyFactory richTextHtmlPolicy;
 
@@ -99,9 +101,12 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public void deleteBrand(Long id) {
+    public void reassignAndDelete(Long id, Long reassignToId) {
         Brand brand = findById(id);
-        if (!brand.getProducts().isEmpty()) {
+        if (reassignToId != null) {
+            findById(reassignToId); // validate đích
+            productService.reassignBrand(id, reassignToId);
+        } else if (!brand.getProducts().isEmpty()) {
             throw BusinessException.inUse("label.brand");
         }
         brandRepository.delete(brand);

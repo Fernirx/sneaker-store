@@ -10,4 +10,8 @@ public interface ProductCategoryService {
     List<CategoryBriefResponse> getCategories(Long productId);
 
     List<CategoryBriefResponse> assignCategories(Long productId, AssignCategoriesRequest request);
+
+    // Cross-module (Category) - chuyển toàn bộ sản phẩm đang gán fromCategoryId sang toCategoryId,
+    // dùng khi xóa danh mục theo lựa chọn "chuyển sang danh mục khác" thay vì gỡ hẳn.
+    void reassignCategory(Long fromCategoryId, Long toCategoryId);
 }

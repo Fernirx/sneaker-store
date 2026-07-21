@@ -9,6 +9,7 @@ import com.fernirx.sneakerapi.brand.service.BrandService;
 import com.fernirx.sneakerapi.common.response.PageResponse;
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
 import com.fernirx.sneakerapi.common.utils.MessageUtil;
+import com.fernirx.sneakerapi.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -86,8 +87,10 @@ public class InternalBrandController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xóa thương hiệu")
-    public ResponseEntity<SuccessResponse<Void>> deleteBrand(@PathVariable Long id) {
-        brandService.deleteBrand(id);
+    public ResponseEntity<SuccessResponse<Void>> deleteBrand(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long reassignTo) {
+        brandService.reassignAndDelete(id, reassignTo);
         return ResponseEntity.ok(SuccessResponse.of(
                 MessageUtil.getMessage("success.resource.deleted", MessageUtil.getMessage("label.brand"))
         ));

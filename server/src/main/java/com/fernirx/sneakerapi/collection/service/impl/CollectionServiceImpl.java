@@ -10,6 +10,7 @@ import com.fernirx.sneakerapi.collection.mapper.CollectionMapper;
 import com.fernirx.sneakerapi.collection.repository.CollectionRepository;
 import com.fernirx.sneakerapi.collection.repository.CollectionSpec;
 import com.fernirx.sneakerapi.collection.service.CollectionService;
+import com.fernirx.sneakerapi.product.service.ProductCollectionService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CollectionServiceImpl implements CollectionService {
     private final CollectionRepository collectionRepository;
     private final CollectionMapper collectionMapper;
+    private final ProductCollectionService productCollectionService;
     private final Slugify slugify;
     private final PolicyFactory richTextHtmlPolicy;
 
@@ -104,8 +106,15 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
-    public void deleteCollection(Long id) {
-        collectionRepository.delete(findById(id));
+    public void reassignAndDelete(Long id, Long reassignToId) {
+        Collection collection = findById(id);
+        if (reassignToId != null) {
+            findById(reassignToId); // validate đích
+            productCollectionService.reassignCollection(id, reassignToId);
+        } else if (!collection.getProductCollections().isEmpty()) {
+            throw BusinessException.inUse("label.collection");
+        }
+        collectionRepository.delete(collection);
     }
 
     private String generateUniqueSlug(String name) {

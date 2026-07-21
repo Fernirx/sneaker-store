@@ -14,6 +14,7 @@ public interface BrandMapper {
 
     BrandResponse toResponse(Brand brand);
 
+    @Mapping(target = "productCount", expression = "java(brand.getProducts().size())")
     BrandInternalResponse toInternalResponse(Brand brand);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

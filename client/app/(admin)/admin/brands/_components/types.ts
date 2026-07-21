@@ -5,6 +5,7 @@ export interface BrandRow {
   description: string | null;
   logoPublicId: string | null;
   active: boolean;
+  productCount: number;
   createdAt: string;
 }
 

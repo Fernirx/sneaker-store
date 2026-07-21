@@ -10,6 +10,7 @@ import com.fernirx.sneakerapi.category.mapper.CategoryMapper;
 import com.fernirx.sneakerapi.category.repository.CategoryRepository;
 import com.fernirx.sneakerapi.category.repository.CategorySpec;
 import com.fernirx.sneakerapi.category.service.CategoryService;
+import com.fernirx.sneakerapi.product.service.ProductCategoryService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final ProductCategoryService productCategoryService;
     private final Slugify slugify;
     private final PolicyFactory richTextHtmlPolicy;
 
@@ -106,8 +108,15 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public void deleteCategory(Long id) {
-        categoryRepository.delete(findById(id));
+    public void reassignAndDelete(Long id, Long reassignToId) {
+        Category category = findById(id);
+        if (reassignToId != null) {
+            findById(reassignToId); // validate đích
+            productCategoryService.reassignCategory(id, reassignToId);
+        } else if (!category.getProductCategories().isEmpty()) {
+            throw BusinessException.inUse("label.category");
+        }
+        categoryRepository.delete(category);
     }
 
     private String generateUniqueSlug(String name) {

@@ -65,6 +65,12 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
                 .toList();
     }
 
+    @Override
+    public void reassignCategory(Long fromCategoryId, Long toCategoryId) {
+        productCategoryRepository.deleteDuplicatesForReassign(fromCategoryId, toCategoryId);
+        productCategoryRepository.bulkReassignCategory(fromCategoryId, categoryRepository.getReferenceById(toCategoryId));
+    }
+
     private Product findProduct(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> BusinessException.notFound("label.product"));

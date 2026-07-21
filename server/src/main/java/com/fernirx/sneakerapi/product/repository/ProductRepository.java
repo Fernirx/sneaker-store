@@ -1,15 +1,21 @@
 package com.fernirx.sneakerapi.product.repository;
 
+import com.fernirx.sneakerapi.brand.entity.Brand;
 import com.fernirx.sneakerapi.product.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+
+    @Modifying
+    @Query("UPDATE Product p SET p.brand = :toBrand WHERE p.brand.id = :fromBrandId")
+    void reassignBrand(@Param("fromBrandId") Long fromBrandId, @Param("toBrand") Brand toBrand);
 
     @Query("SELECT p FROM Product p JOIN FETCH p.brand WHERE p.id IN :ids")
     List<Product> findAllWithBrandByIds(List<Long> ids);

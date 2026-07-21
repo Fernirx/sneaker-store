@@ -244,6 +244,11 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> BusinessException.notFound("label.product"));
     }
 
+    @Override
+    public void reassignBrand(Long fromBrandId, Long toBrandId) {
+        productRepository.reassignBrand(fromBrandId, brandRepository.getReferenceById(toBrandId));
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private Product findByIdWithBrand(Long id) {
