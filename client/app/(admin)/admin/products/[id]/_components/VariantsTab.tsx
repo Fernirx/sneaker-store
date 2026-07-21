@@ -398,7 +398,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
                   <th className="px-4 py-2 text-left">SKU</th>
                   <th className="px-4 py-2 text-left">Giá bán</th>
                   <th className="px-4 py-2 text-left">Giá niêm yết</th>
-                  <th className="px-4 py-2 text-left">Giá vốn</th>
+                  {isAdmin && <th className="px-4 py-2 text-left">Giá vốn</th>}
                   <th className="px-4 py-2 text-left">Tồn</th>
                   <th className="px-4 py-2 text-left">Trạng thái</th>
                   {isAdmin && <th className="px-4 py-2 w-24" />}
@@ -418,9 +418,11 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
                     <td className="px-4 py-2.5 text-muted">
                       {v.originalPrice != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.originalPrice) : '—'}
                     </td>
-                    <td className="px-4 py-2.5 text-muted">
-                      {v.costPrice != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.costPrice) : '—'}
-                    </td>
+                    {isAdmin && (
+                      <td className="px-4 py-2.5 text-muted">
+                        {v.costPrice != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.costPrice) : '—'}
+                      </td>
+                    )}
                     <td className="px-4 py-2.5">
                       <span className={v.stockQuantity <= v.minStockLevel ? 'text-danger font-bold' : ''}>
                         {v.stockQuantity}

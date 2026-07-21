@@ -6,15 +6,20 @@ import com.fernirx.sneakerapi.product.dto.request.CreateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.request.UpdateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.response.ProductVariantGroupResponse;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
+import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/internal/products/{productId}/variants")
@@ -28,8 +33,12 @@ public class InternalProductVariantController {
     @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING', 'WAREHOUSE')")
     @Operation(summary = "Danh sách variant theo màu")
     public ResponseEntity<SuccessResponse<List<ProductVariantGroupResponse>>> getVariants(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long productId) {
-        return ResponseEntity.ok(SuccessResponse.of(productVariantService.getVariants(productId)));
+        Collection<String> callerRoles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+        return ResponseEntity.ok(SuccessResponse.of(productVariantService.getVariantsForStaff(productId, callerRoles)));
     }
 
     @PostMapping

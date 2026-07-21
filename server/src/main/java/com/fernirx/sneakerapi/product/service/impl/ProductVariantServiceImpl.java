@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -73,6 +74,27 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         List<ProductVariant> variants = productVariantRepository
                 .findByProductIdOrderByColorwayAscSizeAsc(productId);
         return productAssembler.toVariantGroups(variants);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductVariantGroupResponse> getVariantsForStaff(Long productId, Collection<String> callerRoles) {
+        List<ProductVariantGroupResponse> groups = getVariants(productId);
+        return callerRoles.contains("ROLE_ADMIN") ? groups : maskCostPrice(groups);
+    }
+
+    private List<ProductVariantGroupResponse> maskCostPrice(List<ProductVariantGroupResponse> groups) {
+        return groups.stream()
+                .map(g -> new ProductVariantGroupResponse(
+                        g.colorway(), g.colorwayCode(), g.colorHex(),
+                        g.variants().stream()
+                                .map(v -> new ProductVariantGroupResponse.VariantResponse(
+                                        v.id(), v.size(), v.shoeWidth(), v.sku(), v.price(), v.originalPrice(),
+                                        null,
+                                        v.stockQuantity(), v.minStockLevel(), v.weight(), v.length(), v.width(), v.height(),
+                                        v.displayOrder(), v.active()))
+                                .toList()))
+                .toList();
     }
 
     @Override

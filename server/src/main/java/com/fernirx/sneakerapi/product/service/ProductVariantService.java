@@ -9,6 +9,7 @@ import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ProductVariantService {
@@ -20,6 +21,10 @@ public interface ProductVariantService {
     ProductVariant findById(Long id);
 
     List<ProductVariantGroupResponse> getVariants(Long productId);
+
+    // Dùng riêng cho endpoint admin - che costPrice (giá vốn) nếu người gọi không có ROLE_ADMIN,
+    // vì đây là dữ liệu nội bộ nhạy cảm không nên lộ cho SALE/MARKETING/WAREHOUSE dù họ được xem biến thể.
+    List<ProductVariantGroupResponse> getVariantsForStaff(Long productId, Collection<String> callerRoles);
 
     Page<VariantSearchResponse> searchVariants(String keyword, Pageable pageable);
 
