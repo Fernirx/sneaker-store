@@ -20,7 +20,7 @@ public class InternalDashboardController {
     private final DashboardService dashboardService;
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'WAREHOUSE', 'MARKETING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'WAREHOUSE')")
     @Operation(summary = "Tổng quan doanh thu, đơn hàng, tồn kho, sản phẩm bán chạy, khách hàng mới")
     public ResponseEntity<SuccessResponse<DashboardSummaryResponse>> getSummary() {
         return ResponseEntity.ok(SuccessResponse.of(dashboardService.getSummary()));

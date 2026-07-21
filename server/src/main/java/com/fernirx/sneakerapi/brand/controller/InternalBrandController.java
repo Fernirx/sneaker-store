@@ -30,7 +30,7 @@ public class InternalBrandController {
     @GetMapping
     // WAREHOUSE cần đọc danh sách thương hiệu vì trang danh sách Product dùng làm bộ lọc theo brand -
     // không thể tách riêng, xem SECURITY_AUTHORIZATION_AUDIT.
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING', 'WAREHOUSE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'WAREHOUSE')")
     @Operation(summary = "Danh sách thương hiệu")
     public ResponseEntity<PageResponse<BrandInternalResponse>> getInternalBrands(
             @ParameterObject @ModelAttribute BrandFilterRequest filter,
@@ -39,7 +39,7 @@ public class InternalBrandController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
     @Operation(summary = "Chi tiết thương hiệu")
     public ResponseEntity<SuccessResponse<BrandInternalResponse>> getInternalById(@PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(brandService.getInternalById(id)));
@@ -58,7 +58,7 @@ public class InternalBrandController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cập nhật thương hiệu")
     public ResponseEntity<SuccessResponse<BrandInternalResponse>> updateBrand(
             @PathVariable Long id,

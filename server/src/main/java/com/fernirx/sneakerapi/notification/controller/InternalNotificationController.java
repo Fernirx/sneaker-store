@@ -69,7 +69,7 @@ public class InternalNotificationController {
     }
 
     @PostMapping("/marketing")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Tạo thông báo marketing cho khách hàng")
     public ResponseEntity<SuccessResponse<NotificationInternalResponse>> createMarketing(
             @Valid @RequestBody CreateNotificationRequest request) {
@@ -81,7 +81,7 @@ public class InternalNotificationController {
     }
 
     @GetMapping("/marketing")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Lịch sử thông báo marketing đã gửi")
     public ResponseEntity<PageResponse<NotificationInternalResponse>> getMarketingHistory(
             @PageableDefault(size = 20) Pageable pageable) {
@@ -89,7 +89,7 @@ public class InternalNotificationController {
     }
 
     @PatchMapping("/marketing/{id}/active")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Ẩn/hiện thông báo marketing")
     public ResponseEntity<SuccessResponse<NotificationInternalResponse>> setActive(
             @PathVariable Long id,

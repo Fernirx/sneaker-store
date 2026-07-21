@@ -25,7 +25,7 @@ public class InternalProductImageController {
     private final ProductImageService productImageService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING', 'WAREHOUSE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'WAREHOUSE')")
     @Operation(summary = "Danh sách ảnh theo màu")
     public ResponseEntity<SuccessResponse<List<ProductImageGroupResponse>>> getImages(
             @PathVariable Long productId) {

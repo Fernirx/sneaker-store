@@ -28,7 +28,7 @@ public class InternalCollectionController {
     private final CollectionService collectionService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
     @Operation(summary = "Danh sách bộ sưu tập")
     public ResponseEntity<PageResponse<CollectionInternalResponse>> getInternalCollections(
             @ParameterObject @ModelAttribute CollectionFilterRequest filter,
@@ -37,7 +37,7 @@ public class InternalCollectionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
     @Operation(summary = "Chi tiết bộ sưu tập")
     public ResponseEntity<SuccessResponse<CollectionInternalResponse>> getInternalById(@PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(collectionService.getInternalById(id)));
@@ -56,7 +56,7 @@ public class InternalCollectionController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cập nhật bộ sưu tập")
     public ResponseEntity<SuccessResponse<CollectionInternalResponse>> updateCollection(
             @PathVariable Long id,

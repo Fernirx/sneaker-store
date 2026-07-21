@@ -25,7 +25,6 @@ export const ALL_ROLES = [
   'ROLE_ADMIN',
   'ROLE_SALE',
   'ROLE_WAREHOUSE',
-  'ROLE_MARKETING',
 ] as const;
 
 export function formatRole(role: string) {

@@ -13,7 +13,7 @@ export default async function CouponsPage() {
     return (
       <CouponsClient
         initialData={data}
-        canWrite={session.roles.includes('ROLE_ADMIN') || session.roles.includes('ROLE_MARKETING')}
+        canWrite={session.roles.includes('ROLE_ADMIN')}
       />
     );
   } catch {

@@ -81,14 +81,14 @@ export default function Sidebar({ roles }: { roles: string[] }) {
           <div className="space-y-0.5">
             <NavItem href="/admin/brands"      label="Thương hiệu"   icon={ICONS.brands}      active={isActive('/admin/brands')} />
             <NavItem href="/admin/categories"  label="Danh mục"      icon={ICONS.categories}  active={isActive('/admin/categories')} />
-            {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_SALE', 'ROLE_MARKETING']) && (
+            {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_SALE']) && (
               <NavItem href="/admin/collections" label="Bộ sưu tập"    icon={ICONS.collections} active={isActive('/admin/collections')} />
             )}
             <NavItem href="/admin/products"    label="Sản phẩm"      icon={ICONS.products}    active={isActive('/admin/products')} />
           </div>
         </div>
 
-        {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_MARKETING']) && (
+        {hasAnyRole(roles, ['ROLE_ADMIN']) && (
           <div className="pt-4">
             <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
               Tương tác
@@ -125,14 +125,14 @@ export default function Sidebar({ roles }: { roles: string[] }) {
           </div>
         )}
 
-        {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_SALE', 'ROLE_MARKETING']) && (
+        {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_SALE']) && (
           <div className="pt-4">
             <p className="font-display text-[9px] font-semibold tracking-[0.14em] uppercase text-muted px-3 mb-1.5">
               Marketing
             </p>
             <div className="space-y-0.5">
               <NavItem href="/admin/coupons" label="Coupon" icon={ICONS.coupons} active={isActive('/admin/coupons')} />
-              {hasAnyRole(roles, ['ROLE_ADMIN', 'ROLE_MARKETING']) && (
+              {hasAnyRole(roles, ['ROLE_ADMIN']) && (
                 <NavItem href="/admin/notifications/marketing" label="Soạn thông báo" icon={ICONS.marketingCompose} active={isActive('/admin/notifications/marketing')} />
               )}
               {hasAnyRole(roles, ['ROLE_ADMIN']) && (

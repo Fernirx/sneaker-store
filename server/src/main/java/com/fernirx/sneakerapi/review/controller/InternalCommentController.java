@@ -26,7 +26,7 @@ public class InternalCommentController {
     private final CommentService commentService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Danh sách bình luận")
     public ResponseEntity<PageResponse<CommentInternalResponse>> getAll(
             @ParameterObject @ModelAttribute InternalCommentFilterRequest filter,
@@ -35,7 +35,7 @@ public class InternalCommentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Chi tiết bình luận")
     public ResponseEntity<SuccessResponse<CommentInternalResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(commentService.getById(id)));

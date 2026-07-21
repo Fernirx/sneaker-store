@@ -27,7 +27,7 @@ public class InternalBannerController {
     private final BannerService bannerService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
     @Operation(summary = "Danh sách banner")
     public ResponseEntity<PageResponse<BannerInternalResponse>> getInternalBanners(
             @ParameterObject @ModelAttribute BannerFilterRequest filter,
@@ -36,7 +36,7 @@ public class InternalBannerController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
     @Operation(summary = "Chi tiết banner")
     public ResponseEntity<SuccessResponse<BannerInternalResponse>> getInternalById(@PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(bannerService.getInternalById(id)));
@@ -55,7 +55,7 @@ public class InternalBannerController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cập nhật banner")
     public ResponseEntity<SuccessResponse<BannerInternalResponse>> updateBanner(
             @PathVariable Long id,

@@ -14,7 +14,7 @@ export default async function BannersPage() {
       <BannersClient
         initialData={data}
         canCreateDelete={session.roles.includes('ROLE_ADMIN')}
-        canUpdate={session.roles.includes('ROLE_ADMIN') || session.roles.includes('ROLE_MARKETING')}
+        canUpdate={session.roles.includes('ROLE_ADMIN')}
       />
     );
   } catch {

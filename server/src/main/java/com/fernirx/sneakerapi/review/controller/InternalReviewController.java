@@ -26,7 +26,7 @@ public class InternalReviewController {
     private final ReviewService reviewService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Danh sách đánh giá")
     public ResponseEntity<PageResponse<ReviewInternalResponse>> getAll(
             @ParameterObject @ModelAttribute InternalReviewFilterRequest filter,
@@ -35,7 +35,7 @@ public class InternalReviewController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Chi tiết đánh giá")
     public ResponseEntity<SuccessResponse<ReviewInternalResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(reviewService.getById(id)));

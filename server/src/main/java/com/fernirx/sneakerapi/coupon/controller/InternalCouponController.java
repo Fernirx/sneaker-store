@@ -27,7 +27,7 @@ public class InternalCouponController {
     private final CouponService couponService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
     @Operation(summary = "Danh sách mã giảm giá")
     public ResponseEntity<PageResponse<CouponInternalResponse>> getAll(
             @ParameterObject @ModelAttribute CouponFilterRequest filter,
@@ -36,14 +36,14 @@ public class InternalCouponController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
     @Operation(summary = "Chi tiết mã giảm giá")
     public ResponseEntity<SuccessResponse<CouponInternalResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(couponService.getById(id)));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Tạo mã giảm giá mới")
     public ResponseEntity<SuccessResponse<CouponInternalResponse>> create(
             @Valid @RequestBody CreateCouponRequest request) {
@@ -55,7 +55,7 @@ public class InternalCouponController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cập nhật mã giảm giá")
     public ResponseEntity<SuccessResponse<CouponInternalResponse>> update(
             @PathVariable Long id,
@@ -68,7 +68,7 @@ public class InternalCouponController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xóa mã giảm giá")
     public ResponseEntity<SuccessResponse<Void>> delete(@PathVariable Long id) {
         couponService.delete(id);
