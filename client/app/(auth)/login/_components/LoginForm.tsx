@@ -291,9 +291,9 @@ export default function LoginForm() {
                     <FieldError msg={fieldErrors['password']} />
                   </div>
                   <div className="flex justify-end text-sm">
-                    <button type="button" className="text-[11px] uppercase tracking-wider text-accent hover:underline">
+                    <Link href="/forgot-password" className="text-[11px] uppercase tracking-wider text-accent hover:underline">
                       {"Quên mật khẩu?"}
-                    </button>
+                    </Link>
                   </div>
                   <button onClick={handleLogin} disabled={pending || !loginEmail || !loginPass}
                     className="w-full bg-accent hover:bg-accent-700 disabled:opacity-40 text-white font-display font-bold text-sm uppercase tracking-wider py-3 rounded transition-colors">
