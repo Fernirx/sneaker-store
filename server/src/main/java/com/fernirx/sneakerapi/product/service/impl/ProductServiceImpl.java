@@ -23,6 +23,7 @@ import com.fernirx.sneakerapi.product.repository.ProductImageRepository;
 import com.fernirx.sneakerapi.product.repository.ProductRepository;
 import com.fernirx.sneakerapi.product.repository.ProductSpec;
 import com.fernirx.sneakerapi.product.repository.ProductVariantRepository;
+import com.fernirx.sneakerapi.product.service.ProductDeletionPolicy;
 import com.fernirx.sneakerapi.product.service.ProductService;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,7 @@ public class ProductServiceImpl implements ProductService {
     private final Slugify slugify;
     private final ApplicationEventPublisher eventPublisher;
     private final PolicyFactory richTextHtmlPolicy;
+    private final ProductDeletionPolicy productDeletionPolicy;
 
     // ─── Public ──────────────────────────────────────────────────────────────
 
@@ -210,21 +212,21 @@ public class ProductServiceImpl implements ProductService {
         return productAssembler.toInternalResponse(saved, null);
     }
 
+    /**
+     * Xóa một sản phẩm khỏi hệ thống.
+     * Luồng xử lý:
+     * 1. Tìm sản phẩm theo ID. Nếu không có ném ngoại lệ not found.
+     * 2. Gọi ProductDeletionPolicy để kiểm tra xem sản phẩm (hoặc các biến thể của nó) có đang được sử dụng 
+     *    ở các module khác (Order, Inventory, Supplier...) hay không. Nếu có, ném lỗi nghiệp vụ.
+     * 3. Thực hiện xóa cứng.
+     */
     @Override
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.product"));
-        // Product tự cascade xóa Variant/Image của chính nó, nhưng Variant lại bị OrderItem/InventoryTransaction/
-        // PurchaseItem/StockAdjustmentItem RESTRICT (không có @OnDelete) - nếu không chặn trước, xóa Product có
-        // 1 variant đã từng phát sinh dữ liệu ở các module đó sẽ vỡ transaction giữa chừng với lỗi FK thô.
-        List<String> reasons = new ArrayList<>();
-        if (productVariantRepository.existsOrderItemByProductId(id)) reasons.add("đơn hàng");
-        if (productVariantRepository.existsInventoryTransactionByProductId(id)) reasons.add("lịch sử biến động kho");
-        if (productVariantRepository.existsPurchaseItemByProductId(id)) reasons.add("phiếu nhập hàng");
-        if (productVariantRepository.existsStockAdjustmentItemByProductId(id)) reasons.add("phiếu điều chỉnh kho");
-        if (!reasons.isEmpty()) {
-            throw BusinessException.of(ErrorCode.IN_USE_REASONS, "label.product", String.join(", ", reasons));
-        }
+        
+        productDeletionPolicy.validateProductDeletion(id);
+        
         productRepository.delete(product);
     }
 

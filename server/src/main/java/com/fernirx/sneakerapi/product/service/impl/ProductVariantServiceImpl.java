@@ -16,6 +16,7 @@ import com.fernirx.sneakerapi.product.mapper.ProductVariantMapper;
 import com.fernirx.sneakerapi.product.repository.ProductRepository;
 import com.fernirx.sneakerapi.product.repository.ProductVariantRepository;
 import com.fernirx.sneakerapi.product.repository.ProductVariantSpec;
+import com.fernirx.sneakerapi.product.service.ProductDeletionPolicy;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -38,6 +39,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final ProductVariantMapper productVariantMapper;
     private final ProductAssembler productAssembler;
     private final ApplicationEventPublisher eventPublisher;
+    private final ProductDeletionPolicy productDeletionPolicy;
 
     @Override
     @Transactional(readOnly = true)
@@ -169,21 +171,22 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return productVariantMapper.toVariantResponse(saved);
     }
 
+    /**
+     * Xóa cứng một biến thể (Variant) của sản phẩm.
+     * Luồng xử lý:
+     * 1. Tìm biến thể theo ID và xác nhận nó thuộc về Product tương ứng.
+     * 2. Gọi ProductDeletionPolicy để kiểm tra xem biến thể này có đang nằm trong đơn hàng, phiếu nhập, 
+     *    hay lịch sử kho nào không. Nếu có, từ chối xóa để bảo toàn dữ liệu ngoại lai.
+     * 3. Xóa biến thể và ép flush xuống DB ngay lập tức.
+     * 4. Gọi hàm syncProductPrices để cập nhật lại khoảng giá (min/max price) của Product mẹ.
+     */
     @Override
     public void deleteVariant(Long productId, Long variantId) {
         findProduct(productId);
         ProductVariant variant = findVariant(productId, variantId);
-        // Pre-check nghiệp vụ trước khi xóa cứng - OrderItem/InventoryTransaction/PurchaseItem/
-        // StockAdjustmentItem đều RESTRICT variant_id (không @OnDelete), nếu không chặn ở đây DB sẽ ném lỗi
-        // khóa ngoại thô thay vì thông báo nghiệp vụ rõ ràng.
-        List<String> reasons = new ArrayList<>();
-        if (productVariantRepository.existsOrderItemByVariantId(variantId)) reasons.add("đơn hàng");
-        if (productVariantRepository.existsInventoryTransactionByVariantId(variantId)) reasons.add("lịch sử biến động kho");
-        if (productVariantRepository.existsPurchaseItemByVariantId(variantId)) reasons.add("phiếu nhập hàng");
-        if (productVariantRepository.existsStockAdjustmentItemByVariantId(variantId)) reasons.add("phiếu điều chỉnh kho");
-        if (!reasons.isEmpty()) {
-            throw BusinessException.of(ErrorCode.IN_USE_REASONS, "label.product.variant", String.join(", ", reasons));
-        }
+        
+        productDeletionPolicy.validateVariantDeletion(variantId);
+        
         productVariantRepository.delete(variant);
         productVariantRepository.flush();
         syncProductPrices(variant.getProduct());

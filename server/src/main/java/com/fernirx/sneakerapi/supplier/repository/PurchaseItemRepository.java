@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface PurchaseItemRepository extends JpaRepository<PurchaseItem, Long> {
     List<PurchaseItem> findAllByPurchase(Purchase purchase);
+    boolean existsByVariant_Product_Id(Long productId);
+    boolean existsByVariant_Id(Long variantId);
 }
