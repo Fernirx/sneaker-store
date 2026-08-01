@@ -49,7 +49,7 @@ export default function ProfileClient({
   const TABS: { key: Tab; label: string }[] = [
     { key: 'info', label: "Thông tin cá nhân" },
     { key: 'address', label: "Địa chỉ giao hàng" },
-    { key: 'security', label: "Bảo mật" },
+    { key: 'security', label: "Đổi mật khẩu" },
   ];
 
   return (

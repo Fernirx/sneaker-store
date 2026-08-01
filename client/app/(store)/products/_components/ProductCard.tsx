@@ -12,7 +12,7 @@ export default function ProductCard({ product }: { product: ProductResponse }) {
   const displayColor = selectedIdx != null ? product.colors[selectedIdx] : product.colors[0];
   const imgSrc = displayColor?.primaryImagePublicId
     ? productUrl(displayColor.primaryImagePublicId, 400, 400)
-    : null;
+    : "https://www.soleretriever.com/placeholder-fancy.webp?width=1200&quality=75&fit=contain";
 
   // Luôn hiển thị khoảng giá Min - Max của sản phẩm (vì chọn màu ngoài thẻ chưa chọn size)
   const priceNode = product.minPrice != null ? (

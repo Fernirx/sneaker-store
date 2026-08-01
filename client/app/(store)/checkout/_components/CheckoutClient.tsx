@@ -136,9 +136,9 @@ function CheckoutItem({ item }: { item: CartItemData }) {
   return (
     <div className="flex gap-4 py-4 border-b border-line last:border-b-0">
       <div className="shrink-0 w-[72px] h-[72px] bg-transparent overflow-hidden">
-        {item.primaryImagePublicId ? (
+        {item.primaryImagePublicId == null ? (
           <img
-            src={productUrl(item.primaryImagePublicId, 144, 144)}
+            src={"https://www.soleretriever.com/placeholder-fancy.webp?width=1200&quality=75&fit=contain"}
             alt={item.productName}
             className="w-full h-full object-contain"
           />
