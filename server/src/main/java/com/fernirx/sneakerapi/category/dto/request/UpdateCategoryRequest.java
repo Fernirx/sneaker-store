@@ -17,5 +17,9 @@ public record UpdateCategoryRequest(
 
         Integer displayOrder,
 
+        Long parentId,
+
+        Boolean clearParent,
+
         Boolean active
 ) {}

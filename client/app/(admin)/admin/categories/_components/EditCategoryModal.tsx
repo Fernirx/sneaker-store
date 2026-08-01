@@ -1,12 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import clientAxios from '@/lib/axios/clientAxios';
 import { parseApiError } from '@/lib/parseApiError';
 import Modal from '@/components/admin/Modal';
 import ImageUpload from '@/components/admin/ImageUpload';
 import TiptapEditor from '@/components/admin/TiptapEditor';
 import { type CategoryRow } from './types';
+
+interface ParentOption {
+  id: number;
+  name: string;
+}
 
 export default function EditCategoryModal({
   category,
@@ -22,9 +27,17 @@ export default function EditCategoryModal({
   const [imagePublicId, setImagePublicId] = useState(category.imagePublicId ?? '');
   const [displayOrder, setDisplayOrder] = useState(String(category.displayOrder));
   const [active, setActive] = useState(category.active);
+  const [parentId, setParentId] = useState(category.parentId ? String(category.parentId) : '');
+  const [parents, setParents] = useState<ParentOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    clientAxios.get('/api/admin/categories?page=0&size=100&sort=displayOrder,asc')
+      .then(res => setParents((res.data.data ?? []).filter((p: ParentOption) => p.id !== category.id)))
+      .catch(() => {});
+  }, [category.id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +50,8 @@ export default function EditCategoryModal({
         description: description || null,
         imagePublicId: imagePublicId || null,
         displayOrder: Number(displayOrder),
+        parentId: parentId ? Number(parentId) : null,
+        clearParent: !parentId,
         active,
       });
       onSaved();
@@ -70,18 +85,36 @@ export default function EditCategoryModal({
           {fieldErrors.name && <p className="text-danger text-xs mt-1">{fieldErrors.name}</p>}
         </div>
 
-        <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-            Thứ tự hiển thị <span className="text-danger">*</span>
-          </label>
-          <input
-            type="number"
-            value={displayOrder}
-            onChange={e => setDisplayOrder(e.target.value)}
-            min="0"
-            required
-            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+              Thứ tự hiển thị <span className="text-danger">*</span>
+            </label>
+            <input
+              type="number"
+              value={displayOrder}
+              onChange={e => setDisplayOrder(e.target.value)}
+              min="0"
+              required
+              className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+              Danh mục cha
+            </label>
+            <select
+              value={parentId}
+              onChange={e => setParentId(e.target.value)}
+              className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink bg-white"
+            >
+              <option value="">— Không có —</option>
+              {parents.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div>

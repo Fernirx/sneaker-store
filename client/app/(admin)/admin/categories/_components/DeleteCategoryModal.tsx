@@ -8,8 +8,6 @@ import { type CategoryRow } from './types';
 
 interface CategoryOption { id: number; name: string; }
 
-type Mode = 'reassign' | 'unlink';
-
 export default function DeleteCategoryModal({
   category,
   onClose,
@@ -20,7 +18,6 @@ export default function DeleteCategoryModal({
   onDeleted: () => void;
 }) {
   const hasProducts = category.productCount > 0;
-  const [mode, setMode] = useState<Mode>(hasProducts ? 'reassign' : 'unlink');
   const [targetId, setTargetId] = useState('');
   const [options, setOptions] = useState<CategoryOption[]>([]);
   const [deleting, setDeleting] = useState(false);
@@ -35,14 +32,14 @@ export default function DeleteCategoryModal({
   }, []);
 
   async function handleDelete() {
-    if (hasProducts && mode === 'reassign' && !targetId) {
+    if (hasProducts && !targetId) {
       setError('Vui lòng chọn danh mục để chuyển sản phẩm sang.');
       return;
     }
     setDeleting(true);
     setError('');
     try {
-      const query = hasProducts && mode === 'reassign' ? `?reassignTo=${targetId}` : '';
+      const query = hasProducts ? `?reassignTo=${targetId}` : '';
       await clientAxios.delete(`/api/admin/categories/${category.id}${query}`);
       onDeleted();
     } catch (err) {
@@ -59,34 +56,22 @@ export default function DeleteCategoryModal({
           Bạn có chắc muốn xóa danh mục <span className="font-bold">{category.name}</span>?
         </p>
 
-        {hasProducts && (
-          <div className="space-y-2">
+        {hasProducts ? (
+          <div className="space-y-1.5">
             <p className="text-xs text-danger">
-              Danh mục này đang được gán cho <span className="font-bold">{category.productCount}</span> sản phẩm. Chọn cách xử lý:
+              Danh mục này đang được gán cho <span className="font-bold">{category.productCount}</span> sản phẩm. Bạn phải chọn danh mục khác để chuyển toàn bộ sản phẩm sang trước khi xóa:
             </p>
-
-            <label className={`flex items-start gap-2.5 p-3 border rounded-sm cursor-pointer transition-colors ${mode === 'reassign' ? 'border-ink bg-paper' : 'border-line hover:bg-paper/50'}`}>
-              <input type="radio" name="mode" checked={mode === 'reassign'} onChange={() => setMode('reassign')} className="mt-0.5 accent-ink" />
-              <span className="flex-1 space-y-1.5">
-                <span className="block text-sm font-bold">Chuyển toàn bộ sản phẩm sang danh mục khác</span>
-                {mode === 'reassign' && (
-                  <select
-                    value={targetId}
-                    onChange={e => setTargetId(e.target.value)}
-                    className="w-full border border-line rounded-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-ink"
-                  >
-                    <option value="">— Chọn danh mục —</option>
-                    {options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-                  </select>
-                )}
-              </span>
-            </label>
-
-            <label className={`flex items-start gap-2.5 p-3 border rounded-sm cursor-pointer transition-colors ${mode === 'unlink' ? 'border-ink bg-paper' : 'border-line hover:bg-paper/50'}`}>
-              <input type="radio" name="mode" checked={mode === 'unlink'} onChange={() => setMode('unlink')} className="mt-0.5 accent-ink" />
-              <span className="block text-sm font-bold">Gỡ danh mục khỏi sản phẩm (không chuyển sang đâu)</span>
-            </label>
+            <select
+              value={targetId}
+              onChange={e => setTargetId(e.target.value)}
+              className="w-full border border-line rounded-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-ink"
+            >
+              <option value="">— Chọn danh mục —</option>
+              {options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </select>
           </div>
+        ) : (
+          <p className="text-xs text-muted">Danh mục này chưa có sản phẩm nào liên kết.</p>
         )}
 
         <div className="flex justify-end gap-2 pt-1">
@@ -98,7 +83,7 @@ export default function DeleteCategoryModal({
           </button>
           <button
             onClick={handleDelete}
-            disabled={deleting}
+            disabled={deleting || (hasProducts && !targetId)}
             className="px-4 py-2 bg-danger text-white text-sm font-bold rounded-sm hover:opacity-90 disabled:opacity-60 transition-opacity"
           >
             {deleting ? 'Đang xóa...' : 'Xóa'}

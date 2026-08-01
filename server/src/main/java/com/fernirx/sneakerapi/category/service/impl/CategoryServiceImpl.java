@@ -93,6 +93,15 @@ public class CategoryServiceImpl implements CategoryService {
         if (request.description() != null) {
             category.setDescription(richTextHtmlPolicy.sanitize(request.description()));
         }
+        if (Boolean.TRUE.equals(request.clearParent())) {
+            category.setParent(null);
+        } else if (request.parentId() != null) {
+            Category parent = findById(request.parentId());
+            if (parent.getId().equals(category.getId())) {
+                throw BusinessException.bad("label.category");
+            }
+            category.setParent(parent);
+        }
         categoryRepository.save(category);
         return categoryMapper.toInternalResponse(categoryRepository.findById(id).orElseThrow());
     }
