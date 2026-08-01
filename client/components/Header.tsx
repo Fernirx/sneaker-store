@@ -3,6 +3,7 @@ import { getSession } from '@/lib/session';
 import { createServerAxios, publicAxios } from '@/lib/axios/serverAxios';
 import HeaderActions from './HeaderActions';
 import HeaderNav from './HeaderNav';
+import HeaderSearch from './HeaderSearch';
 
 interface ProfileResponse {
   firstName: string;
@@ -64,13 +65,7 @@ export default async function Header() {
         <HeaderNav brands={nav.brands} categories={nav.categories} />
 
         {/* Search bar — desktop */}
-        <Link href="/search"
-          className="flex max-w-sm hidden md:flex items-center gap-2 border border-line rounded px-3 py-2 text-sm text-muted hover:border-ink transition-colors">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <span className="text-xs">{"Tìm kiếm sản phẩm..."}</span>
-        </Link>
+        <HeaderSearch />
 
         <div className="flex-1" />
 
