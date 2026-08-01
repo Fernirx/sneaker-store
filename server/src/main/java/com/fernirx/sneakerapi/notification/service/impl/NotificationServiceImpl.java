@@ -173,7 +173,7 @@ public class NotificationServiceImpl implements NotificationService {
         return switch (command.targetType()) {
             case USER -> command.targetUserIds() != null ? command.targetUserIds() : List.of();
             case ROLE -> userRoleRepository.findUserIdsByRole(command.targetRole());
-            case ALL -> userRoleRepository.findUserIdsByRole(Role.ROLE_USER);
+            case ALL -> userRoleRepository.findUserIdsByRole(Role.ROLE_CUSTOMER);
         };
     }
 }

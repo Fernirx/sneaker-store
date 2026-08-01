@@ -16,7 +16,7 @@ export default function CreateUserModal({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
-  const [selectedRoles, setSelectedRoles] = useState<string[]>(['ROLE_USER']);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(['ROLE_CUSTOMER']);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});

@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
 
         Set<Role> roles = (request.roles() != null && !request.roles().isEmpty())
                 ? request.roles()
-                : Set.of(Role.ROLE_USER);
+                : Set.of(Role.ROLE_CUSTOMER);
         roles.forEach(role -> {
             UserRole ur = new UserRole();
             ur.setUser(user);

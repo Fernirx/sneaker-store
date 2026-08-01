@@ -68,7 +68,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         UserRole role = new UserRole();
         role.setUser(user);
-        role.setRole(Role.ROLE_USER);
+        role.setRole(Role.ROLE_CUSTOMER);
         userRoleRepository.save(role);
         return user;
     }
@@ -112,7 +112,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         UserRole role = new UserRole();
         role.setUser(user);
-        role.setRole(Role.ROLE_USER);
+        role.setRole(Role.ROLE_CUSTOMER);
         userRoleRepository.save(role);
         user.getUserRoles().add(role);
 
