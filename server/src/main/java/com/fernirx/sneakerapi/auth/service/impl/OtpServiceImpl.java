@@ -25,6 +25,18 @@ public class OtpServiceImpl implements OtpService {
     private static final int OTP_BOUND = 1_000_000;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+    /**
+     * Sinh và gửi mã OTP qua email theo mục đích sử dụng.
+     * Luồng xử lý:
+     * 1. Kiểm tra Cooldown: Nếu có key cooldown trong Redis, từ chối gửi để 
+     *    chống spam (đợi hết thời gian).
+     * 2. Sinh mã OTP ngẫu nhiên 6 chữ số.
+     * 3. Mã hóa OTP bằng PasswordEncoder (BCrypt) rồi lưu vào Redis (giúp 
+     *    bảo vệ OTP không bị đọc lén từ DB).
+     * 4. Xóa số lần thử sai trước đó và thiết lập lại thời gian Cooldown.
+     * 5. Gửi email qua MailService với template tương ứng mục đích (Đăng ký, 
+     *    Quên MK, Xác thực khách).
+     */
     @Override
     public void sendOtp(String email, String name, OtpPurpose purpose) {
         String p = purpose.name().toLowerCase();
@@ -49,12 +61,26 @@ public class OtpServiceImpl implements OtpService {
 
         String displayName = (name != null && !name.isBlank()) ? name : email.split("@")[0];
         switch (purpose) {
-            case REGISTER -> mailService.sendVerifyEmailOtp(email, displayName, rawOtp, otpProperties.getTtl());
-            case FORGOT_PASSWORD -> mailService.sendForgotPasswordOtp(email, displayName, rawOtp, otpProperties.getTtl());
-            case GUEST_ORDER -> mailService.sendOrderVerificationOtp(email, displayName, rawOtp, otpProperties.getTtl());
+            case REGISTER -> mailService.sendVerifyEmailOtp(
+                    email, displayName, rawOtp, otpProperties.getTtl());
+            case FORGOT_PASSWORD -> mailService.sendForgotPasswordOtp(
+                    email, displayName, rawOtp, otpProperties.getTtl());
+            case GUEST_ORDER -> mailService.sendOrderVerificationOtp(
+                    email, displayName, rawOtp, otpProperties.getTtl());
         }
     }
 
+    /**
+     * Xác minh tính hợp lệ của mã OTP.
+     * Luồng xử lý:
+     * 1. Kiểm tra xem mã OTP còn tồn tại trong Redis không (hết hạn sẽ ném lỗi).
+     * 2. Kiểm tra số lần thử nghiệm (attempts). Nếu vượt quá số lần cho phép 
+     *    (Max Attempts) thì ném lỗi.
+     * 3. Dùng PasswordEncoder để so khớp mã nhập vào với mã đã hash trong Redis.
+     *    - Nếu sai: Tăng biến đếm số lần sai. Ném lỗi sai OTP.
+     *    - Nếu đúng: Xóa mã OTP và bộ đếm khỏi Redis (nhưng không xóa Cooldown 
+     *      để tránh lạm dụng request API).
+     */
     @Override
     public void verifyOtp(String email, String rawOtp, OtpPurpose purpose) {
         String p = purpose.name().toLowerCase();
@@ -84,6 +110,9 @@ public class OtpServiceImpl implements OtpService {
         stringRedisTemplate.delete(attemptsKey);
     }
 
+    /**
+     * Hàm phụ trợ sinh chuỗi 6 chữ số ngẫu nhiên an toàn bằng SecureRandom.
+     */
     private String generateOtp() {
         return String.format("%06d", SECURE_RANDOM.nextInt(OTP_BOUND));
     }

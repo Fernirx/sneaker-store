@@ -20,6 +20,16 @@ public class OAuth2UserProcessorImpl implements OAuth2UserProcessor {
     private final UserSecurityMapper userSecurityMapper;
     private final AuthMapper authMapper;
 
+    /**
+     * Xử lý luồng đăng nhập qua mạng xã hội (Google, Facebook...).
+     * Luồng xử lý:
+     * 1. Nhận thông tin OAuth2 (email, tên, avatar) từ nhà cung cấp dịch vụ.
+     * 2. Gọi UserAccountService để tìm tài khoản có email tương ứng. 
+     *    Nếu chưa có thì tự động tạo mới (mặc định đã kích hoạt).
+     * 3. Khởi tạo profile Customer tương ứng cho User (nếu chưa có).
+     * 4. Bọc thông tin user vào CustomUserDetails và sinh Payload để hệ thống 
+     *    JWT cấp token ở bước tiếp theo.
+     */
     @Override
     public UserTokenPayload process(OAuth2UserInfo userInfo) {
         User user = userAccountService.findOrCreateOAuth2User(authMapper.toCommand(userInfo));
