@@ -18,6 +18,7 @@ public interface CategoryMapper {
     @Mapping(target = "parentId", expression = "java(category.getParent() != null ? category.getParent().getId() : null)")
     @Mapping(target = "parentName", expression = "java(category.getParent() != null ? category.getParent().getName() : null)")
     @Mapping(target = "productCount", expression = "java(category.getProductCategories().size())")
+    @Mapping(target = "childrenCount", expression = "java(category.getCategories().size())")
     CategoryInternalResponse toInternalResponse(Category category);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

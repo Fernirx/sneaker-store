@@ -30,6 +30,10 @@ public class CategoryServiceImpl implements CategoryService {
     private final Slugify slugify;
     private final PolicyFactory richTextHtmlPolicy;
 
+    /**
+     * Lấy danh sách danh mục (công khai) theo bộ lọc.
+     * Tự động lọc chỉ lấy các danh mục đang hoạt động (active = true).
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<CategoryResponse> getCategories(CategoryFilterRequest filter, Pageable pageable) {
@@ -38,6 +42,10 @@ public class CategoryServiceImpl implements CategoryService {
                 .map(categoryMapper::toResponse);
     }
 
+    /**
+     * Lấy chi tiết danh mục bằng slug (cho Frontend).
+     * Chỉ trả về khi danh mục có trạng thái hoạt động (active = true).
+     */
     @Override
     @Transactional(readOnly = true)
     public CategoryResponse getBySlug(String slug) {
@@ -47,6 +55,10 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryMapper.toResponse(category);
     }
 
+    /**
+     * Lấy danh sách danh mục (nội bộ/CMS) theo bộ lọc.
+     * Trả về toàn bộ kể cả danh mục bị ẩn.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<CategoryInternalResponse> getInternalCategories(CategoryFilterRequest filter, Pageable pageable) {
@@ -54,12 +66,23 @@ public class CategoryServiceImpl implements CategoryService {
                 .map(categoryMapper::toInternalResponse);
     }
 
+    /**
+     * Lấy chi tiết danh mục theo ID (nội bộ/CMS).
+     */
     @Override
     @Transactional(readOnly = true)
     public CategoryInternalResponse getInternalById(Long id) {
         return categoryMapper.toInternalResponse(findById(id));
     }
 
+    /**
+     * Tạo danh mục mới.
+     * Luồng xử lý:
+     * 1. Kiểm tra trùng lặp tên (không phân biệt hoa/thường).
+     * 2. Sinh slug từ tên (nếu trùng slug sẽ tự động thêm hậu tố -1, -2).
+     * 3. Sanitize (làm sạch) nội dung mô tả để tránh XSS.
+     * 4. Gắn parent nếu có truyền parentId.
+     */
     @Override
     public CategoryInternalResponse createCategory(CreateCategoryRequest request) {
         if (categoryRepository.existsByNameIgnoreCase(request.name())) {
@@ -81,31 +104,44 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryMapper.toInternalResponse(categoryRepository.findById(saved.getId()).orElseThrow());
     }
 
+    /**
+     * Cập nhật thông tin danh mục.
+     * Luồng xử lý:
+     * 1. Kiểm tra không đổi tên trùng với danh mục khác.
+     * 2. Sanitize nội dung mô tả.
+     * 3. Xử lý parent: Nếu clearParent = true -> gỡ bỏ parent. 
+     *    Ngược lại nếu đổi parent mới -> kiểm tra chống vòng lặp đệ quy.
+     */
     @Override
     public CategoryInternalResponse updateCategory(Long id, UpdateCategoryRequest request) {
         Category category = findById(id);
+        
         if (request.name() != null && !request.name().equalsIgnoreCase(category.getName())) {
             if (categoryRepository.existsByNameIgnoreCase(request.name())) {
                 throw BusinessException.alreadyExists("label.category");
             }
         }
         categoryMapper.updateCategory(request, category);
+        
         if (request.description() != null) {
             category.setDescription(richTextHtmlPolicy.sanitize(request.description()));
         }
+        
         if (Boolean.TRUE.equals(request.clearParent())) {
             category.setParent(null);
         } else if (request.parentId() != null) {
             Category parent = findById(request.parentId());
-            if (parent.getId().equals(category.getId())) {
-                throw BusinessException.bad("label.category");
-            }
+            validateNoCyclicReference(category, parent);
             category.setParent(parent);
         }
+        
         categoryRepository.save(category);
         return categoryMapper.toInternalResponse(categoryRepository.findById(id).orElseThrow());
     }
 
+    /**
+     * Cập nhật slug SEO riêng rẽ cho danh mục.
+     */
     @Override
     public CategoryInternalResponse updateCategorySlug(Long id, String slug) {
         Category category = findById(id);
@@ -116,18 +152,48 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryMapper.toInternalResponse(categoryRepository.save(category));
     }
 
+    /**
+     * Xóa danh mục và tùy chọn chuyển giao dữ liệu.
+     * Luồng xử lý:
+     * 1. Nếu có chỉ định reassignToId: 
+     *    - Kiểm tra chống chuyển gán cho chính nó (Lỗi 3).
+     *    - Kiểm tra chống chuyển gán vào nhánh con gây vòng lặp.
+     *    - Gọi service khác chuyển toàn bộ Sản phẩm sang danh mục mới.
+     *    - Chuyển toàn bộ các Danh mục con sang danh mục cha mới.
+     * 2. Nếu không chỉ định reassign: 
+     *    - Bắt buộc phải rỗng (không chứa sản phẩm, không chứa danh mục con).
+     * 3. Thực thi xóa cứng danh mục hiện tại.
+     */
     @Override
     public void reassignAndDelete(Long id, Long reassignToId) {
         Category category = findById(id);
+        
         if (reassignToId != null) {
-            findById(reassignToId); // validate đích
+            if (id.equals(reassignToId)) {
+                throw BusinessException.bad("label.category");
+            }
+            Category targetCategory = findById(reassignToId);
+            validateNoCyclicReference(category, targetCategory);
             productCategoryService.reassignCategory(id, reassignToId);
-        } else if (!category.getProductCategories().isEmpty()) {
+            for (Category child : category.getCategories()) {
+                child.setParent(targetCategory);
+                categoryRepository.save(child);
+            }
+            category.getCategories().clear();
+            
+        } else if (!category.getProductCategories().isEmpty() || !category.getCategories().isEmpty()) {
             throw BusinessException.inUse("label.category");
         }
+        
         categoryRepository.delete(category);
     }
 
+    // ---- Private helpers ----
+
+    /**
+     * Tự động sinh ra chuỗi slug URL-safe từ tên danh mục. 
+     * Nếu trùng thì nối thêm -1, -2...
+     */
     private String generateUniqueSlug(String name) {
         String base = slugify.slugify(name);
         if (!categoryRepository.existsBySlug(base)) {
@@ -141,8 +207,25 @@ public class CategoryServiceImpl implements CategoryService {
         return candidate;
     }
 
+    /**
+     * Lấy danh mục theo ID, văng lỗi 404 nếu không tồn tại.
+     */
     private Category findById(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.category"));
+    }
+
+    /**
+     * Kiểm tra chống vòng lặp (Cyclic Reference) khi đổi parent cho category.
+     * Bằng cách truy ngược từ newParent lên root, nếu đụng phải category -> Lỗi.
+     */
+    private void validateNoCyclicReference(Category category, Category newParent) {
+        Category current = newParent;
+        while (current != null) {
+            if (current.getId().equals(category.getId())) {
+                throw BusinessException.bad("label.category");
+            }
+            current = current.getParent();
+        }
     }
 }

@@ -18,13 +18,15 @@ export default function DeleteCategoryModal({
   onDeleted: () => void;
 }) {
   const hasProducts = category.productCount > 0;
+  const hasChildren = category.childrenCount > 0;
+  const hasDependencies = hasProducts || hasChildren;
   const [targetId, setTargetId] = useState('');
   const [options, setOptions] = useState<CategoryOption[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!hasProducts) return;
+    if (!hasDependencies) return;
     clientAxios.get('/api/admin/categories?page=0&size=200&sort=name,asc')
       .then(res => setOptions((res.data.data ?? []).filter((c: CategoryOption) => c.id !== category.id)))
       .catch(() => {});
@@ -32,14 +34,14 @@ export default function DeleteCategoryModal({
   }, []);
 
   async function handleDelete() {
-    if (hasProducts && !targetId) {
-      setError('Vui lòng chọn danh mục để chuyển sản phẩm sang.');
+    if (hasDependencies && !targetId) {
+      setError('Vui lòng chọn danh mục để chuyển dữ liệu sang.');
       return;
     }
     setDeleting(true);
     setError('');
     try {
-      const query = hasProducts ? `?reassignTo=${targetId}` : '';
+      const query = hasDependencies ? `?reassignTo=${targetId}` : '';
       await clientAxios.delete(`/api/admin/categories/${category.id}${query}`);
       onDeleted();
     } catch (err) {
@@ -56,10 +58,12 @@ export default function DeleteCategoryModal({
           Bạn có chắc muốn xóa danh mục <span className="font-bold">{category.name}</span>?
         </p>
 
-        {hasProducts ? (
+        {hasDependencies ? (
           <div className="space-y-1.5">
             <p className="text-xs text-danger">
-              Danh mục này đang được gán cho <span className="font-bold">{category.productCount}</span> sản phẩm. Bạn phải chọn danh mục khác để chuyển toàn bộ sản phẩm sang trước khi xóa:
+              Danh mục này đang có <span className="font-bold">{category.productCount}</span> sản phẩm 
+              {hasChildren ? <span> và <span className="font-bold">{category.childrenCount}</span> danh mục con</span> : ''}. 
+              Bạn phải chọn danh mục khác để chuyển toàn bộ dữ liệu sang trước khi xóa:
             </p>
             <select
               value={targetId}
@@ -71,7 +75,7 @@ export default function DeleteCategoryModal({
             </select>
           </div>
         ) : (
-          <p className="text-xs text-muted">Danh mục này chưa có sản phẩm nào liên kết.</p>
+          <p className="text-xs text-muted">Danh mục này đang trống, có thể xóa an toàn.</p>
         )}
 
         <div className="flex justify-end gap-2 pt-1">
@@ -83,7 +87,7 @@ export default function DeleteCategoryModal({
           </button>
           <button
             onClick={handleDelete}
-            disabled={deleting || (hasProducts && !targetId)}
+            disabled={deleting || (hasDependencies && !targetId)}
             className="px-4 py-2 bg-danger text-white text-sm font-bold rounded-sm hover:opacity-90 disabled:opacity-60 transition-opacity"
           >
             {deleting ? 'Đang xóa...' : 'Xóa'}

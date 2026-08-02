@@ -16,5 +16,6 @@ public record CategoryInternalResponse(
         Long parentId,
         String parentName,
         int productCount,
+        int childrenCount,
         LocalDateTime createdAt
 ) {}

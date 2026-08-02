@@ -9,6 +9,7 @@ export interface CategoryRow {
   parentId: number | null;
   parentName: string | null;
   productCount: number;
+  childrenCount: number;
   createdAt: string;
 }
 
