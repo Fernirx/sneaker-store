@@ -8,7 +8,6 @@ import { type CollectionRow } from './types';
 
 interface CollectionOption { id: number; name: string; }
 
-type Mode = 'reassign' | 'unlink';
 
 export default function DeleteCollectionModal({
   collection,
@@ -20,7 +19,6 @@ export default function DeleteCollectionModal({
   onDeleted: () => void;
 }) {
   const hasProducts = collection.productCount > 0;
-  const [mode, setMode] = useState<Mode>(hasProducts ? 'reassign' : 'unlink');
   const [targetId, setTargetId] = useState('');
   const [options, setOptions] = useState<CollectionOption[]>([]);
   const [deleting, setDeleting] = useState(false);
@@ -35,14 +33,14 @@ export default function DeleteCollectionModal({
   }, []);
 
   async function handleDelete() {
-    if (hasProducts && mode === 'reassign' && !targetId) {
+    if (hasProducts && !targetId) {
       setError('Vui lòng chọn bộ sưu tập để chuyển sản phẩm sang.');
       return;
     }
     setDeleting(true);
     setError('');
     try {
-      const query = hasProducts && mode === 'reassign' ? `?reassignTo=${targetId}` : '';
+      const query = hasProducts ? `?reassignTo=${targetId}` : '';
       await clientAxios.delete(`/api/admin/collections/${collection.id}${query}`);
       onDeleted();
     } catch (err) {
@@ -59,34 +57,22 @@ export default function DeleteCollectionModal({
           Bạn có chắc muốn xóa bộ sưu tập <span className="font-bold">{collection.name}</span>?
         </p>
 
-        {hasProducts && (
-          <div className="space-y-2">
+        {hasProducts ? (
+          <div className="space-y-1.5">
             <p className="text-xs text-danger">
-              Bộ sưu tập này đang được gán cho <span className="font-bold">{collection.productCount}</span> sản phẩm. Chọn cách xử lý:
+              Bộ sưu tập này đang được gán cho <span className="font-bold">{collection.productCount}</span> sản phẩm. Bạn phải chọn bộ sưu tập khác để chuyển toàn bộ sản phẩm sang trước khi xóa:
             </p>
-
-            <label className={`flex items-start gap-2.5 p-3 border rounded-sm cursor-pointer transition-colors ${mode === 'reassign' ? 'border-ink bg-paper' : 'border-line hover:bg-paper/50'}`}>
-              <input type="radio" name="mode" checked={mode === 'reassign'} onChange={() => setMode('reassign')} className="mt-0.5 accent-ink" />
-              <span className="flex-1 space-y-1.5">
-                <span className="block text-sm font-bold">Chuyển toàn bộ sản phẩm sang bộ sưu tập khác</span>
-                {mode === 'reassign' && (
-                  <select
-                    value={targetId}
-                    onChange={e => setTargetId(e.target.value)}
-                    className="w-full border border-line rounded-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-ink"
-                  >
-                    <option value="">— Chọn bộ sưu tập —</option>
-                    {options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-                  </select>
-                )}
-              </span>
-            </label>
-
-            <label className={`flex items-start gap-2.5 p-3 border rounded-sm cursor-pointer transition-colors ${mode === 'unlink' ? 'border-ink bg-paper' : 'border-line hover:bg-paper/50'}`}>
-              <input type="radio" name="mode" checked={mode === 'unlink'} onChange={() => setMode('unlink')} className="mt-0.5 accent-ink" />
-              <span className="block text-sm font-bold">Gỡ bộ sưu tập khỏi sản phẩm (không chuyển sang đâu)</span>
-            </label>
+            <select
+              value={targetId}
+              onChange={e => setTargetId(e.target.value)}
+              className="w-full border border-line rounded-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-ink"
+            >
+              <option value="">— Chọn bộ sưu tập —</option>
+              {options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </select>
           </div>
+        ) : (
+          <p className="text-xs text-muted">Bộ sưu tập này chưa có sản phẩm nào liên kết.</p>
         )}
 
         <div className="flex justify-end gap-2 pt-1">
@@ -98,7 +84,7 @@ export default function DeleteCollectionModal({
           </button>
           <button
             onClick={handleDelete}
-            disabled={deleting}
+            disabled={deleting || (hasProducts && !targetId)}
             className="px-4 py-2 bg-danger text-white text-sm font-bold rounded-sm hover:opacity-90 disabled:opacity-60 transition-opacity"
           >
             {deleting ? 'Đang xóa...' : 'Xóa'}

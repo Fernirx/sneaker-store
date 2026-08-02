@@ -168,7 +168,10 @@ public class BrandServiceImpl implements BrandService {
         Brand brand = findById(id);
         
         if (reassignToId != null) {
-            findById(reassignToId); // validate đích
+            if (id.equals(reassignToId)) {
+                throw BusinessException.bad("label.brand");
+            }
+            findById(reassignToId);
             productService.reassignBrand(id, reassignToId);
         } else if (!brand.getProducts().isEmpty()) {
             throw BusinessException.inUse("label.brand");
