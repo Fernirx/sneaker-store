@@ -59,6 +59,9 @@ public class PurchaseServiceImpl implements PurchaseService {
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Lấy danh sách Phiếu Nhập Kho (Purchase Order).
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<PurchaseResponse> getAll(PurchaseFilterRequest filter, Pageable pageable) {
@@ -66,6 +69,9 @@ public class PurchaseServiceImpl implements PurchaseService {
                 .map(purchase -> purchaseMapper.toResponse(purchase, mapItems(purchase)));
     }
 
+    /**
+     * Lấy chi tiết Phiếu Nhập Kho.
+     */
     @Override
     @Transactional(readOnly = true)
     public PurchaseResponse getById(Long id) {
@@ -73,6 +79,10 @@ public class PurchaseServiceImpl implements PurchaseService {
         return purchaseMapper.toResponse(purchase, mapItems(purchase));
     }
 
+    /**
+     * Tạo Phiếu Nhập Kho mới.
+     * Mặc định trạng thái sẽ là DRAFT (Bản nháp) và UNPAID (Chưa thanh toán).
+     */
     @Override
     public PurchaseResponse create(CreatePurchaseRequest request, Long createdByUserId) {
         Supplier supplier = findSupplier(request.supplierId());
@@ -98,6 +108,10 @@ public class PurchaseServiceImpl implements PurchaseService {
         return purchaseMapper.toResponse(purchase, mapItems(purchase));
     }
 
+    /**
+     * Cập nhật Phiếu Nhập Kho.
+     * Logic bảo vệ: CHỈ ĐƯỢC PHÉP CẬP NHẬT KHI PHIẾU Ở TRẠNG THÁI DRAFT.
+     */
     @Override
     public PurchaseResponse update(Long id, UpdatePurchaseRequest request) {
         Purchase purchase = findById(id);
@@ -135,6 +149,10 @@ public class PurchaseServiceImpl implements PurchaseService {
         return purchaseMapper.toResponse(purchase, mapItems(purchase));
     }
 
+    /**
+     * Chốt Phiếu Nhập Kho (DRAFT -> CONFIRMED).
+     * Bắt đầu chờ hàng về. Lúc này không được sửa chi tiết hàng hóa nữa.
+     */
     @Override
     public PurchaseResponse confirm(Long id) {
         Purchase purchase = findById(id);
@@ -146,6 +164,12 @@ public class PurchaseServiceImpl implements PurchaseService {
         return purchaseMapper.toResponse(purchase, mapItems(purchase));
     }
 
+    /**
+     * Nhận hàng vật lý và Nhập Kho (CONFIRMED -> RECEIVED).
+     * Chạy vòng lặp kiểm tra hàng thực nhận vs hàng lỗi (Defective).
+     * Tính ra số lượng có thể bán (Sellable Qty) = Received - Defective.
+     * Gọi productVariantService.increaseStock (Atomic) để cộng tồn kho thực tế, chống Race Condition.
+     */
     @Override
     public PurchaseResponse receive(Long id, ReceivePurchaseRequest request, Long receivedByUserId) {
         Purchase purchase = findById(id);
@@ -194,6 +218,10 @@ public class PurchaseServiceImpl implements PurchaseService {
         return purchaseMapper.toResponse(purchase, mapItems(purchase));
     }
 
+    /**
+     * Hủy Phiếu Nhập Kho.
+     * Chỉ được hủy khi đang DRAFT hoặc CONFIRMED. KHÔNG được hủy nếu đã RECEIVED (đã cộng kho).
+     */
     @Override
     public PurchaseResponse cancel(Long id, CancelPurchaseRequest request) {
         Purchase purchase = findById(id);
@@ -212,6 +240,9 @@ public class PurchaseServiceImpl implements PurchaseService {
         return purchaseMapper.toResponse(purchase, mapItems(purchase));
     }
 
+    /**
+     * Đánh dấu Phiếu đã được Kế toán thanh toán tiền cho Nhà Cung Cấp.
+     */
     @Override
     public PurchaseResponse markAsPaid(Long id) {
         Purchase purchase = findById(id);
@@ -222,6 +253,9 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     // ---- Private helpers ----
 
+    /**
+     * Helper ánh xạ và tính toán dòng chi tiết (PurchaseItem) mỗi khi tạo hoặc sửa Phiếu DRAFT.
+     */
     private void applyItems(Purchase purchase, List<PurchaseItemRequest> itemRequests) {
         List<PurchaseItem> existing = purchaseItemRepository.findAllByPurchase(purchase);
         if (!existing.isEmpty()) {
@@ -250,6 +284,9 @@ public class PurchaseServiceImpl implements PurchaseService {
         recalcTotalCost(purchase);
     }
 
+    /**
+     * Tính toán tổng tiền cuối cùng dựa trên Tổng chi tiết + Thuế + Phí Ship - Giảm giá.
+     */
     private void recalcTotalCost(Purchase purchase) {
         BigDecimal total = purchase.getSubtotal()
                 .subtract(purchase.getDiscountAmount())
@@ -258,30 +295,48 @@ public class PurchaseServiceImpl implements PurchaseService {
         purchase.setTotalCost(total);
     }
 
+    /**
+     * Helper kiểm tra trạng thái Phiếu Nhập Kho.
+     */
     private void requireStatus(Purchase purchase, PurchaseStatus expected) {
         if (purchase.getStatus() != expected) {
             throw BusinessException.bad("label.purchase");
         }
     }
 
+    /**
+     * Tránh NullPointer Exception cho BigDecimal.
+     */
     private BigDecimal zeroIfNull(BigDecimal value) {
         return value != null ? value : BigDecimal.ZERO;
     }
 
+    /**
+     * Sinh mã Phiếu (Purchase Order Code).
+     */
     private String generatePurchaseCode() {
         return "PO" + System.currentTimeMillis() + ThreadLocalRandom.current().nextInt(100, 999);
     }
 
+    /**
+     * Helper map DTO cho các Item.
+     */
     private List<PurchaseItemResponse> mapItems(Purchase purchase) {
         return purchaseItemRepository.findAllByPurchase(purchase).stream()
                 .map(purchaseMapper::toItemResponse).toList();
     }
 
+    /**
+     * Helper tìm Nhà cung cấp.
+     */
     private Supplier findSupplier(Long id) {
         return supplierRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.supplier"));
     }
 
+    /**
+     * Helper tìm Phiếu Nhập.
+     */
     private Purchase findById(Long id) {
         return purchaseRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.purchase"));

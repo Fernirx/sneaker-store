@@ -23,6 +23,9 @@ public class SupplierServiceImpl implements SupplierService {
     private final SupplierRepository supplierRepository;
     private final SupplierMapper supplierMapper;
 
+    /**
+     * Lấy danh sách Nhà cung cấp.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<SupplierResponse> getAll(SupplierFilterRequest filter, Pageable pageable) {
@@ -30,12 +33,19 @@ public class SupplierServiceImpl implements SupplierService {
                 .map(supplierMapper::toResponse);
     }
 
+    /**
+     * Lấy chi tiết Nhà cung cấp.
+     */
     @Override
     @Transactional(readOnly = true)
     public SupplierResponse getById(Long id) {
         return supplierMapper.toResponse(findById(id));
     }
 
+    /**
+     * Tạo mới Nhà cung cấp.
+     * Quy tắc: Tên và Mã (Code) phải là duy nhất.
+     */
     @Override
     public SupplierResponse create(CreateSupplierRequest request) {
         if (supplierRepository.existsByCodeIgnoreCase(request.code())) {
@@ -57,6 +67,10 @@ public class SupplierServiceImpl implements SupplierService {
         return supplierMapper.toResponse(supplierRepository.save(supplier));
     }
 
+    /**
+     * Cập nhật thông tin Nhà cung cấp.
+     * Quy tắc: Tên và Mã (Code) nếu có đổi thì phải duy nhất, không trùng với nhà cung cấp khác.
+     */
     @Override
     public SupplierResponse update(Long id, UpdateSupplierRequest request) {
         Supplier supplier = findById(id);
@@ -75,6 +89,11 @@ public class SupplierServiceImpl implements SupplierService {
         return supplierMapper.toResponse(supplierRepository.save(supplier));
     }
 
+    /**
+     * Xóa Nhà cung cấp.
+     * Quy tắc bảo vệ: Không được phép xóa nếu Nhà cung cấp đã có lịch sử Phiếu nhập kho (Purchase).
+     * Để tránh làm hỏng toàn vẹn dữ liệu (Data Integrity).
+     */
     @Override
     public void delete(Long id) {
         Supplier supplier = findById(id);
@@ -84,6 +103,9 @@ public class SupplierServiceImpl implements SupplierService {
         supplierRepository.delete(supplier);
     }
 
+    /**
+     * Helper tìm Nhà cung cấp.
+     */
     private Supplier findById(Long id) {
         return supplierRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.supplier"));
