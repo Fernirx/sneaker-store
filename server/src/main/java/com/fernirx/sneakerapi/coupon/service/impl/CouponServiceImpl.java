@@ -40,6 +40,15 @@ public class CouponServiceImpl implements CouponService {
     private final CouponMapper couponMapper;
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * Dùng thử Coupon để xem trước số tiền được giảm giá (cho Front-end).
+     * Luồng xử lý:
+     * 1. Tìm Coupon theo mã (không phân biệt hoa/thường).
+     * 2. Gọi hàm validate để kiểm tra trạng thái, thời gian, và điều kiện tối thiểu.
+     * 3. Kiểm tra giới hạn số lần sử dụng của user hiện tại (nếu có email/phone).
+     * 4. Tính toán số tiền được giảm giá dựa trên loại Coupon.
+     * 5. Trả về kết quả dự kiến.
+     */
     @Override
     @Transactional(readOnly = true)
     public CouponPreviewResponse preview(CouponPreviewRequest request) {
@@ -60,6 +69,10 @@ public class CouponServiceImpl implements CouponService {
         );
     }
 
+    /**
+     * Lấy danh sách toàn bộ Coupon cho trang quản trị CMS.
+     * Hỗ trợ phân trang và tìm kiếm theo bộ lọc.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<CouponInternalResponse> getAll(CouponFilterRequest filter, Pageable pageable) {
@@ -67,17 +80,31 @@ public class CouponServiceImpl implements CouponService {
                 .map(couponMapper::toInternalResponse);
     }
 
+    /**
+     * Lấy chi tiết thông tin Coupon theo ID cho hệ thống quản trị.
+     */
     @Override
     @Transactional(readOnly = true)
     public CouponInternalResponse getById(Long id) {
         return couponMapper.toInternalResponse(findById(id));
     }
 
+    /**
+     * Tạo mới một mã giảm giá.
+     * Luồng xử lý:
+     * 1. Kiểm tra xem mã code đã tồn tại chưa.
+     * 2. Validate tính hợp lệ của Ngày tháng và Giá trị giảm (không quá 100%).
+     * 3. Gán các thông tin cấu hình, ép mã code thành chữ HOA.
+     * 4. Lưu xuống DB, sau đó phát Event báo cho hệ thống Notification.
+     */
     @Override
     public CouponInternalResponse create(CreateCouponRequest request) {
         if (couponRepository.existsByCodeIgnoreCase(request.code())) {
             throw BusinessException.alreadyExists("label.coupon");
         }
+        
+        validateBusinessRules(request.discountType(), request.discountValue(), request.startDate(), request.endDate());
+        
         Coupon coupon = new Coupon();
         coupon.setCode(request.code().toUpperCase());
         coupon.setDescription(request.description());
@@ -96,25 +123,51 @@ public class CouponServiceImpl implements CouponService {
         return couponMapper.toInternalResponse(saved);
     }
 
+    /**
+     * Cập nhật thông tin Coupon.
+     * Luồng xử lý:
+     * 1. Lấy dữ liệu Coupon cũ.
+     * 2. Validate tính hợp lệ của cấu hình mới (Thời gian & Giá trị giảm).
+     * 3. Cập nhật các trường được phép thay đổi. (Không cho phép đổi mã Code).
+     * 4. Lưu dữ liệu.
+     */
     @Override
     public CouponInternalResponse update(Long id, UpdateCouponRequest request) {
         Coupon coupon = findById(id);
+        
+        DiscountType type = coupon.getDiscountType();
+        BigDecimal discountValue = request.discountValue() != null ? request.discountValue() : coupon.getDiscountValue();
+        LocalDateTime startDate = request.startDate() != null ? request.startDate() : coupon.getStartDate();
+        LocalDateTime endDate = request.endDate() != null ? request.endDate() : coupon.getEndDate();
+        
+        validateBusinessRules(type, discountValue, startDate, endDate);
+        
         couponMapper.updateCoupon(request, coupon);
         return couponMapper.toInternalResponse(couponRepository.save(coupon));
     }
 
+    /**
+     * Xóa một mã giảm giá khỏi hệ thống.
+     * Luồng xử lý:
+     * 1. Tìm Coupon cần xóa.
+     * 2. Kiểm tra xem Coupon này đã từng được sử dụng trong Đơn hàng nào chưa.
+     * 3. Nếu ĐÃ có lịch sử sử dụng, CHẶN XÓA để bảo toàn lịch sử đối soát kế toán.
+     *    (Thay vào đó Admin chỉ được update active = false).
+     * 4. Nếu chưa từng sử dụng, cho phép xóa cứng khỏi cơ sở dữ liệu.
+     */
     @Override
     public void delete(Long id) {
         Coupon coupon = findById(id);
-        // Coupon vẫn là dữ liệu cấu hình có thể xóa nếu chưa phát sinh nghiệp vụ, nhưng đã được áp dụng
-        // vào đơn hàng thì trở thành dữ liệu lịch sử (đối soát tài chính) - chặn xóa để bảo toàn audit,
-        // chỉ cho vô hiệu hóa (active=false) thay vì xóa.
         if (couponUsageRepository.existsByCoupon_Id(id)) {
             throw BusinessException.of(ErrorCode.IN_USE_REASONS, "label.coupon", "lịch sử sử dụng");
         }
         couponRepository.delete(coupon);
     }
 
+    /**
+     * Xác thực hợp lệ của Coupon và tính toán số tiền giảm (dành cho bước Tạo đơn).
+     * Trả về kết quả để Service đơn hàng lưu lại thông tin.
+     */
     @Override
     @Transactional(readOnly = true)
     public CouponApplyResult validate(String code, BigDecimal orderAmount, String email, String phone) {
@@ -126,6 +179,10 @@ public class CouponServiceImpl implements CouponService {
         return new CouponApplyResult(coupon.getId(), coupon.getCode(), discountAmount);
     }
 
+    /**
+     * Ghi nhận lịch sử người dùng đã thực sự áp dụng thành công Coupon cho đơn hàng.
+     * Thực hiện tăng số đếm (usedCount) bằng query Atomic để chống race-condition.
+     */
     @Override
     public void recordUsage(Long couponId, Order order, String email, String phone) {
         int updatedRows = couponRepository.incrementUsedCount(couponId);
@@ -142,6 +199,10 @@ public class CouponServiceImpl implements CouponService {
         couponUsageRepository.save(usage);
     }
 
+    /**
+     * Hủy áp dụng Coupon cho Đơn hàng (khi đơn hàng bị hủy bỏ/thất bại).
+     * Giảm đi số đếm đã sử dụng và xóa lịch sử ghi nhận tương ứng.
+     */
     @Override
     public void releaseUsage(Long orderId) {
         couponUsageRepository.findByOrder_Id(orderId).ifPresent(usage -> {
@@ -150,6 +211,12 @@ public class CouponServiceImpl implements CouponService {
         });
     }
 
+    // ---- Private helpers ----
+
+    /**
+     * Kiểm tra số lần giới hạn sử dụng của 1 User cụ thể đối với mã Coupon này.
+     * Nếu đã sử dụng hết lượt cho phép thì văng lỗi từ chối.
+     */
     private void validateUserUsageLimit(Coupon coupon, String email, String phone) {
         if (coupon.getUserUsageLimit() == null) {
             return;
@@ -162,7 +229,28 @@ public class CouponServiceImpl implements CouponService {
             throw BusinessException.of(ErrorCode.COUPON_USAGE_LIMIT);
         }
     }
+    
+    /**
+     * Validate các quy tắc nghiệp vụ khi tạo/sửa Coupon:
+     * 1. Thời gian: Ngày kết thúc không được nhỏ hơn ngày bắt đầu.
+     * 2. Giá trị: Nếu là PERCENTAGE, % giảm không được lớn hơn 100.
+     */
+    private void validateBusinessRules(DiscountType type, BigDecimal discountValue, LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
+            throw BusinessException.bad("label.coupon");
+        }
+        if (type == DiscountType.PERCENTAGE && discountValue != null && discountValue.compareTo(new BigDecimal("100")) > 0) {
+            throw BusinessException.bad("label.coupon");
+        }
+    }
 
+    /**
+     * Validate các điều kiện sử dụng của Coupon tại thời điểm hiện tại:
+     * - Cờ Active
+     * - Chưa tới ngày bắt đầu / Đã quá ngày kết thúc.
+     * - Đã hết lượt dùng chung của toàn hệ thống (usageLimit).
+     * - Tổng tiền đơn hàng chưa đạt giá trị tối thiểu.
+     */
     private void validate(Coupon coupon, BigDecimal orderAmount) {
         if (!coupon.getActive()) {
             throw BusinessException.bad("label.coupon");
@@ -182,6 +270,10 @@ public class CouponServiceImpl implements CouponService {
         }
     }
 
+    /**
+     * Tính toán số tiền được giảm thực tế dựa trên Loại Coupon (Phần trăm / Trừ thẳng tiền).
+     * Nếu là Phần trăm, sẽ có thêm màng lọc khống chế số tiền giảm tối đa (maxDiscountAmount).
+     */
     private BigDecimal calculateDiscount(Coupon coupon, BigDecimal orderAmount) {
         return switch (coupon.getDiscountType()) {
             case PERCENTAGE -> {
@@ -197,6 +289,9 @@ public class CouponServiceImpl implements CouponService {
         };
     }
 
+    /**
+     * Lấy Coupon theo ID, văng lỗi 404 nếu không tìm thấy.
+     */
     private Coupon findById(Long id) {
         return couponRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.coupon"));
