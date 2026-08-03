@@ -57,6 +57,11 @@ public class ProductServiceImpl implements ProductService {
 
     // ─── Public ──────────────────────────────────────────────────────────────
 
+    /**
+     * Lấy danh sách sản phẩm (dành cho Customer - Storefront).
+     * Chỉ trả về các sản phẩm và biến thể đang active (được map qua ProductAssembler).
+     * Áp dụng N+1 Batching: Group Variants và Images theo ProductID để giảm tải DB.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponse> getProducts(ProductFilterRequest filter, Pageable pageable) {
@@ -68,11 +73,14 @@ public class ProductServiceImpl implements ProductService {
 
         productRepository.findAllWithBrandByIds(productIds);
 
+        // Gom nhóm (Group) các biến thể theo ID Sản Phẩm mẹ. 
+        // Tránh tình trạng lặp lại N query rời rạc cho N sản phẩm (Batch Fetching).
         Map<Long, List<ProductVariant>> variantsByProduct = productVariantRepository
                 .findByProductIdInAndActiveTrueOrderByDisplayOrderAsc(productIds)
                 .stream()
                 .collect(Collectors.groupingBy(v -> v.getProduct().getId()));
 
+        // Tương tự, gom nhóm các Hình ảnh theo ID Sản Phẩm mẹ.
         Map<Long, List<ProductImage>> imagesByProduct = productImageRepository
                 .findByProductIdInOrderByPrimaryImageDescDisplayOrderAsc(productIds)
                 .stream()
@@ -85,6 +93,10 @@ public class ProductServiceImpl implements ProductService {
         ));
     }
 
+    /**
+     * Lấy chi tiết sản phẩm theo Slug (dành cho Customer - Storefront).
+     * Tự động tăng ViewCount mỗi lần truy cập.
+     */
     @Override
     public ProductDetailResponse getBySlug(String slug) {
         Product product = productRepository.findActiveBySlugWithBrand(slug)
@@ -103,6 +115,10 @@ public class ProductServiceImpl implements ProductService {
 
     // ─── Internal ────────────────────────────────────────────────────────────
 
+    /**
+     * Lấy danh sách sản phẩm (dành cho Admin/Staff - CMS).
+     * Trả về tất cả sản phẩm (kể cả inactive) và tối ưu hóa Map ảnh Primary.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<ProductInternalResponse> getInternalProducts(InternalProductFilterRequest filter, Pageable pageable) {
@@ -114,6 +130,8 @@ public class ProductServiceImpl implements ProductService {
 
         productRepository.findAllWithBrandByIds(productIds);
 
+        // Tạo Map ánh xạ từ Product ID sang URL Ảnh đại diện (Primary Image).
+        // Giải quyết nhanh bài toán lấy đúng 1 ảnh đầu tiên đại diện cho toàn bộ product.
         Map<Long, String> primaryImageByProduct = productImageRepository
                 .findByProductIdInAndPrimaryImageTrueOrderByProductIdAscDisplayOrderAsc(productIds)
                 .stream()
@@ -129,6 +147,9 @@ public class ProductServiceImpl implements ProductService {
         ));
     }
 
+    /**
+     * Lấy chi tiết sản phẩm theo ID (dành cho Admin/Staff - CMS).
+     */
     @Override
     @Transactional(readOnly = true)
     public ProductInternalResponse getInternalById(Long id) {
@@ -143,6 +164,11 @@ public class ProductServiceImpl implements ProductService {
         return productAssembler.toInternalResponse(product, primaryImage);
     }
 
+    /**
+     * CMS - Tạo mới sản phẩm.
+     * Mặc định sản phẩm mới tạo sẽ ở trạng thái Inactive (cần thêm Variant mới được Publish).
+     * Tự động generate Slug duy nhất và sanitize mô tả HTML để chống XSS.
+     */
     @Override
     public ProductInternalResponse createProduct(CreateProductRequest request) {
         Brand brand = brandRepository.findById(request.brandId())
@@ -172,6 +198,11 @@ public class ProductServiceImpl implements ProductService {
         return productAssembler.toInternalResponse(productRepository.save(product), null);
     }
 
+    /**
+     * CMS - Cập nhật thông tin sản phẩm.
+     * Quy tắc bảo vệ: Không cho phép Publish (Active = true) nếu sản phẩm chưa có bất kỳ Variant nào đang active.
+     * Phát sự kiện Notification nếu sản phẩm vừa được chuyển sang OnSale hoặc Published.
+     */
     @Override
     public ProductInternalResponse updateProduct(Long id, UpdateProductRequest request) {
         Product product = findByIdWithBrand(id);
@@ -253,11 +284,17 @@ public class ProductServiceImpl implements ProductService {
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
+    /**
+     * Helper tìm sản phẩm theo ID có fetch kèm thông tin Brand để tránh N+1.
+     */
     private Product findByIdWithBrand(Long id) {
         return productRepository.findByIdWithBrand(id)
                 .orElseThrow(() -> BusinessException.notFound("label.product"));
     }
 
+    /**
+     * Helper tạo Slug duy nhất. Nếu trùng sẽ tự động thêm hậu tố -1, -2...
+     */
     private String generateUniqueSlug(String name) {
         String base = slugify.slugify(name);
         if (!productRepository.existsBySlug(base)) return base;

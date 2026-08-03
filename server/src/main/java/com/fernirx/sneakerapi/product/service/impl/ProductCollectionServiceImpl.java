@@ -15,6 +15,10 @@ public class ProductCollectionServiceImpl implements ProductCollectionService {
     private final ProductCollectionRepository productCollectionRepository;
     private final CollectionRepository collectionRepository;
 
+    /**
+     * Chuyển tất cả sản phẩm từ bộ sưu tập cũ sang bộ sưu tập mới (dùng khi gộp hoặc xóa Collection).
+     * Tương tự Category, xóa liên kết trùng lặp trước khi bulk update để chống lỗi Unique Constraint.
+     */
     @Override
     public void reassignCollection(Long fromCollectionId, Long toCollectionId) {
         productCollectionRepository.deleteDuplicatesForReassign(fromCollectionId, toCollectionId);

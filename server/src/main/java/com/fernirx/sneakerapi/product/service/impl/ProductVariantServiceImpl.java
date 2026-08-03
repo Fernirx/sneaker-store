@@ -41,6 +41,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final ApplicationEventPublisher eventPublisher;
     private final ProductDeletionPolicy productDeletionPolicy;
 
+    /**
+     * Tìm một biến thể đang hoạt động (Active) theo ID.
+     * Dành cho các tác vụ Storefront (khách hàng chỉ được xem biến thể đang active).
+     */
     @Override
     @Transactional(readOnly = true)
     public ProductVariant findActiveById(Long id) {
@@ -52,6 +56,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return variant;
     }
 
+    /**
+     * Tìm danh sách các biến thể đang hoạt động theo danh sách ID.
+     * Sử dụng để xác thực các mặt hàng trong giỏ hàng hoặc trước khi tạo đơn hàng.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ProductVariant> findAllActiveByIds(List<Long> ids) {
@@ -62,6 +70,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return variants;
     }
 
+    /**
+     * Tìm biến thể theo ID bất kể trạng thái (Active/Inactive).
+     * Dành cho các tác vụ CMS nội bộ (Admin/Staff).
+     */
     @Override
     @Transactional(readOnly = true)
     public ProductVariant findById(Long id) {
@@ -69,6 +81,9 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
     }
 
+    /**
+     * Lấy danh sách các biến thể của một sản phẩm, nhóm theo Colorway (màu sắc).
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ProductVariantGroupResponse> getVariants(Long productId) {
@@ -78,6 +93,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return productAssembler.toVariantGroups(variants);
     }
 
+    /**
+     * Lấy danh sách các biến thể của một sản phẩm dành cho Staff/Admin.
+     * Dựa trên Role của người gọi, tự động che giấu CostPrice nếu không phải Admin.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ProductVariantGroupResponse> getVariantsForStaff(Long productId, Collection<String> callerRoles) {
@@ -85,6 +104,9 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return callerRoles.contains("ROLE_ADMIN") ? groups : maskCostPrice(groups);
     }
 
+    /**
+     * Helper lọc và che giấu giá nhập (CostPrice) khi trả về cho các Role không phải Admin (như Sale, Warehouse).
+     */
     private List<ProductVariantGroupResponse> maskCostPrice(List<ProductVariantGroupResponse> groups) {
         return groups.stream()
                 .map(g -> new ProductVariantGroupResponse(
@@ -99,6 +121,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .toList();
     }
 
+    /**
+     * Tìm kiếm nhanh các biến thể theo từ khóa (SKU, tên sản phẩm).
+     * Phục vụ cho tính năng tìm kiếm của nhân viên tại quầy (POS) hoặc CMS.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<VariantSearchResponse> searchVariants(String keyword, Pageable pageable) {
@@ -106,6 +132,14 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .map(productVariantMapper::toSearchResponse);
     }
 
+    /**
+     * Thêm mới một biến thể (Variant) cho sản phẩm.
+     * Quy tắc bảo vệ: 
+     * 1. SKU phải là duy nhất trên toàn hệ thống.
+     * 2. Tổ hợp (ProductId, Size, Colorway, ShoeWidth) phải là duy nhất để tránh tạo biến thể trùng lặp.
+     * 3. Giá bán phải hợp lệ (lớn hơn 0), giá gốc (nếu có) phải lớn hơn hoặc bằng giá bán. Nếu vi phạm, ép hạ cờ active = false.
+     * 4. Gọi syncProductPrices để cập nhật lại khoảng giá cho Product mẹ.
+     */
     @Override
     public ProductVariantGroupResponse.VariantResponse addVariant(Long productId, CreateVariantRequest request) {
         Product product = findProduct(productId);
@@ -147,6 +181,13 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return productVariantMapper.toVariantResponse(saved);
     }
 
+    /**
+     * Cập nhật thông tin của một biến thể.
+     * Quy tắc bảo vệ:
+     * 1. Tương tự addVariant, nếu SKU bị đổi thì SKU mới không được trùng với Variant khác.
+     * 2. Validate lại Giá bán & Giá gốc. Nếu không hợp lệ mà Variant đang active -> ép hạ active = false.
+     * 3. Sync lại giá min/max của Product mẹ.
+     */
     @Override
     public ProductVariantGroupResponse.VariantResponse updateVariant(Long productId, Long variantId, UpdateVariantRequest request) {
         findProduct(productId);
@@ -192,6 +233,15 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         syncProductPrices(variant.getProduct());
     }
 
+    /**
+     * Trừ tồn kho một cách an toàn (Atomic Decrease).
+     * Luồng xử lý:
+     * 1. Dùng truy vấn Update với điều kiện stock_quantity >= quantity để khóa row và cập nhật, tránh Race Condition 100%.
+     * 2. Nếu không cập nhật được (updatedRows = 0):
+     *    - Nếu Variant không tồn tại -> ném lỗi Not Found.
+     *    - Nếu Variant tồn tại nhưng không đủ số lượng -> ném lỗi hết hàng.
+     * 3. Bắn sự kiện (LowStockEvent hoặc OutOfStockEvent) nếu tồn kho chạm ngưỡng cảnh báo hoặc về 0.
+     */
     @Override
     public StockChangeResult decreaseStock(Long variantId, int quantity) {
         int updatedRows = productVariantRepository.decreaseStockAtomic(variantId, quantity);
@@ -209,6 +259,9 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return new StockChangeResult(variantId, newStock + quantity, newStock);
     }
 
+    /**
+     * Helper kiểm tra tồn kho và phát sự kiện cảnh báo sắp hết hoặc đã hết hàng.
+     */
     private void publishStockThresholdEvent(Long variantId, int newStock) {
         if (newStock > 0) {
             ProductVariant variant = productVariantRepository.findById(variantId).orElse(null);
@@ -224,6 +277,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         }
     }
 
+    /**
+     * Cộng tồn kho an toàn (Atomic Increase).
+     * Dùng truy vấn Update trực tiếp vào DB để cộng dồn, tránh Race Condition.
+     */
     @Override
     public StockChangeResult increaseStock(Long variantId, int quantity) {
         int updatedRows = productVariantRepository.increaseStockAtomic(variantId, quantity);
@@ -235,16 +292,27 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return new StockChangeResult(variantId, newStock - quantity, newStock);
     }
 
+    /**
+     * Helper tìm sản phẩm theo ID, ném ngoại lệ chung nếu không thấy.
+     */
     private Product findProduct(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> BusinessException.notFound("label.product"));
     }
 
+    /**
+     * Helper tìm biến thể theo Variant ID và Product ID tương ứng.
+     */
     private ProductVariant findVariant(Long productId, Long variantId) {
         return productVariantRepository.findByIdAndProductId(variantId, productId)
                 .orElseThrow(() -> BusinessException.notFound("label.product.variant"));
     }
 
+    /**
+     * Helper tự động đồng bộ lại khoảng giá (minPrice, maxPrice) và trạng thái active của Product mẹ
+     * mỗi khi có một biến thể được thêm/sửa/xóa.
+     * Nếu không còn biến thể active nào, ép hạ active của Product = false.
+     */
     private void syncProductPrices(Product product) {
         List<ProductVariant> activeVariants = productVariantRepository.findByProductIdAndActiveTrueOrderByDisplayOrderAsc(product.getId());
         if (activeVariants.isEmpty()) {

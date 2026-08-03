@@ -18,6 +18,10 @@ public class ProductQueryServiceImpl implements ProductQueryService {
 
     private final ProductService productService;
 
+    /**
+     * Tìm kiếm sản phẩm theo Brand Slug (Storefront).
+     * Đóng gói lại filter và chuyển tiếp cho ProductService xử lý gốc.
+     */
     @Override
     public Page<ProductResponse> getProductsByBrandSlug(String brandSlug, BySlugProductFilterRequest filter, Pageable pageable) {
         ProductFilterRequest full = new ProductFilterRequest(
@@ -28,6 +32,10 @@ public class ProductQueryServiceImpl implements ProductQueryService {
         return productService.getProducts(full, pageable);
     }
 
+    /**
+     * Tìm kiếm sản phẩm theo Category Slug (Storefront).
+     * Đóng gói lại filter và chuyển tiếp cho ProductService xử lý gốc.
+     */
     @Override
     public Page<ProductResponse> getProductsByCategorySlug(String categorySlug, BySlugProductFilterRequest filter, Pageable pageable) {
         ProductFilterRequest full = new ProductFilterRequest(
@@ -38,6 +46,10 @@ public class ProductQueryServiceImpl implements ProductQueryService {
         return productService.getProducts(full, pageable);
     }
 
+    /**
+     * Tìm kiếm sản phẩm theo Collection Slug (Storefront).
+     * Đóng gói lại filter và chuyển tiếp cho ProductService xử lý gốc.
+     */
     @Override
     public Page<ProductResponse> getProductsByCollectionSlug(String collectionSlug, BySlugProductFilterRequest filter, Pageable pageable) {
         ProductFilterRequest full = new ProductFilterRequest(
