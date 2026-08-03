@@ -22,6 +22,11 @@ public class InventoryTransactionServiceImpl implements InventoryTransactionServ
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Ghi nhận một giao dịch biến động tồn kho (Lịch sử nhập/xuất/điều chỉnh).
+     * Hàm này chỉ làm nhiệm vụ Log, không trực tiếp thay đổi số dư kho.
+     * Việc thay đổi số dư phải được thực hiện ở ProductVariantService trước đó.
+     */
     @Override
     public void record(Long variantId, Long userId, InventoryTransactionType type, int quantity,
                         int oldStock, int newStock, InventoryReferenceType referenceType,
