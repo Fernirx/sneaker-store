@@ -52,6 +52,10 @@ public class ReviewServiceImpl implements ReviewService {
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Lấy danh sách Đánh giá (Review) đã được duyệt cho Storefront.
+     * Áp dụng kỹ thuật Batch Fetching để gom nhóm hình ảnh của review, chống N+1 query.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<ReviewResponse> getApprovedReviews(String productSlug, Pageable pageable) {
@@ -67,6 +71,11 @@ public class ReviewServiceImpl implements ReviewService {
                 imagesByReview.getOrDefault(review.getId(), List.of())));
     }
 
+    /**
+     * Tính toán tổng quan đánh giá (Review Summary).
+     * Tạo sẵn dải phân bổ từ 5 sao tới 1 sao để tránh bị thiếu cột nếu không có lượt đánh giá nào.
+     * Tính trung bình điểm số làm tròn tới 1 chữ số thập phân bằng Java thay vì query phức tạp.
+     */
     @Override
     @Transactional(readOnly = true)
     public ReviewSummaryResponse getReviewSummary(String productSlug) {
@@ -92,6 +101,12 @@ public class ReviewServiceImpl implements ReviewService {
         return new ReviewSummaryResponse(averageRating, totalReviews, distribution);
     }
 
+    /**
+     * Khách hàng tạo Đánh giá mới cho sản phẩm.
+     * Quy tắc bảo vệ (Chống fake review):
+     * 1. Mỗi User chỉ được đánh giá 1 Sản phẩm đúng 1 lần (existsByUser_IdAndProduct_Id).
+     * 2. Chỉ được đánh giá khi khách hàng ĐÃ MUA và ĐƠN HÀNG ĐÃ GIAO THÀNH CÔNG (findDeliveredOrderForProduct).
+     */
     @Override
     public ReviewResponse createReview(Long userId, CreateReviewRequest request) {
         Product product = productService.findEntityById(request.productId());
@@ -118,6 +133,11 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewMapper.toResponse(review, ReviewerResponse.from(review.getUser()), images);
     }
 
+    /**
+     * Khách hàng sửa Đánh giá.
+     * Quy tắc bảo vệ: Nếu User sửa lại nội dung hoặc hình ảnh, Đánh giá sẽ BỊ TƯỚC QUYỀN APPROVED (setApproved = false).
+     * Phải chờ Admin duyệt lại mới được hiện lên Storefront. Chống việc user sửa thành Spam/Quảng cáo sau khi đã duyệt.
+     */
     @Override
     public ReviewResponse updateReview(Long userId, Long reviewId, UpdateReviewRequest request) {
         ProductReview review = findOwnedReview(userId, reviewId);
@@ -137,12 +157,19 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewMapper.toResponse(review, ReviewerResponse.from(review.getUser()), images);
     }
 
+    /**
+     * Khách hàng xóa Đánh giá.
+     */
     @Override
     public void deleteReview(Long userId, Long reviewId) {
         ProductReview review = findOwnedReview(userId, reviewId);
         productReviewRepository.delete(review);
     }
 
+    /**
+     * Admin/Staff lấy danh sách Đánh giá nội bộ.
+     * Áp dụng Batch Fetching lấy hình ảnh giống getApprovedReviews.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<ReviewInternalResponse> getAll(InternalReviewFilterRequest filter, Pageable pageable) {
@@ -153,6 +180,9 @@ public class ReviewServiceImpl implements ReviewService {
                 review, imagesByReview.getOrDefault(review.getId(), List.of())));
     }
 
+    /**
+     * Admin/Staff lấy chi tiết Đánh giá.
+     */
     @Override
     @Transactional(readOnly = true)
     public ReviewInternalResponse getById(Long id) {
@@ -161,6 +191,9 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewMapper.toInternalResponse(review, images);
     }
 
+    /**
+     * Admin/Staff Duyệt hoặc Ẩn Đánh giá.
+     */
     @Override
     public ReviewInternalResponse setApproved(Long id, boolean approved) {
         ProductReview review = findById(id);
@@ -170,6 +203,9 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewMapper.toInternalResponse(review, images);
     }
 
+    /**
+     * Admin/Staff Xóa Đánh giá cứng khỏi DB.
+     */
     @Override
     public void delete(Long id) {
         productReviewRepository.delete(findById(id));
@@ -177,6 +213,9 @@ public class ReviewServiceImpl implements ReviewService {
 
     // ---- Helpers ----
 
+    /**
+     * Helper tìm đánh giá và xác minh tính sở hữu.
+     */
     private ProductReview findOwnedReview(Long userId, Long reviewId) {
         ProductReview review = findById(reviewId);
         if (!review.getUser().getId().equals(userId)) {
@@ -185,11 +224,17 @@ public class ReviewServiceImpl implements ReviewService {
         return review;
     }
 
+    /**
+     * Helper tìm đánh giá chung.
+     */
     private ProductReview findById(Long id) {
         return productReviewRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.review"));
     }
 
+    /**
+     * Helper lưu danh sách ảnh của đánh giá.
+     */
     private List<ReviewImageResponse> saveImages(ProductReview review, List<String> imagePublicIds) {
         if (CollectionUtils.isEmpty(imagePublicIds)) {
             return List.of();
@@ -205,6 +250,9 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewImageRepository.saveAll(images).stream().map(reviewMapper::toImageResponse).toList();
     }
 
+    /**
+     * Helper tối ưu (Batch Fetching) để lấy ảnh của 1 list ReviewIDs thay vì dùng Lazy Loading chọc DB từng cái.
+     */
     private Map<Long, List<ReviewImageResponse>> mapImagesByReviewId(List<Long> reviewIds) {
         if (reviewIds.isEmpty()) {
             return Map.of();

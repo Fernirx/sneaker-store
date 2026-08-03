@@ -42,6 +42,10 @@ public class CommentServiceImpl implements CommentService {
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Lấy danh sách bình luận (Comment) đã được duyệt của một sản phẩm.
+     * Sử dụng cấu trúc Cây (Tree) để hiển thị Reply lồng nhau.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<CommentResponse> getApprovedCommentTree(String productSlug, Pageable pageable) {
@@ -66,6 +70,10 @@ public class CommentServiceImpl implements CommentService {
         return new PageImpl<>(content, pageable, total);
     }
 
+    /**
+     * Helper đệ quy để build cây Comment.
+     * Lọc lấy các reply đã được duyệt và sắp xếp theo thời gian tạo.
+     */
     private CommentResponse buildNode(ProductComment node, Map<Long, List<ProductComment>> byParentId) {
         List<CommentResponse> replies = byParentId.getOrDefault(node.getId(), List.of()).stream()
                 .filter(c -> Boolean.TRUE.equals(c.getApproved()))
@@ -75,6 +83,11 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toResponse(node, ReviewerResponse.from(node.getUser()), replies);
     }
 
+    /**
+     * Khách hàng tạo bình luận mới (hỏi đáp).
+     * Nếu là reply (có parentId), xác thực parent đó có thuộc cùng 1 Product hay không.
+     * Mặc định bình luận mới sẽ được Auto-Approved.
+     */
     @Override
     public CommentResponse createComment(Long userId, CreateCommentRequest request) {
         Product product;
@@ -101,6 +114,10 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toResponse(comment, ReviewerResponse.from(comment.getUser()), List.of());
     }
 
+    /**
+     * Khách hàng sửa bình luận của chính mình.
+     * Xác thực quyền sở hữu (findOwnedComment) trước khi lưu.
+     */
     @Override
     public CommentResponse updateComment(Long userId, Long commentId, UpdateCommentRequest request) {
         ProductComment comment = findOwnedComment(userId, commentId);
@@ -109,12 +126,19 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toResponse(comment, ReviewerResponse.from(comment.getUser()), List.of());
     }
 
+    /**
+     * Khách hàng xóa bình luận.
+     * Xác thực quyền sở hữu trước khi xóa.
+     */
     @Override
     public void deleteComment(Long userId, Long commentId) {
         ProductComment comment = findOwnedComment(userId, commentId);
         productCommentRepository.delete(comment);
     }
 
+    /**
+     * Admin/Staff lấy danh sách tất cả bình luận để kiểm duyệt.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<CommentInternalResponse> getAll(InternalCommentFilterRequest filter, Pageable pageable) {
@@ -122,12 +146,18 @@ public class CommentServiceImpl implements CommentService {
                 .map(commentMapper::toInternalResponse);
     }
 
+    /**
+     * Admin/Staff lấy chi tiết bình luận.
+     */
     @Override
     @Transactional(readOnly = true)
     public CommentInternalResponse getById(Long id) {
         return commentMapper.toInternalResponse(findById(id));
     }
 
+    /**
+     * Admin/Staff duyệt hoặc ẩn bình luận.
+     */
     @Override
     public CommentInternalResponse setApproved(Long id, boolean approved) {
         ProductComment comment = findById(id);
@@ -135,6 +165,9 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toInternalResponse(productCommentRepository.save(comment));
     }
 
+    /**
+     * Admin/Staff xóa bình luận.
+     */
     @Override
     public void delete(Long id) {
         productCommentRepository.delete(findById(id));
@@ -142,6 +175,10 @@ public class CommentServiceImpl implements CommentService {
 
     // ---- Helpers ----
 
+    /**
+     * Helper tìm bình luận và xác thực User ID có phải là chủ nhân hay không.
+     * Ném SecurityCustomException (403 Forbidden) nếu cố tình can thiệp bình luận người khác.
+     */
     private ProductComment findOwnedComment(Long userId, Long commentId) {
         ProductComment comment = findById(commentId);
         if (!comment.getUser().getId().equals(userId)) {
@@ -150,6 +187,9 @@ public class CommentServiceImpl implements CommentService {
         return comment;
     }
 
+    /**
+     * Helper tìm bình luận chung.
+     */
     private ProductComment findById(Long id) {
         return productCommentRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.comment"));
