@@ -37,6 +37,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderService orderService;
     private final OrderProperties orderProperties;
 
+    /**
+     * Tạo URL thanh toán VNPay cho đơn hàng.
+     * Các bước kiểm tra trước khi sinh URL:
+     * 1. Đơn hàng phải do chính user (hoặc guest) này sở hữu.
+     * 2. Đơn hàng phải chọn phương thức VNPAY, đang ở trạng thái PENDING và chưa thanh toán.
+     * 3. Đơn hàng chưa quá hạn thanh toán.
+     * 4. Số lần thanh toán thất bại trước đó chưa vượt ngưỡng cho phép (tránh spam).
+     */
     @Override
     public String create(Long orderId, Long userId, String guestToken, String ipAddress) {
         Order order = orderService.findOwnedEntityById(orderId, userId, guestToken);
@@ -57,6 +65,19 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentProvider.buildPaymentUrl(request, ipAddress);
     }
 
+    /**
+     * Webhook/IPN Callback nhận từ VNPay để xử lý kết quả thanh toán.
+     * Luồng xử lý và chống gian lận:
+     * 1. Xác thực chữ ký (Checksum) từ VNPay gửi sang.
+     * 2. Phân tích Order ID, khóa dòng đơn hàng (SELECT FOR UPDATE) để tránh Race Condition nếu user click thanh toán liên tục.
+     * 3. Kiểm tra tính hợp lệ: Đơn chưa được xác nhận thanh toán trước đó, và số tiền VNPay báo về phải khớp 100% với đơn hàng.
+     * 4. Ghi nhận giao dịch (Payment) vào CSDL:
+     *    - Nếu THÀNH CÔNG (00): 
+     *      + Nếu đơn đang PENDING -> Xác nhận thanh toán (markAsPaid).
+     *      + Nếu đơn ĐÃ BỊ HỦY hoặc ĐỔI TRẠNG THÁI khác (Late Payment) -> Không khôi phục đơn mà cắm cờ (AdminNote) để xử lý hoàn tiền thủ công.
+     *    - Nếu THẤT BẠI: Cấp nhật trạng thái FAILED. Nếu số lần fail vượt quá giới hạn -> Tự động Hủy đơn hàng.
+     * 5. Trả về mã phản hồi theo chuẩn VNPay.
+     */
     @Override
     public Map<String, String> handleIpn(Map<String, String> params) {
         if (!paymentProvider.verifySignature(params)) {
@@ -115,12 +136,18 @@ public class PaymentServiceImpl implements PaymentService {
         return ipnResponse("00", "Confirm Success");
     }
 
+    /**
+     * Lấy danh sách lịch sử thanh toán (CMS).
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<PaymentInternalResponse> getAll(PaymentFilterRequest filter, Pageable pageable) {
         return paymentRepository.findAll(PaymentSpec.build(filter), pageable).map(paymentMapper::toInternalResponse);
     }
 
+    /**
+     * Lấy chi tiết lịch sử thanh toán (CMS).
+     */
     @Override
     @Transactional(readOnly = true)
     public PaymentInternalResponse getById(Long id) {
@@ -129,6 +156,9 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.toInternalResponse(payment);
     }
 
+    /**
+     * Helper bóc tách Order ID từ mã giao dịch VNPay gửi về.
+     */
     private Long parseOrderId(String txnRef) {
         if (txnRef == null) return null;
         try {
@@ -138,6 +168,9 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /**
+     * Helper đóng gói phản hồi theo chuẩn cấu trúc VNPay IPN.
+     */
     private Map<String, String> ipnResponse(String code, String message) {
         return Map.of("RspCode", code, "Message", message);
     }
