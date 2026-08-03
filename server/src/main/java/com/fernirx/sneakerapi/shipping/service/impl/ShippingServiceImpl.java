@@ -35,24 +35,39 @@ public class ShippingServiceImpl implements ShippingService {
     private final ProductVariantService productVariantService;
     private final SettingService settingService;
 
+    /**
+     * Lấy danh sách Tỉnh/Thành phố.
+     * Sử dụng Redis/Spring Cache (@Cacheable) để tối ưu, tránh gọi API hãng vận chuyển (GHN) liên tục
+     * do dữ liệu địa giới hành chính rất hiếm khi thay đổi.
+     */
     @Override
     @Cacheable("shipping_provinces")
     public List<LocalityResponse> getProvinces() {
         return shippingProvider.getProvinces();
     }
 
+    /**
+     * Lấy danh sách Quận/Huyện theo Tỉnh/Thành phố (có Cache).
+     */
     @Override
     @Cacheable(value = "shipping_districts", key = "#provinceId")
     public List<LocalityResponse> getDistricts(Integer provinceId) {
         return shippingProvider.getDistricts(provinceId);
     }
 
+    /**
+     * Lấy danh sách Phường/Xã theo Quận/Huyện (có Cache).
+     */
     @Override
     @Cacheable(value = "shipping_wards", key = "#districtId")
     public List<LocalityResponse> getWardsByDistrict(Integer districtId) {
         return shippingProvider.getWardsByDistrict(districtId);
     }
 
+    /**
+     * Tính trước phí vận chuyển cho màn hình Giỏ Hàng (Cart) khi khách chưa điền thông tin người nhận.
+     * Tự động điền dữ liệu giả (Placeholder Name/Phone) để bypass validation của hãng vận chuyển.
+     */
     @Override
     public ShippingFeeResponse previewShippingFee(PreviewShippingFeeRequest request) {
         List<Long> variantIds = request.items().stream().map(ShippingItemRequest::variantId).toList();
@@ -80,6 +95,11 @@ public class ShippingServiceImpl implements ShippingService {
         return calculateShippingFee(resolved);
     }
 
+    /**
+     * Tính phí vận chuyển thực tế (Checkout).
+     * Logic bảo vệ: Kiểm tra tổng giá trị đơn hàng (Subtotal) so với mốc FreeShip trong Cấu hình (StoreSetting).
+     * Nếu đạt mốc, trả về phí = 0 ngay lập tức, không cần gọi API hãng vận chuyển cho đỡ tốn tài nguyên.
+     */
     @Override
     public ShippingFeeResponse calculateShippingFee(CalculateShippingFeeCommand request) {
         BigDecimal freeShipThreshold = settingService.getStoreSetting().freeShipThreshold();
@@ -89,16 +109,26 @@ public class ShippingServiceImpl implements ShippingService {
         return shippingProvider.calculateShippingFee(request);
     }
 
+    /**
+     * Bắn API sang hãng vận chuyển (ví dụ: GHN) để tạo đơn giao hàng thực tế.
+     */
     @Override
     public ShipmentResult createShipment(CreateShipmentCommand command) {
         return shippingProvider.createShipment(command);
     }
 
+    /**
+     * Hủy đơn giao hàng phía hãng vận chuyển.
+     */
     @Override
     public void cancelShipment(String shippingOrderCode) {
         shippingProvider.cancelShipment(shippingOrderCode);
     }
 
+    /**
+     * Lấy trạng thái hiện tại của đơn giao hàng từ hãng vận chuyển.
+     * Sử dụng ClientOrderCode (ví dụ: ORD123456) thay vì mã nội bộ của hãng.
+     */
     @Override
     public ShipmentStatusResult getShipmentStatus(String clientOrderCode) {
         return shippingProvider.getShipmentStatus(clientOrderCode);
