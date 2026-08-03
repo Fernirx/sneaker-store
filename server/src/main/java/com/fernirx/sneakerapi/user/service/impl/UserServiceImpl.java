@@ -34,6 +34,9 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Lấy danh sách tài khoản (dành cho CMS).
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<UserInternalResponse> getUsers(UserFilterRequest filter, Pageable pageable) {
@@ -41,12 +44,18 @@ public class UserServiceImpl implements UserService {
                 .map(userMapper::toInternalResponse);
     }
 
+    /**
+     * Lấy chi tiết tài khoản.
+     */
     @Override
     @Transactional(readOnly = true)
     public UserInternalResponse getUserById(Long id) {
         return userMapper.toInternalResponse(findById(id));
     }
 
+    /**
+     * Admin tạo tài khoản (ví dụ tạo cho Staff).
+     */
     @Override
     public UserInternalResponse createUser(CreateUserRequest request) {
         if (userRepository.findByEmailIncludingDeleted(request.email()).isPresent()) {
@@ -77,6 +86,10 @@ public class UserServiceImpl implements UserService {
         return userMapper.toInternalResponse(userRepository.findById(user.getId()).orElseThrow());
     }
 
+    /**
+     * Admin sửa quyền hoặc trạng thái của tài khoản.
+     * Xóa sạch role cũ (flush) và cấp lại role mới một cách an toàn.
+     */
     @Override
     public UserInternalResponse updateUser(Long id, UpdateUserRequest request) {
         User user = findById(id);
@@ -97,11 +110,17 @@ public class UserServiceImpl implements UserService {
         return userMapper.toInternalResponse(userRepository.findById(id).orElseThrow());
     }
 
+    /**
+     * Admin xóa mềm tài khoản (Soft Delete - Cấu hình ở Entity).
+     */
     @Override
     public void deleteUser(Long id) {
         userRepository.delete(findById(id));
     }
 
+    /**
+     * Helper tìm user.
+     */
     private User findById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.user"));
