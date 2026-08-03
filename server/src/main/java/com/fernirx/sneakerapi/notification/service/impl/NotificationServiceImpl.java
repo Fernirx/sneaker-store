@@ -47,12 +47,19 @@ public class NotificationServiceImpl implements NotificationService {
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Lấy danh sách thông báo của người dùng hiện tại (có phân trang).
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<NotificationResponse> getMyNotifications(Long userId, Pageable pageable) {
         return notificationRecipientRepository.findByUserId(userId, pageable).map(notificationMapper::toResponse);
     }
 
+    /**
+     * Lấy chi tiết một thông báo của người dùng.
+     * Đảm bảo tính bảo mật (IDOR): Chỉ lấy được thông báo thuộc về chính userId này.
+     */
     @Override
     @Transactional(readOnly = true)
     public NotificationResponse getMyNotificationDetail(Long notificationId, Long userId) {
@@ -62,12 +69,20 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationMapper.toResponse(recipient);
     }
 
+    /**
+     * Đếm số lượng thông báo chưa đọc của người dùng.
+     * Dùng để hiển thị badge số lượng đỏ góc màn hình.
+     */
     @Override
     @Transactional(readOnly = true)
     public long getUnreadCount(Long userId) {
         return notificationRecipientRepository.countUnreadByUserId(userId);
     }
 
+    /**
+     * Đánh dấu một thông báo là đã đọc.
+     * Cập nhật thời gian readAt nếu chưa được đánh dấu.
+     */
     @Override
     public void markAsRead(Long notificationId, Long userId) {
         NotificationRecipient recipient = notificationRecipientRepository
@@ -79,12 +94,19 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    /**
+     * Đăng ký kết nối SSE (Server-Sent Events) để nhận thông báo realtime (Push Notification).
+     */
     @Override
     @Transactional(readOnly = true)
     public SseEmitter subscribe(Long userId) {
         return sseEmitterRegistry.register(userId);
     }
 
+    /**
+     * Tạo thông báo mới và Push qua SSE tới người dùng.
+     * Hỗ trợ chống XSS bằng cách sanitize nội dung HTML trước khi lưu.
+     */
     @Override
     public Notification create(CreateNotificationCommand command) {
         List<Long> recipientUserIds = resolveRecipientUserIds(command);
@@ -99,8 +121,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (command.targetType() == NotificationTargetType.USER && recipientUserIds.size() == 1) {
             notification.setTargetUser(entityManager.getReference(User.class, recipientUserIds.get(0)));
         }
-        // Sanitize tập trung tại điểm ghi DB duy nhất - bảo vệ mọi nguồn gọi create() hiện tại (event
-        // listener, message ghép chuỗi tự động) lẫn tương lai, không phụ thuộc từng caller tự sanitize.
+        
         notification.setTitle(richTextHtmlPolicy.sanitize(command.title()));
         notification.setMessage(richTextHtmlPolicy.sanitize(command.message()));
         notification.setImagePublicId(command.imagePublicId());
@@ -122,6 +143,10 @@ public class NotificationServiceImpl implements NotificationService {
         return savedNotification;
     }
 
+    /**
+     * CMS - Tạo thông báo thủ công (Marketing/Thông báo chung).
+     * Chỉ được phép gửi cho tất cả (ALL) hoặc danh sách Khách hàng cụ thể (USER).
+     */
     @Override
     public NotificationInternalResponse createMarketing(CreateNotificationRequest request) {
         if (request.targetType() == NotificationTargetType.ROLE) {
@@ -135,7 +160,6 @@ public class NotificationServiceImpl implements NotificationService {
                 ? customerRepository.findAllById(request.targetCustomerIds()).stream().map(c -> c.getUser().getId()).toList()
                 : null;
 
-        // Không sanitize ở đây nữa - create() giờ tự sanitize title+message cho mọi caller (xem create()).
         CreateNotificationCommand command = new CreateNotificationCommand(
                 request.type(),
                 request.targetType(),
@@ -153,6 +177,9 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationMapper.toInternalResponse(saved);
     }
 
+    /**
+     * CMS - Lấy danh sách lịch sử gửi thông báo Marketing.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<NotificationInternalResponse> getMarketingHistory(Pageable pageable) {
@@ -161,6 +188,10 @@ public class NotificationServiceImpl implements NotificationService {
                 .map(notificationMapper::toInternalResponse);
     }
 
+    /**
+     * CMS - Bật/Tắt (Thu hồi) thông báo. 
+     * Khi active = false thì thông báo sẽ bị ẩn khỏi list của khách.
+     */
     @Override
     public NotificationInternalResponse setActive(Long id, boolean active) {
         Notification notification = notificationRepository.findById(id)
@@ -169,6 +200,9 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationMapper.toInternalResponse(notificationRepository.save(notification));
     }
 
+    /**
+     * Helper xác định danh sách User ID nhận thông báo dựa vào TargetType.
+     */
     private List<Long> resolveRecipientUserIds(CreateNotificationCommand command) {
         return switch (command.targetType()) {
             case USER -> command.targetUserIds() != null ? command.targetUserIds() : List.of();

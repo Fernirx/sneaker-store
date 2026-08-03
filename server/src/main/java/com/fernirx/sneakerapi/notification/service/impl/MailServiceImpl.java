@@ -19,6 +19,10 @@ public class MailServiceImpl implements MailService {
     private final MailProvider mailProvider;
     private final SpringTemplateEngine templateEngine;
 
+    /**
+     * Gửi email mã OTP xác thực email khi đăng ký tài khoản.
+     * Quá trình gửi được chạy ngầm (Async) để không làm block luồng chính.
+     */
     @Override
     @Async
     public void sendVerifyEmailOtp(String to, String username, String otpCode, int expiryMinutes) {
@@ -27,6 +31,9 @@ public class MailServiceImpl implements MailService {
         mailProvider.send(to, MessageUtil.getMessage("mail.verify.email.subject"), html);
     }
 
+    /**
+     * Gửi email mã OTP cấp lại mật khẩu.
+     */
     @Override
     @Async
     public void sendForgotPasswordOtp(String to, String username, String otpCode, int expiryMinutes) {
@@ -35,6 +42,9 @@ public class MailServiceImpl implements MailService {
         mailProvider.send(to, MessageUtil.getMessage("mail.forgot.password.subject"), html);
     }
 
+    /**
+     * Gửi email mã OTP xác thực đơn hàng cho khách vãng lai (Guest).
+     */
     @Override
     @Async
     public void sendOrderVerificationOtp(String to, String username, String otpCode, int expiryMinutes) {
@@ -43,6 +53,9 @@ public class MailServiceImpl implements MailService {
         mailProvider.send(to, MessageUtil.getMessage("mail.guest_order.subject"), html);
     }
 
+    /**
+     * Gửi email xác nhận đơn hàng thành công kèm theo link tra cứu đơn hàng.
+     */
     @Override
     @Async
     public void sendOrderConfirmation(String to, String recipientName, String orderCode, BigDecimal totalAmount, String orderUrl) {
@@ -55,6 +68,9 @@ public class MailServiceImpl implements MailService {
         mailProvider.send(to, MessageUtil.getMessage("mail.order_confirmation.subject", orderCode), html);
     }
 
+    /**
+     * Helper tạo Context chung cho các loại email OTP.
+     */
     private Context buildOtpContext(String username, String otpCode, int expiryMinutes) {
         Context context = new Context();
         context.setVariable("username", username);
