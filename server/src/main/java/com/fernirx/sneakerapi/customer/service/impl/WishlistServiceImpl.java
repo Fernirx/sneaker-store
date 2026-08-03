@@ -36,6 +36,10 @@ public class WishlistServiceImpl implements WishlistService {
     private final ProductVariantService productVariantService;
     private final ProductImageService productImageService;
 
+    /**
+     * Lấy danh sách sản phẩm yêu thích của khách hàng.
+     * Hỗ trợ phân trang và tự động truy vấn kèm hình ảnh đại diện của từng sản phẩm.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<WishlistResponse> getWishlist(Long userId, Pageable pageable) {
@@ -51,6 +55,14 @@ public class WishlistServiceImpl implements WishlistService {
         return page.map(w -> wishlistMapper.toResponse(w, resolveImage(w, primaryImages)));
     }
 
+    /**
+     * Thêm một sản phẩm (hoặc một phiên bản sản phẩm cụ thể) vào danh sách yêu thích.
+     * Luồng xử lý:
+     * 1. Xác thực Sản phẩm (và Variant nếu có) tồn tại.
+     * 2. Nếu có Variant, đảm bảo Variant đó đúng là của Sản phẩm này.
+     * 3. Kiểm tra chống trùng lặp: Nếu khách đã thêm đúng Sản phẩm/Variant này rồi thì văng lỗi.
+     * 4. Lưu vào DB và trả về kết quả kèm hình ảnh.
+     */
     @Override
     public WishlistResponse addWishlist(Long userId, CreateWishlistRequest request) {
         Customer customer = findCustomer(userId);
@@ -81,6 +93,10 @@ public class WishlistServiceImpl implements WishlistService {
         return wishlistMapper.toResponse(wishlist, resolveImage(wishlist, primaryImages));
     }
 
+    /**
+     * Xóa một sản phẩm khỏi danh sách yêu thích.
+     * Luồng xử lý: Xác thực IDOR để đảm bảo chỉ chính khách hàng đó mới có quyền xóa.
+     */
     @Override
     public void removeWishlist(Long userId, Long wishlistId) {
         Customer customer = findCustomer(userId);
@@ -92,11 +108,17 @@ public class WishlistServiceImpl implements WishlistService {
         wishlistRepository.delete(wishlist);
     }
 
+    /**
+     * Helper tìm Customer từ User ID.
+     */
     private Customer findCustomer(Long userId) {
         return customerRepository.findByUserId(userId)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
     }
 
+    /**
+     * Helper lấy URL hình ảnh đại diện của sản phẩm dựa trên Colorway của Variant.
+     */
     private String resolveImage(Wishlist wishlist, Map<String, String> primaryImages) {
         if (wishlist.getVariant() == null) return null;
         String key = wishlist.getProduct().getId() + ":" + wishlist.getVariant().getColorway();

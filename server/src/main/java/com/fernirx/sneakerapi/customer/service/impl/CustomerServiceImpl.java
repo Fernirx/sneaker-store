@@ -37,6 +37,10 @@ public class CustomerServiceImpl implements CustomerService {
     private final UserRepository userRepository;
     private final SettingService settingService;
 
+    /**
+     * Lấy hồ sơ Customer của User. Nếu chưa có thì tự động khởi tạo mới.
+     * (Thường dùng khi User bắt đầu thao tác với các tính năng cần Customer profile).
+     */
     @Override
     public Customer getOrCreateByUserId(Long userId) {
         return customerRepository.findByUserId(userId).orElseGet(() -> {
@@ -49,6 +53,9 @@ public class CustomerServiceImpl implements CustomerService {
         });
     }
 
+    /**
+     * Khởi tạo hồ sơ Customer khi User mới đăng ký tài khoản thành công.
+     */
     @Override
     public void initCustomer(User user) {
         if (customerRepository.findByUserId(user.getId()).isPresent()) return;
@@ -60,6 +67,9 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.save(customer);
     }
 
+    /**
+     * Lấy hồ sơ Customer cho Front-end (khách hàng tự xem).
+     */
     @Override
     @Transactional(readOnly = true)
     public CustomerResponse getCustomer(Long userId) {
@@ -68,6 +78,9 @@ public class CustomerServiceImpl implements CustomerService {
         return customerMapper.toResponse(customer);
     }
 
+    /**
+     * Lấy danh sách Customer cho CMS quản trị.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<CustomerInternalResponse> getCustomers(CustomerFilterRequest filter, Pageable pageable) {
@@ -75,6 +88,9 @@ public class CustomerServiceImpl implements CustomerService {
                 .map(customerMapper::toInternalResponse);
     }
 
+    /**
+     * Lấy chi tiết Customer theo ID cho CMS quản trị.
+     */
     @Override
     @Transactional(readOnly = true)
     public CustomerInternalResponse getCustomerById(Long id) {
@@ -83,6 +99,9 @@ public class CustomerServiceImpl implements CustomerService {
         return customerMapper.toInternalResponse(customer);
     }
 
+    /**
+     * Cập nhật hồ sơ Customer từ CMS quản trị (ví dụ đổi Hạng, cộng trừ điểm tay...).
+     */
     @Override
     public CustomerInternalResponse updateCustomer(Long id, UpdateCustomerRequest request) {
         Customer customer = customerRepository.findById(id)
@@ -91,18 +110,34 @@ public class CustomerServiceImpl implements CustomerService {
         return customerMapper.toInternalResponse(customerRepository.save(customer));
     }
 
+    /**
+     * Xóa hồ sơ Customer.
+     * Thực tế là Soft-delete (cấu hình @SQLDelete) để giữ nguyên liên kết Đơn hàng, 
+     * Lịch sử điểm nhằm mục đích đối soát tài chính và kiểm toán.
+     */
     @Override
     public void deleteCustomer(Long id) {
-        // Soft-delete (xem @SQLDelete trên Customer entity) - Order/PointTransaction vẫn giữ nguyên liên
-        // kết đầy đủ để đối soát/khôi phục sau này, không cần pre-check chặn như hard-delete trước đây.
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
         customerRepository.delete(customer);
     }
 
+    /**
+     * Cộng điểm và tích lũy chi tiêu khi Khách hàng mua hàng thành công.
+     * Luồng xử lý:
+     * 1. Bỏ qua nếu cấu hình tích điểm đang tắt (pointsPerAmount <= 0).
+     * 2. Kiểm tra chống trùng lặp (Idempotent) qua OrderID.
+     * 3. Tính số điểm thực nhận và lưu PointTransaction.
+     * 4. Cộng điểm, cộng tổng chi tiêu, và cập nhật hạng (Tier) nếu đủ điều kiện.
+     */
     @Override
     public void earnFromOrder(Long customerId, Long orderId, BigDecimal earnedAmount) {
         if (earnedAmount == null || earnedAmount.signum() <= 0) return;
+
+        BigDecimal pointsPerAmount = settingService.getStoreSetting().pointsPerAmount();
+        if (pointsPerAmount == null || pointsPerAmount.signum() <= 0) {
+            return;
+        }
 
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
@@ -112,7 +147,7 @@ public class CustomerServiceImpl implements CustomerService {
             return;
         }
 
-        long earnedPoints = earnedAmount.divideToIntegralValue(settingService.getStoreSetting().pointsPerAmount()).longValue();
+        long earnedPoints = earnedAmount.divideToIntegralValue(pointsPerAmount).longValue();
 
         PointTransaction tx = new PointTransaction();
         tx.setCustomer(customer);
@@ -134,6 +169,11 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.save(customer);
     }
 
+    /**
+     * Thu hồi toàn bộ điểm và chi tiêu tích lũy khi Đơn hàng bị Hủy hoặc Trả toàn bộ.
+     * Đảm bảo tính toán chính xác số điểm đã từng được cộng (bỏ qua tỉ lệ quy đổi hiện tại 
+     * để tránh việc cấu hình thay đổi làm sai lệch điểm thu hồi).
+     */
     @Override
     public void revokeFromOrder(Long customerId, Long orderId, BigDecimal revokedAmount) {
         if (revokedAmount == null || revokedAmount.signum() <= 0) return;
@@ -146,12 +186,14 @@ public class CustomerServiceImpl implements CustomerService {
             return;
         }
 
-        if (!pointTransactionRepository.existsByCustomerAndReferenceTypeAndReferenceIdAndType(
-                customer, PointReferenceType.ORDER, orderId, PointTransactionType.EARN)) {
+        PointTransaction earnTx = pointTransactionRepository.findByCustomerAndReferenceTypeAndReferenceIdAndType(
+                customer, PointReferenceType.ORDER, orderId, PointTransactionType.EARN).orElse(null);
+
+        if (earnTx == null) {
             return;
         }
 
-        long revokedPoints = revokedAmount.divideToIntegralValue(settingService.getStoreSetting().pointsPerAmount()).longValue();
+        long revokedPoints = earnTx.getAmount();
 
         PointTransaction tx = new PointTransaction();
         tx.setCustomer(customer);
@@ -173,9 +215,18 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.save(customer);
     }
 
+    /**
+     * Thu hồi một phần điểm và chi tiêu khi Khách hàng yêu cầu Đổi/Trả một vài sản phẩm trong đơn.
+     * Dùng tỉ lệ hiện tại để thu hồi phần tương ứng.
+     */
     @Override
     public void revokePartial(Long customerId, Long orderId, Long returnRequestId, BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) return;
+
+        BigDecimal pointsPerAmount = settingService.getStoreSetting().pointsPerAmount();
+        if (pointsPerAmount == null || pointsPerAmount.signum() <= 0) {
+            return;
+        }
 
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
@@ -189,7 +240,7 @@ public class CustomerServiceImpl implements CustomerService {
             return;
         }
 
-        long revokedPoints = amount.divideToIntegralValue(settingService.getStoreSetting().pointsPerAmount()).longValue();
+        long revokedPoints = amount.divideToIntegralValue(pointsPerAmount).longValue();
 
         PointTransaction tx = new PointTransaction();
         tx.setCustomer(customer);
@@ -211,6 +262,10 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.save(customer);
     }
 
+    /**
+     * Tính toán Hạng Thành Viên (Membership Tier) dựa trên Tổng tiền đã chi tiêu của Khách.
+     * Các ngưỡng được lấy động từ Store Settings.
+     */
     private MembershipTier resolveTier(BigDecimal totalSpent) {
         StoreSettingResponse storeSetting = settingService.getStoreSetting();
         if (totalSpent.compareTo(storeSetting.platinumThreshold()) >= 0) return MembershipTier.PLATINUM;
