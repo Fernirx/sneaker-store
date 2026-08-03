@@ -40,10 +40,10 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT o.status, COUNT(o) FROM Order o GROUP BY o.status")
     List<Object[]> countGroupByStatus();
 
-    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.paymentStatus = 'PAID' AND o.createdAt >= :from")
+    @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.paymentStatus = 'PAID' AND o.createdAt >= :from")
     BigDecimal sumRevenueSince(@Param("from") LocalDateTime from);
 
-    @Query(value = "SELECT DATE(created_at) AS d, COALESCE(SUM(total_amount), 0) AS revenue " +
+    @Query(value = "SELECT DATE(created_at) AS d, SUM(total_amount) AS revenue " +
             "FROM orders WHERE payment_status = 'PAID' AND created_at >= :from " +
             "GROUP BY DATE(created_at) ORDER BY d", nativeQuery = true)
     List<Object[]> findDailyRevenueSince(@Param("from") LocalDateTime from);

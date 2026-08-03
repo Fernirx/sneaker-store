@@ -44,6 +44,10 @@ public class DashboardServiceImpl implements DashboardService {
     private final PurchaseRepository purchaseRepository;
     private final StockAdjustmentRepository stockAdjustmentRepository;
 
+    /**
+     * Lấy dữ liệu tổng hợp cho trang Dashboard (Thống kê doanh thu, đơn hàng, tồn kho, v.v.).
+     * Các dữ liệu này được query trực tiếp từ database, có thể sẽ nặng nếu dữ liệu lớn.
+     */
     @Override
     public DashboardSummaryResponse getSummary() {
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
@@ -66,9 +70,12 @@ public class DashboardServiceImpl implements DashboardService {
                 .map(row -> new TopProduct((String) row[0], (String) row[1], (Long) row[2]))
                 .toList();
 
+        BigDecimal todayRevenue = orderRepository.sumRevenueSince(startOfToday);
+        BigDecimal monthRevenue = orderRepository.sumRevenueSince(startOfMonth);
+
         return new DashboardSummaryResponse(
-                orderRepository.sumRevenueSince(startOfToday),
-                orderRepository.sumRevenueSince(startOfMonth),
+                todayRevenue != null ? todayRevenue : BigDecimal.ZERO,
+                monthRevenue != null ? monthRevenue : BigDecimal.ZERO,
                 orderCountByStatus,
                 buildRevenueByDay(),
                 productVariantRepository.countLowStock(),
@@ -81,11 +88,15 @@ public class DashboardServiceImpl implements DashboardService {
         );
     }
 
-    // Điền đủ 14 ngày liên tiếp (kể cả ngày doanh thu = 0) để biểu đồ đường không bị lệch trục thời gian
+    /**
+     * Lấy doanh thu theo từng ngày trong 14 ngày gần nhất.
+     * Điền đủ 14 ngày liên tiếp (kể cả ngày doanh thu = 0) để biểu đồ đường trên FE 
+     * không bị lệch trục thời gian.
+     */
     private List<DailyRevenue> buildRevenueByDay() {
         LocalDateTime chartFrom = LocalDate.now().minusDays(REVENUE_CHART_DAYS - 1L).atStartOfDay();
         Map<LocalDate, BigDecimal> revenueByDate = orderRepository.findDailyRevenueSince(chartFrom).stream()
-                .collect(Collectors.toMap(row -> toLocalDate(row[0]), row -> (BigDecimal) row[1]));
+                .collect(Collectors.toMap(row -> toLocalDate(row[0]), row -> row[1] != null ? new BigDecimal(row[1].toString()) : BigDecimal.ZERO));
 
         List<DailyRevenue> result = new ArrayList<>(REVENUE_CHART_DAYS);
         for (int i = REVENUE_CHART_DAYS - 1; i >= 0; i--) {
@@ -95,12 +106,18 @@ public class DashboardServiceImpl implements DashboardService {
         return result;
     }
 
+    /**
+     * Helper chuyển đổi kiểu dữ liệu Date (từ native query) về LocalDate.
+     */
     private LocalDate toLocalDate(Object value) {
         if (value instanceof LocalDate d) return d;
         if (value instanceof java.sql.Date d) return d.toLocalDate();
         return LocalDate.parse(value.toString());
     }
 
+    /**
+     * Helper map dữ liệu ProductVariant sang DTO LowStockVariant cho Dashboard.
+     */
     private LowStockVariant toLowStockVariant(ProductVariant v) {
         return new LowStockVariant(v.getId(), v.getProduct().getId(), v.getProduct().getName(), v.getSku(),
                 v.getColorway(), v.getSize(), v.getStockQuantity(), v.getMinStockLevel());
