@@ -57,6 +57,7 @@ export interface SizeItem {
   size: number;
   shoeWidth: string;
   price: number | null;
+  originalPrice?: number | null;
   stockQuantity: number;
 }
 

@@ -59,8 +59,9 @@ export default function ProductDetailClient({
   const wishlistEntry    = isWishlisted(product.id, currentVariantId);
 
   const displayPrice  = selectedSize?.price ?? color?.sizes?.[0]?.price ?? product.minPrice;
-  const hasDiscount   = false; // originalPrice is removed from product level
-  const discountPct   = 0;
+  const originalPrice = selectedSize?.originalPrice ?? color?.sizes?.[0]?.originalPrice ?? null;
+  const hasDiscount   = originalPrice != null && originalPrice > (displayPrice ?? 0);
+  const discountPct   = hasDiscount ? Math.round(((originalPrice! - displayPrice!) / originalPrice!) * 100) : 0;
 
   function handleColorChange(idx: number) {
     setColorIdx(idx);
@@ -227,7 +228,7 @@ export default function ProductDetailClient({
             {hasDiscount && (
               <>
                 <span className="text-base text-faint line-through tabular-nums">
-                  {/* formatPrice(product.originalPrice!) */}
+                  {formatPrice(originalPrice!)}
                 </span>
                 <span className="text-[10px] font-black text-white bg-accent px-2 py-1 rounded-sm tabular-nums">
                   -{discountPct}%

@@ -54,6 +54,7 @@ public record ProductDetailResponse(
             Short size,
             ShoeWidth shoeWidth,
             BigDecimal price,
+            BigDecimal originalPrice,
             Integer stockQuantity
     ) {}
 }

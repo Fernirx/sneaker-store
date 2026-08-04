@@ -41,7 +41,6 @@ public record CreateAddressRequest(
         @NotNull(message = "{validation.field.not_blank}")
         Integer provinceCode,
 
-        @NullableNotBlank
         @Size(max = 20, message = "{validation.size.max}")
         String postalCode,
 

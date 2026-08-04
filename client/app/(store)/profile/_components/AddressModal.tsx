@@ -24,10 +24,13 @@ const EMPTY: AddressForm = {
   province: '', provinceCode: null, postalCode: '', defaultAddress: false,
 };
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+        {label}
+        {required && <span className="text-danger ml-1">*</span>}
+      </label>
       {children}
     </div>
   );
@@ -113,12 +116,12 @@ export default function AddressModal({
 
         <div className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Field label={"Họ tên người nhận"}>
+            <Field label={"Họ tên người nhận"} required>
               <input value={form.name} onChange={e => set('name', e.target.value)}
                 className={inputCls(errors.name)} />
               {errors.name && <p className="text-xs text-danger mt-1">{errors.name}</p>}
             </Field>
-            <Field label={"Số điện thoại"}>
+            <Field label={"Số điện thoại"} required>
               <div className="flex relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-ink z-10 font-medium">
                   +84
@@ -137,7 +140,7 @@ export default function AddressModal({
             </Field>
           </div>
 
-          <Field label={"Địa chỉ cụ thể (số nhà, tên đường)"}>
+          <Field label={"Địa chỉ cụ thể (số nhà, tên đường)"} required>
             <input value={form.street} onChange={e => set('street', e.target.value)}
               placeholder={"123 Đường ABC"} className={inputCls(errors.street)} />
             {errors.street && <p className="text-xs text-danger mt-1">{errors.street}</p>}
@@ -165,9 +168,10 @@ export default function AddressModal({
             wardError={errors.ward}
           />
 
-          <Field label={"Mã bưu chính (tùy chọn)"}>
+          <Field label={"Mã bưu chính"}>
             <input value={form.postalCode} onChange={e => set('postalCode', e.target.value)}
-              className={inputCls()} />
+              className={inputCls(errors.postalCode)} />
+            {errors.postalCode && <p className="text-xs text-danger mt-1">{errors.postalCode}</p>}
           </Field>
 
 

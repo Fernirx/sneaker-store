@@ -36,7 +36,6 @@ public record UpdateAddressRequest(
 
         Integer provinceCode,
 
-        @NullableNotBlank
         @Size(max = 20, message = "{validation.size.max}")
         String postalCode,
 
