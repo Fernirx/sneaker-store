@@ -32,6 +32,8 @@ public interface ProductVariantService {
 
     ProductVariantGroupResponse.VariantResponse updateVariant(Long productId, Long variantId, UpdateVariantRequest request);
 
+    void updateColorwayGroup(Long productId, com.fernirx.sneakerapi.product.dto.request.UpdateColorwayGroupRequest request);
+
     void deleteVariant(Long productId, Long variantId);
 
     StockChangeResult decreaseStock(Long variantId, int quantity);

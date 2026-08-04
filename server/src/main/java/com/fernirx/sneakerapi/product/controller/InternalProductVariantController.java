@@ -68,6 +68,18 @@ public class InternalProductVariantController {
         ));
     }
 
+    @PutMapping("/colorway-group")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Đổi tên nhóm màu (cho cả variant và ảnh)")
+    public ResponseEntity<SuccessResponse<Void>> updateColorwayGroup(
+            @PathVariable Long productId,
+            @Valid @RequestBody com.fernirx.sneakerapi.product.dto.request.UpdateColorwayGroupRequest request) {
+        productVariantService.updateColorwayGroup(productId, request);
+        return ResponseEntity.ok(SuccessResponse.of(
+                MessageUtil.getMessage("success.resource.updated", "Colorway Group")
+        ));
+    }
+
     @DeleteMapping("/{variantId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xóa variant")

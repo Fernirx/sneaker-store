@@ -31,6 +31,10 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     boolean existsByProductIdAndSizeAndColorwayAndShoeWidth(Long productId, Short size, String colorway, Object shoeWidth);
 
+    @Modifying
+    @Query("UPDATE ProductVariant v SET v.colorway = :newColorway, v.colorwayCode = :newColorwayCode, v.colorHex = :newColorHex WHERE v.product.id = :productId AND v.colorway = :oldColorway")
+    int updateColorwayByProductAndColorway(@Param("productId") Long productId, @Param("oldColorway") String oldColorway, @Param("newColorway") String newColorway, @Param("newColorwayCode") String newColorwayCode, @Param("newColorHex") String newColorHex);
+
     @Query("SELECT v.stockQuantity FROM ProductVariant v WHERE v.id = :id")
     Optional<Integer> findStockQuantityById(@Param("id") Long id);
 

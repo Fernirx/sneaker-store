@@ -224,6 +224,11 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
+  const [editGroupTarget, setEditGroupTarget] = useState<ColorGroup | null>(null);
+  const [editGroupForm, setEditGroupForm] = useState({ colorway: '', colorwayCode: '', colorHex: '' });
+  const [editGroupSaving, setEditGroupSaving] = useState(false);
+  const [editGroupError, setEditGroupError] = useState('');
+
   async function load() {
     setLoading(true);
     try {
@@ -330,6 +335,26 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
     }
   }
 
+  async function handleEditGroup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editGroupTarget) return;
+    setEditGroupSaving(true); setEditGroupError('');
+    try {
+      await clientAxios.put(`/api/admin/products/${productId}/variants/colorway-group`, {
+        oldColorway: editGroupTarget.colorway,
+        newColorway: editGroupForm.colorway,
+        newColorwayCode: editGroupForm.colorwayCode || null,
+        newColorHex: editGroupForm.colorHex || null
+      });
+      setEditGroupTarget(null);
+      load();
+    } catch (err) {
+      setEditGroupError(parseApiError(err).general);
+    } finally {
+      setEditGroupSaving(false);
+    }
+  }
+
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true); setDeleteError('');
@@ -374,20 +399,35 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
               <span className="font-bold text-sm">{g.colorway}</span>
               {g.colorwayCode && <span className="text-xs text-muted">{g.colorwayCode}</span>}
               {isAdmin && (
-                <button
-                  onClick={() => {
-                    setAddForm({
-                      ...EMPTY,
-                      colorway: g.colorway,
-                      colorwayCode: g.colorwayCode ?? '',
-                      colorHex: g.colorHex ?? '#000000',
-                    });
-                    setAddOpen(true);
-                  }}
-                  className="ml-auto text-[11px] font-bold text-accent hover:underline"
-                >
-                  + Thêm size
-                </button>
+                <div className="ml-auto flex items-center gap-4">
+                  <button
+                    onClick={() => {
+                      setEditGroupTarget(g);
+                      setEditGroupForm({
+                        colorway: g.colorway,
+                        colorwayCode: g.colorwayCode ?? '',
+                        colorHex: g.colorHex ?? '#000000',
+                      });
+                    }}
+                    className="text-[11px] font-bold text-muted hover:text-ink hover:underline"
+                  >
+                    Sửa nhóm màu
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAddForm({
+                        ...EMPTY,
+                        colorway: g.colorway,
+                        colorwayCode: g.colorwayCode ?? '',
+                        colorHex: g.colorHex ?? '#000000',
+                      });
+                      setAddOpen(true);
+                    }}
+                    className="text-[11px] font-bold text-accent hover:underline"
+                  >
+                    + Thêm size
+                  </button>
+                </div>
               )}
             </div>
             <table className="w-full text-sm">
@@ -479,6 +519,40 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
             </div>
           </div>
         </div>
+      )}
+
+      {editGroupTarget && (
+        <InlineModal title="Sửa nhóm màu" onClose={() => setEditGroupTarget(null)}>
+          <form onSubmit={handleEditGroup} className="space-y-4">
+            {editGroupError && <p className="text-danger text-sm">{editGroupError}</p>}
+            <p className="text-xs text-muted mb-2">Thao tác này sẽ cập nhật màu sắc cho <b>tất cả {editGroupTarget.variants.length} variant</b> trong nhóm này.</p>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Colorway <span className="text-danger">*</span></label>
+              <input value={editGroupForm.colorway} onChange={e => setEditGroupForm(f => ({ ...f, colorway: e.target.value }))} required
+                className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Mã colorway</label>
+              <input value={editGroupForm.colorwayCode} onChange={e => setEditGroupForm(f => ({ ...f, colorwayCode: e.target.value }))}
+                className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Màu HEX</label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={editGroupForm.colorHex} onChange={e => setEditGroupForm(f => ({ ...f, colorHex: e.target.value }))}
+                  className="w-10 h-9 border border-line rounded-sm cursor-pointer p-0.5" />
+                <input value={editGroupForm.colorHex} onChange={e => setEditGroupForm(f => ({ ...f, colorHex: e.target.value }))} maxLength={7}
+                  className="flex-1 border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button type="button" onClick={() => setEditGroupTarget(null)} className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper">Hủy</button>
+              <button type="submit" disabled={editGroupSaving} className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60">
+                {editGroupSaving ? 'Đang lưu...' : 'Lưu tất cả'}
+              </button>
+            </div>
+          </form>
+        </InlineModal>
       )}
     </div>
   );

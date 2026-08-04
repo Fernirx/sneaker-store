@@ -13,6 +13,7 @@ import com.fernirx.sneakerapi.product.dto.response.VariantSearchResponse;
 import com.fernirx.sneakerapi.product.entity.Product;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import com.fernirx.sneakerapi.product.mapper.ProductVariantMapper;
+import com.fernirx.sneakerapi.product.repository.ProductImageRepository;
 import com.fernirx.sneakerapi.product.repository.ProductRepository;
 import com.fernirx.sneakerapi.product.repository.ProductVariantRepository;
 import com.fernirx.sneakerapi.product.repository.ProductVariantSpec;
@@ -36,6 +37,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     private final ProductVariantRepository productVariantRepository;
     private final ProductRepository productRepository;
+    private final ProductImageRepository productImageRepository;
     private final ProductVariantMapper productVariantMapper;
     private final ProductAssembler productAssembler;
     private final ApplicationEventPublisher eventPublisher;
@@ -210,6 +212,14 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         ProductVariant saved = productVariantRepository.save(variant);
         syncProductPrices(variant.getProduct());
         return productVariantMapper.toVariantResponse(saved);
+    }
+
+    @Override
+    public void updateColorwayGroup(Long productId, com.fernirx.sneakerapi.product.dto.request.UpdateColorwayGroupRequest request) {
+        findProduct(productId);
+        String oldColorway = request.oldColorway();
+        productVariantRepository.updateColorwayByProductAndColorway(productId, oldColorway, request.newColorway(), request.newColorwayCode(), request.newColorHex());
+        productImageRepository.updateColorwayByProductAndColorway(productId, oldColorway, request.newColorway(), request.newColorHex());
     }
 
     /**
