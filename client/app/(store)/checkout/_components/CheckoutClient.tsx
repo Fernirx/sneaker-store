@@ -131,7 +131,8 @@ function FloatingTextarea({ id, label, ...textareaProps }: { id: string; label: 
 function CheckoutItem({ item }: { item: CartItemData }) {
   const unit = Number(item.unitPrice);
   const orig = item.originalPrice ? Number(item.originalPrice) : null;
-  const pct  = orig ? Math.round((1 - unit / orig) * 100) : 0;
+  const hasDiscount = orig != null && orig > unit;
+  const pct  = hasDiscount ? Math.round(((orig! - unit) / orig!) * 100) : 0;
 
   return (
     <div className="flex gap-4 py-4 border-b border-line last:border-b-0">
@@ -156,17 +157,17 @@ function CheckoutItem({ item }: { item: CartItemData }) {
       </div>
 
       <div className="shrink-0 flex flex-col items-end gap-0.5 pt-0.5">
-        {orig && (
+        {hasDiscount && (
           <span className="text-[10px] font-bold text-white bg-accent px-1 py-0.5 rounded-sm leading-none">
             -{pct}%
           </span>
         )}
-        <span className={`text-[14px] font-bold tabular-nums ${orig ? 'text-accent' : 'text-ink'}`}>
+        <span className={`text-[14px] font-bold tabular-nums ${hasDiscount ? 'text-accent' : 'text-ink'}`}>
           {formatPrice(unit * item.quantity)}
         </span>
-        {orig && (
+        {hasDiscount && (
           <span className="text-[11px] text-faint line-through tabular-nums">
-            {formatPrice(orig * item.quantity)}
+            {formatPrice(orig! * item.quantity)}
           </span>
         )}
       </div>

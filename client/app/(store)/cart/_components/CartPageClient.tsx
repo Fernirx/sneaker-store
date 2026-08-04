@@ -48,7 +48,8 @@ function CartItemRow({ item }: { item: CartItemData }) {
   const lowStock = !item.outOfStock && item.stockQuantity > 0 && item.stockQuantity <= 3;
   const orig     = item.originalPrice ? Number(item.originalPrice) : null;
   const unit     = Number(item.unitPrice);
-  const pct      = orig ? Math.round((1 - unit / orig) * 100) : 0;
+  const hasDiscount = orig != null && orig > unit;
+  const pct      = hasDiscount ? Math.round(((orig! - unit) / orig!) * 100) : 0;
 
   return (
     <div
@@ -148,17 +149,17 @@ function CartItemRow({ item }: { item: CartItemData }) {
 
       {/* Price */}
       <div className="shrink-0 flex flex-col items-end gap-0.5 pt-0.5 min-w-[80px]">
-        {orig && (
+        {hasDiscount && (
           <span className="text-[10px] font-bold text-white bg-accent px-1.5 py-0.5 rounded-sm tabular-nums leading-none">
             -{pct}%
           </span>
         )}
-        <span className={`text-[15px] font-bold tabular-nums leading-tight ${orig ? 'text-accent' : 'text-ink'}`}>
+        <span className={`text-[15px] font-bold tabular-nums leading-tight ${hasDiscount ? 'text-accent' : 'text-ink'}`}>
           {formatPrice(unit * qty)}
         </span>
-        {orig && (
+        {hasDiscount && (
           <span className="text-[11px] text-faint line-through tabular-nums leading-none">
-            {formatPrice(orig * qty)}
+            {formatPrice(orig! * qty)}
           </span>
         )}
         {qty > 1 && (
