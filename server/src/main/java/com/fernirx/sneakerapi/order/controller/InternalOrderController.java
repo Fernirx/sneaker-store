@@ -56,7 +56,7 @@ public class InternalOrderController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'WAREHOUSE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
     @Operation(summary = "Cập nhật trạng thái đơn hàng")
     public ResponseEntity<SuccessResponse<OrderInternalResponse>> updateStatus(
             @AuthenticationPrincipal CustomUserDetails userDetails,

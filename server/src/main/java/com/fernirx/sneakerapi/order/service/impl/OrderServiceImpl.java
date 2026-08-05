@@ -251,6 +251,9 @@ public class OrderServiceImpl implements OrderService {
             }
             cancelOrder(id, StringUtils.hasText(request.note()) ? request.note() : "Admin hủy đơn");
         } else {
+            if (request.status() == OrderStatus.SHIPPING) {
+                throw BusinessException.bad("Trạng thái Đang giao hàng được hệ thống tự động cập nhật khi tạo vận đơn thành công.");
+            }
             if (current.getStatus() == OrderStatus.PENDING && request.status() == OrderStatus.CONFIRMED
                     && !callerRoles.contains("ROLE_ADMIN") && !callerRoles.contains("ROLE_SALE")) {
                 throw BusinessException.of(ErrorCode.ACCESS_DENIED);

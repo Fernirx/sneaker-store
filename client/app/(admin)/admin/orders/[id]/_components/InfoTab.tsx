@@ -29,17 +29,40 @@ export default function InfoTab({
   const canManageShipment = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_WAREHOUSE');
   const canConfirmOrder   = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_SALE');
   const canForceDeliver   = roles.includes('ROLE_ADMIN');
+  const canUpdateStatus   = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_SALE');
   // Xác nhận đơn (PENDING -> CONFIRMED) là quyết định CSKH, WAREHOUSE không có quyền này (BE chặn) -
   // ẩn luôn option để không cho chọn 1 hành động chắc chắn sẽ bị từ chối. Tương tự, đánh dấu DELIVERED thủ
   // công qua dropdown này chỉ dành cho ADMIN (lối thoát hiếm khi GHN lỗi) - đường chính đạo là nút "Làm mới
   // trạng thái GHN" (canManageShipment), SALE/WAREHOUSE không được tự set DELIVERED không qua GHN xác nhận.
   // Hủy đơn PENDING cũng là quyết định CSKH (đơn còn chưa bàn giao cho kho xử lý) - dùng chung
   // canConfirmOrder vì đúng cùng bộ role (ADMIN/SALE) được thao tác trên đơn PENDING.
-  const statusOptions = STATUS_OPTIONS.filter(
-    s => !(s.value === 'CONFIRMED' && order.status === 'PENDING' && !canConfirmOrder)
-      && !(s.value === 'DELIVERED' && !canForceDeliver)
-      && !(s.value === 'CANCELLED' && order.status === 'PENDING' && !canConfirmOrder)
-  );
+  // State Machine chuẩn cho Frontend (chỉ hiển thị những tuỳ chọn thủ công được phép)
+  const statusOptions = STATUS_OPTIONS.filter(s => {
+    if (s.value === order.status) return true; // Luôn hiển thị trạng thái hiện tại để User có thể Cập nhật mỗi Ghi chú
+    if (s.value === 'SHIPPING') return false;  // Không bao giờ cho chọn thủ công
+
+    if (order.status === 'PENDING') {
+      if (s.value === 'CONFIRMED' && canConfirmOrder) return true;
+      if (s.value === 'CANCELLED' && canConfirmOrder) return true;
+      return false;
+    }
+
+    if (order.status === 'CONFIRMED') {
+      // Đã xác nhận thì chỉ có thể Hủy (còn sang Đang giao là tự động qua GHN)
+      if (s.value === 'CANCELLED' && canConfirmOrder) return true;
+      return false;
+    }
+
+    if (order.status === 'SHIPPING') {
+      // Đang giao thì chỉ Admin mới được ép Hoàn thành thủ công, hoặc ép Hủy (nếu mất hàng)
+      if (s.value === 'DELIVERED' && canForceDeliver) return true;
+      if (s.value === 'CANCELLED' && canForceDeliver) return true;
+      return false;
+    }
+
+    // Nếu đã DELIVERED hoặc CANCELLED thì không cho đổi sang bất kỳ trạng thái nào khác
+    return false;
+  });
 
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [note, setNote]     = useState('');
@@ -231,39 +254,41 @@ export default function InfoTab({
         {shipmentError && <p className="text-xs text-danger">{shipmentError}</p>}
       </div>
 
-      <div className="bg-white border border-line rounded-sm p-5 space-y-3 lg:col-span-2">
-        <h3 className="font-display font-bold text-xs uppercase tracking-wide text-muted mb-2">
-          Cập nhật trạng thái
-        </h3>
-        <div className="flex flex-wrap items-end gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-muted mb-1">Trạng thái</label>
-            <select
-              value={status}
-              onChange={e => setStatus(e.target.value as OrderStatus)}
-              className="border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
+      {canUpdateStatus && (
+        <div className="bg-white border border-line rounded-sm p-5 space-y-3 lg:col-span-2">
+          <h3 className="font-display font-bold text-xs uppercase tracking-wide text-muted mb-2">
+            Cập nhật trạng thái
+          </h3>
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-muted mb-1">Trạng thái</label>
+              <select
+                value={status}
+                onChange={e => setStatus(e.target.value as OrderStatus)}
+                className="border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
+              >
+                {statusOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-xs font-semibold text-muted mb-1">Ghi chú (không bắt buộc)</label>
+              <input
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
+              />
+            </div>
+            <button
+              onClick={handleUpdateStatus}
+              disabled={saving || (status === order.status && !note.trim())}
+              className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-accent-700 transition-colors disabled:opacity-40"
             >
-              {statusOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
+              {saving ? 'Đang lưu...' : 'Cập nhật'}
+            </button>
           </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-semibold text-muted mb-1">Ghi chú (không bắt buộc)</label>
-            <input
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
-            />
-          </div>
-          <button
-            onClick={handleUpdateStatus}
-            disabled={saving || (status === order.status && !note.trim())}
-            className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-accent-700 transition-colors disabled:opacity-40"
-          >
-            {saving ? 'Đang lưu...' : 'Cập nhật'}
-          </button>
+          {error && <p className="text-xs text-danger">{error}</p>}
         </div>
-        {error && <p className="text-xs text-danger">{error}</p>}
-      </div>
+      )}
     </div>
   );
 }
