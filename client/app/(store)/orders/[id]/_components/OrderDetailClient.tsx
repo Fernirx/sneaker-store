@@ -253,43 +253,67 @@ export default function OrderDetailClient({
           />
         )}
 
-        {/* Cancel */}
+        {/* Actions (Cancel / Pay Again) */}
         {order.status === 'PENDING' && (
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col items-start gap-3">
             {error && (
-              <p className="text-[12px] text-danger bg-danger/5 border border-danger/20 rounded-sm px-3 py-2.5 mb-3">
+              <p className="text-[12px] text-danger bg-danger/5 border border-danger/20 rounded-sm px-3 py-2.5 w-full">
                 {error}
               </p>
             )}
-            {!confirmOpen ? (
-              <button
-                onClick={() => setConfirmOpen(true)}
-                className="text-[12px] font-bold uppercase tracking-widest text-danger border border-danger/30 px-5 py-2.5 rounded-sm hover:bg-danger/5 transition-colors"
-              >
-                {"Hủy đơn hàng"}
-              </button>
-            ) : (
-              <div className="border border-danger/30 rounded-sm p-4 bg-danger/5 space-y-3">
-                <p className="text-[13px] font-semibold text-ink">{"Hủy đơn hàng?"}</p>
-                <p className="text-[12px] text-muted">{"Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác."}</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCancel}
-                    disabled={cancelling}
-                    className="text-[12px] font-bold uppercase tracking-widest bg-danger text-white px-4 py-2 rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-                  >
-                    {cancelling ? "Đang hủy..." : "Xác nhận hủy"}
-                  </button>
-                  <button
-                    onClick={() => setConfirmOpen(false)}
-                    disabled={cancelling}
-                    className="text-[12px] font-bold uppercase tracking-widest border border-line px-4 py-2 rounded-sm hover:bg-paper transition-colors"
-                  >
-                    {"Không"}
-                  </button>
+
+            <div className="flex gap-3">
+              {order.paymentMethod === 'VNPAY' && order.paymentStatus === 'UNPAID' && (
+                <button
+                  onClick={async () => {
+                    setError('');
+                    setCancelling(true); // Tái sử dụng state loading
+                    try {
+                      const res = await clientAxios.post('/api/payment', { orderId: order.id }, { headers: guestHeaders() });
+                      if (res.data?.data) window.location.href = res.data.data;
+                    } catch (err) {
+                      setError(parseApiError(err).general);
+                      setCancelling(false);
+                    }
+                  }}
+                  disabled={cancelling}
+                  className="text-[12px] font-bold uppercase tracking-widest bg-ink text-white px-5 py-2.5 rounded-sm hover:bg-accent transition-colors disabled:opacity-50"
+                >
+                  {cancelling ? "Đang xử lý..." : "Thanh toán ngay"}
+                </button>
+              )}
+
+              {!confirmOpen ? (
+                <button
+                  onClick={() => setConfirmOpen(true)}
+                  disabled={cancelling}
+                  className="text-[12px] font-bold uppercase tracking-widest text-danger border border-danger/30 px-5 py-2.5 rounded-sm hover:bg-danger/5 transition-colors disabled:opacity-50"
+                >
+                  {"Hủy đơn hàng"}
+                </button>
+              ) : (
+                <div className="border border-danger/30 rounded-sm p-4 bg-danger/5 space-y-3 w-full">
+                  <p className="text-[13px] font-semibold text-ink">{"Hủy đơn hàng?"}</p>
+                  <p className="text-[12px] text-muted">{"Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác."}</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCancel}
+                      disabled={cancelling}
+                      className="text-[12px] font-bold uppercase tracking-widest bg-danger text-white px-4 py-2 rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                      {cancelling ? "Đang hủy..." : "Xác nhận hủy"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmOpen(false)}
+                      disabled={cancelling}
+                      className="text-[12px] font-bold uppercase tracking-widest border border-line px-4 py-2 rounded-sm hover:bg-paper transition-colors"
+                    >
+                      {"Không"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -149,7 +149,7 @@ export default function PaymentCallbackClient({
           </div>
 
           <Link
-            href="/checkout"
+            href={orderDetailHref}
             className="w-full text-[12px] font-bold uppercase tracking-widest bg-ink text-white py-3.5 rounded-sm hover:bg-accent transition-colors text-center block"
           >
             {"Thanh toán lại"}
@@ -182,7 +182,7 @@ export default function PaymentCallbackClient({
 
           <div className="flex gap-3 w-full">
             <Link
-              href="/checkout"
+              href={orderDetailHref}
               className="flex-1 text-[12px] font-bold uppercase tracking-widest bg-ink text-white py-3 rounded-sm hover:bg-accent transition-colors text-center"
             >
               {"Thử lại"}
