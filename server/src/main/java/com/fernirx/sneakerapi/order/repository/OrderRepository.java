@@ -30,6 +30,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     Optional<Order> findByIdempotencyKey(String idempotencyKey);
 
+    List<Order> findByStatus(OrderStatus status);
+
     List<Order> findByPaymentMethodAndPaymentStatusAndStatusAndExpiredAtBefore(
             PaymentMethod paymentMethod, OrderPaymentStatus paymentStatus, OrderStatus status, LocalDateTime expiredBefore);
 

@@ -28,4 +28,16 @@ public class OrderScheduler {
             orderService.cancelOrder(order.getId(), "Hết hạn thanh toán");
         }
     }
+    // Chạy mỗi 30 phút — đồng bộ trạng thái giao hàng cho các đơn đang SHIPPING từ GHN
+    @Scheduled(cron = "0 0/30 * * * *")
+    public void syncShippingStatus() {
+        List<Order> shippingOrders = orderRepository.findByStatus(OrderStatus.SHIPPING);
+        for (Order order : shippingOrders) {
+            try {
+                orderService.syncShipmentStatus(order.getId(), null);
+            } catch (Exception e) {
+                // Bỏ qua lỗi của từng đơn để không làm chết cả tiến trình đồng bộ
+            }
+        }
+    }
 }
