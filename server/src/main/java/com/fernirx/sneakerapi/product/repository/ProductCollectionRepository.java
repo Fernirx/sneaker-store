@@ -7,7 +7,15 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface ProductCollectionRepository extends JpaRepository<ProductCollection, Long> {
+
+    List<ProductCollection> findByProductIdOrderByCollectionLaunchDateDesc(Long productId);
+
+    @Modifying
+    @Query("DELETE FROM ProductCollection pc WHERE pc.product.id = :productId")
+    void deleteByProductId(Long productId);
 
     // Sản phẩm đã có sẵn cả fromCollectionId lẫn toCollectionId - xóa liên kết cũ trước khi bulk update
     // ở dưới, tránh vi phạm UNIQUE (product_id, collection_id) khi 2 dòng gộp thành 1.

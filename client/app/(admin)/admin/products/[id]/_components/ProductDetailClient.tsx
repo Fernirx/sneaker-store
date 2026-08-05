@@ -7,12 +7,14 @@ import BasicInfoTab from './BasicInfoTab';
 import VariantsTab from './VariantsTab';
 import ImagesTab from './ImagesTab';
 import CategoriesTab from './CategoriesTab';
+import CollectionsTab from './CollectionsTab';
 
 const TABS = [
   { key: 'basic',      label: 'Thông tin cơ bản' },
   { key: 'variants',   label: 'Size & Màu' },
   { key: 'images',     label: 'Ảnh sản phẩm' },
   { key: 'categories', label: 'Danh mục' },
+  { key: 'collections', label: 'Bộ sưu tập' },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
@@ -60,6 +62,7 @@ export default function ProductDetailClient({
       {activeTab === 'variants'   && <VariantsTab productId={product.id} isAdmin={isAdmin} />}
       {activeTab === 'images'     && <ImagesTab productId={product.id} isAdmin={isAdmin} />}
       {activeTab === 'categories' && <CategoriesTab productId={product.id} isAdmin={isAdmin} />}
+      {activeTab === 'collections' && <CollectionsTab productId={product.id} isAdmin={isAdmin} />}
     </div>
   );
 }
