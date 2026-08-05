@@ -122,6 +122,11 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.delete(customer);
     }
 
+    @Override
+    public void restoreCustomer(Long userId) {
+        customerRepository.restoreCustomerNative(userId);
+    }
+
     /**
      * Cộng điểm và tích lũy chi tiêu khi Khách hàng mua hàng thành công.
      * Luồng xử lý:

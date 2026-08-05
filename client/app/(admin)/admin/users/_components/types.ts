@@ -5,6 +5,7 @@ export interface UserRow {
   emailVerified: boolean;
   roles: string[];
   createdAt: string;
+  deletedAt: string;
 }
 
 export interface PageMeta {

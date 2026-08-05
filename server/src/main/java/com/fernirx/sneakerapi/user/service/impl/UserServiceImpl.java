@@ -15,6 +15,7 @@ import com.fernirx.sneakerapi.user.repository.UserRepository;
 import com.fernirx.sneakerapi.user.repository.UserRoleRepository;
 import com.fernirx.sneakerapi.user.repository.UserSpec;
 import com.fernirx.sneakerapi.user.service.UserService;
+import com.fernirx.sneakerapi.customer.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserRoleRepository userRoleRepository;
+    private final CustomerService customerService;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -116,6 +118,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long id) {
         userRepository.delete(findById(id));
+    }
+
+    @Override
+    public void restoreUser(Long id) {
+        userRepository.restoreUserNative(id);
+        customerService.restoreCustomer(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserInternalResponse> getDeletedUsers(Pageable pageable) {
+        return userRepository.findAllDeleted(pageable)
+                .map(userMapper::toInternalResponse);
     }
 
     /**

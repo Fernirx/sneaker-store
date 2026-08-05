@@ -13,4 +13,13 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
     Optional<User> findByEmailIncludingDeleted(@Param("email") String email);
+
+    @Query(value = "SELECT * FROM users WHERE deleted_at IS NOT NULL", 
+           countQuery = "SELECT count(*) FROM users WHERE deleted_at IS NOT NULL", 
+           nativeQuery = true)
+    org.springframework.data.domain.Page<User> findAllDeleted(org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value = "UPDATE users SET deleted_at = NULL, active = 1 WHERE id = :id", nativeQuery = true)
+    void restoreUserNative(@Param("id") Long id);
 }

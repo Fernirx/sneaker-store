@@ -19,6 +19,7 @@ public interface CustomerService {
     CustomerInternalResponse getCustomerById(Long id);
     CustomerInternalResponse updateCustomer(Long id, UpdateCustomerRequest request);
     void deleteCustomer(Long id);
+    void restoreCustomer(Long userId);
     void earnFromOrder(Long customerId, Long orderId, BigDecimal earnedAmount);
     void revokeFromOrder(Long customerId, Long orderId, BigDecimal revokedAmount);
 

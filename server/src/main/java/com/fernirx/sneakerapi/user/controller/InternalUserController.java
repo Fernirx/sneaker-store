@@ -84,4 +84,22 @@ public class InternalUserController {
                 MessageUtil.getMessage("success.resource.deleted", MessageUtil.getMessage("label.user"))
         ));
     }
+
+    @GetMapping("/deleted")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Danh sách người dùng đã xóa")
+    public ResponseEntity<PageResponse<UserInternalResponse>> getDeletedUsers(
+            @PageableDefault(size = 20, sort = "deleted_at", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(PageResponse.of(userService.getDeletedUsers(pageable)));
+    }
+
+    @PatchMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Khôi phục người dùng đã xóa")
+    public ResponseEntity<SuccessResponse<Void>> restoreUser(@PathVariable Long id) {
+        userService.restoreUser(id);
+        return ResponseEntity.ok(SuccessResponse.of(
+                MessageUtil.getMessage("success.resource.updated", MessageUtil.getMessage("label.user"))
+        ));
+    }
 }
