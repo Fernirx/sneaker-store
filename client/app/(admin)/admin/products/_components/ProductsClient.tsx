@@ -6,8 +6,10 @@ import clientAxios from '@/lib/axios/clientAxios';
 import { productUrl } from '@/lib/cloudinaryUrl';
 import {
   type ProductRow, type PageData,
+  type VariantGroup,
   GENDER_OPTIONS, formatPrice,
 } from './types';
+import { Fragment } from 'react';
 import CreateProductModal from './CreateProductModal';
 import DeleteProductModal from './DeleteProductModal';
 
@@ -31,6 +33,10 @@ export default function ProductsClient({
 
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ProductRow | null>(null);
+
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [variantsCache, setVariantsCache] = useState<Record<number, VariantGroup[]>>({});
+  const [loadingVariants, setLoadingVariants] = useState<Record<number, boolean>>({});
 
   const mounted = useRef(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,7 +84,31 @@ export default function ProductsClient({
     setCurrentPage(0);
   }
 
-  const colCount = isAdmin ? 7 : 6;
+  async function toggleRow(productId: number) {
+    const newSet = new Set(expandedRows);
+    if (newSet.has(productId)) {
+      newSet.delete(productId);
+      setExpandedRows(newSet);
+      return;
+    }
+    
+    newSet.add(productId);
+    setExpandedRows(newSet);
+
+    if (!variantsCache[productId]) {
+      setLoadingVariants(prev => ({ ...prev, [productId]: true }));
+      try {
+        const { data } = await clientAxios.get(`/api/admin/products/${productId}/variants`);
+        setVariantsCache(prev => ({ ...prev, [productId]: data.data || [] }));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingVariants(prev => ({ ...prev, [productId]: false }));
+      }
+    }
+  }
+
+  const colCount = isAdmin ? 8 : 7;
 
   return (
     <div className="space-y-5">
@@ -135,6 +165,7 @@ export default function ProductsClient({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
+              <th className="w-8 px-2 py-3"></th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted w-16">Ảnh</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tên / Mã</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thương hiệu</th>
@@ -153,8 +184,18 @@ export default function ProductsClient({
               </tr>
             ) : (
               pageData.data.map(p => (
-                <tr key={p.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3">
+                <Fragment key={p.id}>
+                  <tr className="border-b border-line-2 hover:bg-paper/50 transition-colors">
+                    <td className="px-2 py-3 text-center">
+                      <button onClick={() => toggleRow(p.id)} className="text-muted hover:text-ink w-6 h-6 flex items-center justify-center rounded bg-paper border border-line-2">
+                        {expandedRows.has(p.id) ? (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                        ) : (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"></path></svg>
+                        )}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
                     {p.primaryImagePublicId ? (
                       <img
                         src={productUrl(p.primaryImagePublicId, 56, 56)}
@@ -211,7 +252,60 @@ export default function ProductsClient({
                       </div>
                     </td>
                   )}
-                </tr>
+                  </tr>
+                  
+                  {expandedRows.has(p.id) && (
+                    <tr className="bg-paper/30 border-b border-line-2">
+                      <td colSpan={colCount} className="p-0">
+                        <div className="p-4 pl-12">
+                          {loadingVariants[p.id] ? (
+                            <div className="text-xs text-muted flex items-center gap-2">
+                              <svg className="animate-spin h-3 w-3 text-ink" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                              Đang tải dữ liệu...
+                            </div>
+                          ) : variantsCache[p.id]?.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                              {variantsCache[p.id].map(group => (
+                                <div key={group.colorwayCode || group.colorway} className="bg-white border border-line rounded p-3 shadow-sm">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="w-3 h-3 rounded-full border border-line" style={{ backgroundColor: group.colorHex || '#ccc' }}></span>
+                                    <span className="text-xs font-bold">{group.colorway}</span>
+                                  </div>
+                                  <table className="w-full text-xs">
+                                    <thead>
+                                      <tr className="text-muted text-[10px] uppercase border-b border-line-2">
+                                        <th className="text-left pb-1 font-medium">Size</th>
+                                        <th className="text-right pb-1 font-medium">SKU</th>
+                                        <th className="text-right pb-1 font-medium">Tồn</th>
+                                        <th className="text-right pb-1 font-medium">Giá</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {group.variants.map(v => (
+                                        <tr key={v.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
+                                          <td className="py-1.5">{v.size}</td>
+                                          <td className="py-1.5 text-right text-muted">{v.sku}</td>
+                                          <td className="py-1.5 text-right">
+                                            <span className={v.stockQuantity > 0 ? 'text-ok font-medium' : 'text-danger font-medium'}>
+                                              {v.stockQuantity}
+                                            </span>
+                                          </td>
+                                          <td className="py-1.5 text-right font-medium">{formatPrice(v.price)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-muted">Sản phẩm này chưa có mẫu mã nào.</div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))
             )}
           </tbody>

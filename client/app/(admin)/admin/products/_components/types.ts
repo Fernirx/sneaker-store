@@ -42,6 +42,31 @@ export interface PageData {
   meta: PageMeta;
 }
 
+export interface VariantDetail {
+  id: number;
+  size: number;
+  shoeWidth: string;
+  sku: string;
+  price: number;
+  originalPrice: number;
+  costPrice: number;
+  stockQuantity: number;
+  minStockLevel: number;
+  weight: number;
+  length: number;
+  width: number;
+  height: number;
+  displayOrder: number;
+  active: boolean;
+}
+
+export interface VariantGroup {
+  colorway: string;
+  colorwayCode: string;
+  colorHex: string;
+  variants: VariantDetail[];
+}
+
 export const GENDER_OPTIONS = [
   { value: 'MEN',   label: 'Nam' },
   { value: 'WOMEN', label: 'Nữ' },
