@@ -50,6 +50,7 @@ export default function NotificationsClient({ isLoggedIn }: { isLoggedIn: boolea
   async function markAsRead(id: number) {
     setNotifications(list => list.map(n => n.id === id ? { ...n, read: true } : n));
     await clientAxios.patch(`/api/notifications/${id}/read`).catch(() => {});
+    window.dispatchEvent(new Event('notification-read'));
   }
 
   if (loading) return <NotificationsSkeleton />;

@@ -28,5 +28,11 @@ export function useNotificationUnreadCount(basePath: string) {
     return () => source.close();
   }, [basePath, refetch]);
 
+  useEffect(() => {
+    const handleRead = () => setCount(c => Math.max(0, c - 1));
+    window.addEventListener('notification-read', handleRead);
+    return () => window.removeEventListener('notification-read', handleRead);
+  }, []);
+
   return count;
 }

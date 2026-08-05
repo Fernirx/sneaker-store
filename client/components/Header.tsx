@@ -65,7 +65,7 @@ export default async function Header() {
         <HeaderNav brands={nav.brands} categories={nav.categories} />
 
         {/* Search bar — desktop */}
-        <HeaderSearch />
+        {/*<HeaderSearch />*/}
 
         <div className="flex-1" />
 

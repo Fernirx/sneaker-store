@@ -210,7 +210,7 @@ export default function InfoTab({
                     disabled={syncingShipment}
                     className="border border-line text-ink font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-sm hover:bg-bg-subtle transition-colors disabled:opacity-40"
                   >
-                    {syncingShipment ? 'Đang đồng bộ...' : 'Làm mới trạng thái GHN'}
+                    {syncingShipment ? 'Đang đồng bộ...' : 'Đồng bộ trạng thái GHN'}
                   </button>
                 )}
                 {(order.status === 'SHIPPING' || order.status === 'CONFIRMED') && (

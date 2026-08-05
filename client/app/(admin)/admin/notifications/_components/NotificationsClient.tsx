@@ -29,6 +29,7 @@ export default function NotificationsClient({ initialData }: { initialData: Page
     if (notification.read) return;
     setResult(r => ({ ...r, data: r.data.map(n => n.id === notification.id ? { ...n, read: true } : n) }));
     await clientAxios.patch(`/api/admin/notifications/${notification.id}/read`).catch(() => {});
+    window.dispatchEvent(new Event('notification-read'));
   }
 
   const notifications = result.data;
