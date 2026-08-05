@@ -78,7 +78,10 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
      */
     @Override
     public void reassignCategory(Long fromCategoryId, Long toCategoryId) {
-        productCategoryRepository.deleteDuplicatesForReassign(fromCategoryId, toCategoryId);
+        List<Long> duplicateProductIds = productCategoryRepository.findProductIdsByCategoryId(toCategoryId);
+        if (!duplicateProductIds.isEmpty()) {
+            productCategoryRepository.deleteByCategoryAndProductIds(fromCategoryId, duplicateProductIds);
+        }
         productCategoryRepository.bulkReassignCategory(fromCategoryId, categoryRepository.getReferenceById(toCategoryId));
     }
 

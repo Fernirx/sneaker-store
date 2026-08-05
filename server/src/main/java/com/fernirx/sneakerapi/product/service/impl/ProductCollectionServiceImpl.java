@@ -21,7 +21,10 @@ public class ProductCollectionServiceImpl implements ProductCollectionService {
      */
     @Override
     public void reassignCollection(Long fromCollectionId, Long toCollectionId) {
-        productCollectionRepository.deleteDuplicatesForReassign(fromCollectionId, toCollectionId);
+        java.util.List<Long> duplicateProductIds = productCollectionRepository.findProductIdsByCollectionId(toCollectionId);
+        if (!duplicateProductIds.isEmpty()) {
+            productCollectionRepository.deleteByCollectionAndProductIds(fromCollectionId, duplicateProductIds);
+        }
         productCollectionRepository.bulkReassignCollection(fromCollectionId, collectionRepository.getReferenceById(toCollectionId));
     }
 }
