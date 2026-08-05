@@ -265,13 +265,6 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
       return;
     }
 
-    if (isFreeShip) {
-      setShippingFee(0);
-      setExpectedDeliveryTime(null);
-      setLoadingShippingFee(false);
-      return;
-    }
-
     let cancelled = false;
     setLoadingShippingFee(true);
 
@@ -289,7 +282,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
     })
       .then(({ data }) => {
         if (!cancelled && data?.data) {
-          setShippingFee(Number(data.data.fee ?? 0));
+          setShippingFee(isFreeShip ? 0 : Number(data.data.fee ?? 0));
           setExpectedDeliveryTime(data.data.expectedDeliveryTime ?? null);
         }
       })

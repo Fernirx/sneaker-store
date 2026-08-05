@@ -92,7 +92,7 @@ public class ShippingServiceImpl implements ShippingService {
                 subtotal,
                 items
         );
-        return calculateShippingFee(resolved);
+        return shippingProvider.calculateShippingFee(resolved);
     }
 
     /**
