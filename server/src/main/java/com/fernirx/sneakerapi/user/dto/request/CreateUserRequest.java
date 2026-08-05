@@ -15,6 +15,7 @@ public record CreateUserRequest(
         String email,
 
         @NotBlank(message = "{validation.field.not_blank}")
+        @com.fernirx.sneakerapi.common.annotation.StrongPassword
         @Size(max = 255, message = "{validation.size.max}")
         String password,
 
