@@ -23,5 +23,5 @@ public interface CouponService {
 
     CouponApplyResult validate(String code, BigDecimal orderAmount, String email, String phone);
     void recordUsage(Long couponId, Order order, String email, String phone);
-    void releaseUsage(Long orderId);
+    void releaseUsage(Order order);
 }

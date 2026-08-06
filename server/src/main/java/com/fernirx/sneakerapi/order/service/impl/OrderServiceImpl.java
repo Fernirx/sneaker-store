@@ -553,7 +553,7 @@ public class OrderServiceImpl implements OrderService {
                     "Hoàn kho do hủy đơn #" + order.getCode());
         }
 
-        couponService.releaseUsage(order.getId());
+        couponService.releaseUsage(order);
         changeStatus(orderId, OrderStatus.CANCELLED, null, reason);
 
         eventPublisher.publishEvent(new OrderCancelledEvent(order.getId(), order.getCode(), reason));

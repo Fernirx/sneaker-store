@@ -204,11 +204,15 @@ public class CouponServiceImpl implements CouponService {
      * Giảm đi số đếm đã sử dụng và xóa lịch sử ghi nhận tương ứng.
      */
     @Override
-    public void releaseUsage(Long orderId) {
-        couponUsageRepository.findByOrder_Id(orderId).ifPresent(usage -> {
-            couponRepository.decrementUsedCount(usage.getCoupon().getId());
-            couponUsageRepository.delete(usage);
-        });
+    public void releaseUsage(Order order) {
+        CouponUsage usage = order.getCouponUsage();
+        if (usage == null) {
+            return;
+        }
+        couponRepository.decrementUsedCount(usage.getCoupon().getId());
+        order.setCouponUsage(null);
+        couponUsageRepository.delete(usage);
+        order.setCouponUsage(null);
     }
 
     // ---- Private helpers ----
