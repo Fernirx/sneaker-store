@@ -25,12 +25,9 @@ export async function DELETE(
   props: { params: Promise<{ id: string }> },
 ) {
   const { id } = await props.params;
-  const reassignTo = req.nextUrl.searchParams.get('reassignTo');
   try {
     const api = await createServerAxios();
-    const { data } = await api.delete(`/internal/brands/${id}`, {
-      params: reassignTo ? { reassignTo } : undefined,
-    });
+    const { data } = await api.delete(`/internal/brands/${id}`);
     return NextResponse.json(data);
   } catch (error) {
     if (axios.isAxiosError(error)) {

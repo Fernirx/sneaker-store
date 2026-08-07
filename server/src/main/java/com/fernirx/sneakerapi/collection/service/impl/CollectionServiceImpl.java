@@ -163,29 +163,17 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     /**
-     * Xóa Collection. Hỗ trợ chuyển giao sản phẩm sang Collection khác trước khi xóa.
+     * Xóa Collection.
      * Luồng xử lý:
-     * 1. Nếu có chỉ định reassignToId: 
-     *    - Kiểm tra chống chuyển gán cho chính nó (Lỗi tự gán).
-     *    - Gọi service chuyển toàn bộ Sản phẩm sang Collection mới.
-     * 2. Nếu không chỉ định reassignToId:
-     *    - Bắt buộc Collection phải trống (không chứa sản phẩm).
-     * 3. Thực thi xóa cứng.
+     * 1. Bắt buộc Collection phải trống (không chứa sản phẩm).
+     * 2. Thực thi xóa cứng.
      */
     @Override
-    public void reassignAndDelete(Long id, Long reassignToId) {
+    public void delete(Long id) {
         Collection collection = findById(id);
-        
-        if (reassignToId != null) {
-            if (id.equals(reassignToId)) {
-                throw BusinessException.bad("label.collection");
-            }
-            findById(reassignToId);
-            productCollectionService.reassignCollection(id, reassignToId);
-        } else if (!collection.getProductCollections().isEmpty()) {
+        if (!collection.getProductCollections().isEmpty()) {
             throw BusinessException.inUse("label.collection");
         }
-        
         collectionRepository.delete(collection);
     }
 

@@ -13,10 +13,6 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
-    @Modifying
-    @Query("UPDATE Product p SET p.brand = :toBrand WHERE p.brand.id = :fromBrandId")
-    void reassignBrand(@Param("fromBrandId") Long fromBrandId, @Param("toBrand") Brand toBrand);
-
     @Query("SELECT p FROM Product p JOIN FETCH p.brand WHERE p.id IN :ids")
     List<Product> findAllWithBrandByIds(List<Long> ids);
 

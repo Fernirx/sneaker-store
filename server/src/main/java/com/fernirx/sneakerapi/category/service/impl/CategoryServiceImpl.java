@@ -153,38 +153,18 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     /**
-     * Xóa danh mục và tùy chọn chuyển giao dữ liệu.
+     * Xóa danh mục.
      * Luồng xử lý:
-     * 1. Nếu có chỉ định reassignToId: 
-     *    - Kiểm tra chống chuyển gán cho chính nó (Lỗi 3).
-     *    - Kiểm tra chống chuyển gán vào nhánh con gây vòng lặp.
-     *    - Gọi service khác chuyển toàn bộ Sản phẩm sang danh mục mới.
-     *    - Chuyển toàn bộ các Danh mục con sang danh mục cha mới.
-     * 2. Nếu không chỉ định reassign: 
-     *    - Bắt buộc phải rỗng (không chứa sản phẩm, không chứa danh mục con).
-     * 3. Thực thi xóa cứng danh mục hiện tại.
+     * 1. Kiểm tra rỗng (không chứa sản phẩm, không chứa danh mục con).
+     *    Nếu không -> ném lỗi IN_USE
+     * 2. Thực thi xóa cứng danh mục.
      */
     @Override
-    public void reassignAndDelete(Long id, Long reassignToId) {
+    public void delete(Long id) {
         Category category = findById(id);
-        
-        if (reassignToId != null) {
-            if (id.equals(reassignToId)) {
-                throw BusinessException.bad("label.category");
-            }
-            Category targetCategory = findById(reassignToId);
-            validateNoCyclicReference(category, targetCategory);
-            productCategoryService.reassignCategory(id, reassignToId);
-            for (Category child : category.getCategories()) {
-                child.setParent(targetCategory);
-                categoryRepository.save(child);
-            }
-            category.getCategories().clear();
-            
-        } else if (!category.getProductCategories().isEmpty() || !category.getCategories().isEmpty()) {
+        if (!category.getProductCategories().isEmpty() || !category.getCategories().isEmpty()) {
             throw BusinessException.inUse("label.category");
         }
-        
         categoryRepository.delete(category);
     }
 

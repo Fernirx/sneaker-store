@@ -16,6 +16,5 @@ public interface CategoryService {
     CategoryInternalResponse createCategory(CreateCategoryRequest request);
     CategoryInternalResponse updateCategory(Long id, UpdateCategoryRequest request);
     CategoryInternalResponse updateCategorySlug(Long id, String slug);
-
-    void reassignAndDelete(Long id, Long reassignToId);
+    void delete(Long id);
 }

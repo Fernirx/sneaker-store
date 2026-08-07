@@ -152,31 +152,19 @@ public class BrandServiceImpl implements BrandService {
     }
 
     /**
-     * Xóa một Brand. Hỗ trợ chuyển giao sản phẩm sang Brand khác trước khi xóa.
+     * Xóa một Brand.
      * Luồng xử lý:
      * 1. Tìm Brand cần xóa.
-     * 2. Nếu có chỉ định reassignToId: 
-     *    - Validate ID đích tồn tại.
-     *    - Gọi ProductService để cập nhật một loạt các sản phẩm sang Brand mới.
-     * 3. Nếu KHÔNG có chỉ định reassignToId:
-     *    - Check xem Brand hiện tại có đang trống sản phẩm không. 
-     *    - Nếu vẫn còn sản phẩm -> Báo lỗi đang được sử dụng (IN_USE).
-     * 4. Gọi DB xóa cứng Brand.
+     * 2. Check xem Brand hiện tại có đang trống sản phẩm không. 
+     *    Nếu vẫn còn sản phẩm -> Báo lỗi đang được sử dụng (IN_USE).
+     * 3. Gọi DB xóa cứng Brand.
      */
     @Override
-    public void reassignAndDelete(Long id, Long reassignToId) {
+    public void delete(Long id) {
         Brand brand = findById(id);
-        
-        if (reassignToId != null) {
-            if (id.equals(reassignToId)) {
-                throw BusinessException.bad("label.brand");
-            }
-            findById(reassignToId);
-            productService.reassignBrand(id, reassignToId);
-        } else if (!brand.getProducts().isEmpty()) {
+        if (!brand.getProducts().isEmpty()) {
             throw BusinessException.inUse("label.brand");
         }
-        
         brandRepository.delete(brand);
     }
 

@@ -84,10 +84,8 @@ public class InternalCollectionController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xóa bộ sưu tập")
-    public ResponseEntity<SuccessResponse<Void>> deleteCollection(
-            @PathVariable Long id,
-            @RequestParam(required = false) Long reassignTo) {
-        collectionService.reassignAndDelete(id, reassignTo);
+    public ResponseEntity<SuccessResponse<Void>> deleteCollection(@PathVariable Long id) {
+        collectionService.delete(id);
         return ResponseEntity.ok(SuccessResponse.of(
                 MessageUtil.getMessage("success.resource.deleted", MessageUtil.getMessage("label.collection"))
         ));

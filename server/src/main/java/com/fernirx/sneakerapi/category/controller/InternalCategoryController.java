@@ -87,10 +87,8 @@ public class InternalCategoryController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xóa danh mục")
-    public ResponseEntity<SuccessResponse<Void>> deleteCategory(
-            @PathVariable Long id,
-            @RequestParam(required = false) Long reassignTo) {
-        categoryService.reassignAndDelete(id, reassignTo);
+    public ResponseEntity<SuccessResponse<Void>> deleteCategory(@PathVariable Long id) {
+        categoryService.delete(id);
         return ResponseEntity.ok(SuccessResponse.of(
                 MessageUtil.getMessage("success.resource.deleted", MessageUtil.getMessage("label.category"))
         ));

@@ -10,8 +10,4 @@ public interface ProductCollectionService {
     List<CollectionBriefResponse> getCollections(Long productId);
 
     List<CollectionBriefResponse> assignCollections(Long productId, AssignCollectionsRequest request);
-
-    // Cross-module (Collection) - chuyển toàn bộ sản phẩm đang gán fromCollectionId sang toCollectionId,
-    // dùng khi xóa bộ sưu tập theo lựa chọn "chuyển sang bộ sưu tập khác" thay vì gỡ hẳn.
-    void reassignCollection(Long fromCollectionId, Long toCollectionId);
 }

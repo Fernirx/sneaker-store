@@ -16,5 +16,5 @@ public interface CollectionService {
     CollectionInternalResponse createCollection(CreateCollectionRequest request);
     CollectionInternalResponse updateCollection(Long id, UpdateCollectionRequest request);
     CollectionInternalResponse updateCollectionSlug(Long id, String slug);
-    void reassignAndDelete(Long id, Long reassignToId);
+    void delete(Long id);
 }

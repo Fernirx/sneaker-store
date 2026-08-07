@@ -69,17 +69,4 @@ public class ProductCollectionServiceImpl implements ProductCollectionService {
         return productRepository.findById(productId)
                 .orElseThrow(() -> BusinessException.notFound("label.product"));
     }
-
-    /**
-     * Chuyển tất cả sản phẩm từ bộ sưu tập cũ sang bộ sưu tập mới (dùng khi gộp hoặc xóa Collection).
-     * Tương tự Category, xóa liên kết trùng lặp trước khi bulk update để chống lỗi Unique Constraint.
-     */
-    @Override
-    public void reassignCollection(Long fromCollectionId, Long toCollectionId) {
-        java.util.List<Long> duplicateProductIds = productCollectionRepository.findProductIdsByCollectionId(toCollectionId);
-        if (!duplicateProductIds.isEmpty()) {
-            productCollectionRepository.deleteByCollectionAndProductIds(fromCollectionId, duplicateProductIds);
-        }
-        productCollectionRepository.bulkReassignCollection(fromCollectionId, collectionRepository.getReferenceById(toCollectionId));
-    }
 }

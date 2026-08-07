@@ -73,19 +73,6 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
     }
 
     /**
-     * Chuyển tất cả sản phẩm từ danh mục cũ sang danh mục mới (dùng khi gộp hoặc xóa danh mục).
-     * Xóa các liên kết trùng lặp trước khi thực hiện bulk update để tránh vi phạm Unique Constraint.
-     */
-    @Override
-    public void reassignCategory(Long fromCategoryId, Long toCategoryId) {
-        List<Long> duplicateProductIds = productCategoryRepository.findProductIdsByCategoryId(toCategoryId);
-        if (!duplicateProductIds.isEmpty()) {
-            productCategoryRepository.deleteByCategoryAndProductIds(fromCategoryId, duplicateProductIds);
-        }
-        productCategoryRepository.bulkReassignCategory(fromCategoryId, categoryRepository.getReferenceById(toCategoryId));
-    }
-
-    /**
      * Helper tìm sản phẩm theo ID.
      */
     private Product findProduct(Long productId) {

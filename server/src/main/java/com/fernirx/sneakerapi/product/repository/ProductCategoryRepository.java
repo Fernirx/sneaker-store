@@ -16,17 +16,4 @@ public interface ProductCategoryRepository extends JpaRepository<ProductCategory
     @Modifying
     @Query("DELETE FROM ProductCategory pc WHERE pc.product.id = :productId")
     void deleteByProductId(Long productId);
-
-    // Sản phẩm đã có sẵn cả fromCategoryId lẫn toCategoryId - xóa liên kết cũ trước khi bulk update
-    // ở dưới, tránh vi phạm UNIQUE (product_id, category_id) khi 2 dòng gộp thành 1.
-    @Query("SELECT pc.product.id FROM ProductCategory pc WHERE pc.category.id = :categoryId")
-    List<Long> findProductIdsByCategoryId(@Param("categoryId") Long categoryId);
-
-    @Modifying
-    @Query("DELETE FROM ProductCategory pc WHERE pc.category.id = :categoryId AND pc.product.id IN :productIds")
-    void deleteByCategoryAndProductIds(@Param("categoryId") Long categoryId, @Param("productIds") List<Long> productIds);
-
-    @Modifying
-    @Query("UPDATE ProductCategory pc SET pc.category = :toCategory WHERE pc.category.id = :fromCategoryId")
-    void bulkReassignCategory(@Param("fromCategoryId") Long fromCategoryId, @Param("toCategory") Category toCategory);
 }

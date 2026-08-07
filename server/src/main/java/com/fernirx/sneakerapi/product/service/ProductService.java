@@ -27,8 +27,4 @@ public interface ProductService {
     // Cross-module (Review)
     Product findEntityById(Long id);
     Product findActiveBySlug(String slug);
-
-    // Cross-module (Brand) - chuyển toàn bộ sản phẩm đang gán fromBrandId sang toBrandId, dùng khi xóa
-    // thương hiệu theo lựa chọn "chuyển sang thương hiệu khác" (Brand là FK bắt buộc, không thể gỡ hẳn).
-    void reassignBrand(Long fromBrandId, Long toBrandId);
 }

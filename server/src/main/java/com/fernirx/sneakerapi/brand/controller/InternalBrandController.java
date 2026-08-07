@@ -87,10 +87,8 @@ public class InternalBrandController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xóa thương hiệu")
-    public ResponseEntity<SuccessResponse<Void>> deleteBrand(
-            @PathVariable Long id,
-            @RequestParam(required = false) Long reassignTo) {
-        brandService.reassignAndDelete(id, reassignTo);
+    public ResponseEntity<SuccessResponse<Void>> deleteBrand(@PathVariable Long id) {
+        brandService.delete(id);
         return ResponseEntity.ok(SuccessResponse.of(
                 MessageUtil.getMessage("success.resource.deleted", MessageUtil.getMessage("label.brand"))
         ));
