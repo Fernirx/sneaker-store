@@ -12,6 +12,9 @@ export interface StoreSetting {
   silverThreshold: number;
   goldThreshold: number;
   platinumThreshold: number;
+  silverDiscountRate: number;
+  goldDiscountRate: number;
+  platinumDiscountRate: number;
   updatedAt: string;
 }
 
@@ -21,11 +24,14 @@ interface StoreSettingForm {
   silverThreshold: string;
   goldThreshold: string;
   platinumThreshold: string;
+  silverDiscountRate: string;
+  goldDiscountRate: string;
+  platinumDiscountRate: string;
 }
 
 function toForm(data: StoreSetting | null): StoreSettingForm {
   if (!data) {
-    return { pointsPerAmount: '', freeShipThreshold: '', silverThreshold: '', goldThreshold: '', platinumThreshold: '' };
+    return { pointsPerAmount: '', freeShipThreshold: '', silverThreshold: '', goldThreshold: '', platinumThreshold: '', silverDiscountRate: '0', goldDiscountRate: '0', platinumDiscountRate: '0' };
   }
   return {
     pointsPerAmount: String(data.pointsPerAmount),
@@ -33,6 +39,9 @@ function toForm(data: StoreSetting | null): StoreSettingForm {
     silverThreshold: String(data.silverThreshold),
     goldThreshold: String(data.goldThreshold),
     platinumThreshold: String(data.platinumThreshold),
+    silverDiscountRate: String(data.silverDiscountRate ?? 0),
+    goldDiscountRate: String(data.goldDiscountRate ?? 0),
+    platinumDiscountRate: String(data.platinumDiscountRate ?? 0),
   };
 }
 
@@ -91,6 +100,9 @@ export default function StoreSettingClient({ initialData }: { initialData: Store
         silverThreshold: Number(form.silverThreshold),
         goldThreshold: Number(form.goldThreshold),
         platinumThreshold: Number(form.platinumThreshold),
+        silverDiscountRate: Number(form.silverDiscountRate),
+        goldDiscountRate: Number(form.goldDiscountRate),
+        platinumDiscountRate: Number(form.platinumDiscountRate),
       };
       if (isCreate) {
         await clientAxios.post('/api/admin/settings/store', payload);
@@ -159,6 +171,27 @@ export default function StoreSettingClient({ initialData }: { initialData: Store
               onChange={e => set('platinumThreshold', e.target.value)}
               className={inputCls(errors.platinumThreshold)} />
             {errors.platinumThreshold && <p className="text-xs text-danger mt-1">{errors.platinumThreshold}</p>}
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="Giảm giá hạng Bạc (%)">
+            <input type="number" min="0" max="100" value={form.silverDiscountRate}
+              onChange={e => set('silverDiscountRate', e.target.value)}
+              className={inputCls(errors.silverDiscountRate)} />
+            {errors.silverDiscountRate && <p className="text-xs text-danger mt-1">{errors.silverDiscountRate}</p>}
+          </Field>
+          <Field label="Giảm giá hạng Vàng (%)">
+            <input type="number" min="0" max="100" value={form.goldDiscountRate}
+              onChange={e => set('goldDiscountRate', e.target.value)}
+              className={inputCls(errors.goldDiscountRate)} />
+            {errors.goldDiscountRate && <p className="text-xs text-danger mt-1">{errors.goldDiscountRate}</p>}
+          </Field>
+          <Field label="Giảm giá hạng Bạch kim (%)">
+            <input type="number" min="0" max="100" value={form.platinumDiscountRate}
+              onChange={e => set('platinumDiscountRate', e.target.value)}
+              className={inputCls(errors.platinumDiscountRate)} />
+            {errors.platinumDiscountRate && <p className="text-xs text-danger mt-1">{errors.platinumDiscountRate}</p>}
           </Field>
         </div>
 

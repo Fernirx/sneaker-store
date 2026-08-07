@@ -27,6 +27,9 @@ export interface CartData {
   items: CartItemData[];
   totalItems: number;
   totalAmount: number;
+  tierDiscountAmount: number;
+  tierDiscountRate: number;
+  tierName: string | null;
 }
 
 interface CartAdjustment {
@@ -47,7 +50,7 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const EMPTY_CART: CartData = { guestToken: null, items: [], totalItems: 0, totalAmount: 0 };
+const EMPTY_CART: CartData = { guestToken: null, items: [], totalItems: 0, totalAmount: 0, tierDiscountAmount: 0, tierDiscountRate: 0, tierName: null };
 
 function extractAdjustments(data: CartData): CartAdjustment[] {
   return (data.items ?? [])

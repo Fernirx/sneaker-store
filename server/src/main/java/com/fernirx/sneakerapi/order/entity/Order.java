@@ -118,6 +118,11 @@ public class Order extends BaseAuditEntity {
     private BigDecimal discountAmount;
 
     @NotNull
+    @ColumnDefault("0.00")
+    @Column(name = "tier_discount_amount", nullable = false, precision = 15, scale = 2)
+    private BigDecimal tierDiscountAmount;
+
+    @NotNull
     @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalAmount;
 

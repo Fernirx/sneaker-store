@@ -14,9 +14,12 @@ import com.fernirx.sneakerapi.cart.service.CartService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.customer.entity.Customer;
 import com.fernirx.sneakerapi.customer.service.CustomerService;
+import com.fernirx.sneakerapi.customer.enums.MembershipTier;
 import com.fernirx.sneakerapi.product.entity.ProductVariant;
 import com.fernirx.sneakerapi.product.service.ProductImageService;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
+import com.fernirx.sneakerapi.setting.dto.response.StoreSettingResponse;
+import com.fernirx.sneakerapi.setting.service.SettingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +42,7 @@ public class CartServiceImpl implements CartService {
     private final ProductVariantService productVariantService;
     private final ProductImageService productImageService;
     private final CustomerService customerService;
+    private final SettingService settingService;
     private final CartMapper cartMapper;
 
     /**
@@ -344,26 +348,50 @@ public class CartServiceImpl implements CartService {
                 })
                 .toList();
 
-        // Tính tổng tiền của các món đang được tick chọn (selected = true)
         BigDecimal totalAmount = itemResponses.stream()
                 .filter(r -> Boolean.TRUE.equals(r.selected()))
                 .map(r -> r.unitPrice().multiply(BigDecimal.valueOf(r.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return new CartResponse(cart.getGuestToken(), itemResponses, items.size(), totalAmount);
+        BigDecimal tierDiscountAmount = BigDecimal.ZERO;
+        Integer tierDiscountRate = 0;
+
+        String tierName = null;
+        if (cart.getCustomer() != null && cart.getCustomer().getMembershipTier() != MembershipTier.BRONZE) {
+            StoreSettingResponse setting = settingService.getStoreSetting();
+            tierName = switch (cart.getCustomer().getMembershipTier()) {
+                case SILVER -> "Silver";
+                case GOLD -> "Gold";
+                case PLATINUM -> "Platinum";
+                default -> null;
+            };
+            tierDiscountRate = switch (cart.getCustomer().getMembershipTier()) {
+                case SILVER -> setting.silverDiscountRate();
+                case GOLD -> setting.goldDiscountRate();
+                case PLATINUM -> setting.platinumDiscountRate();
+                default -> 0;
+            };
+            if (tierDiscountRate != null && tierDiscountRate > 0) {
+                tierDiscountAmount = totalAmount.multiply(BigDecimal.valueOf(tierDiscountRate)).divide(BigDecimal.valueOf(100));
+            } else {
+                tierDiscountRate = 0;
+            }
+        }
+
+        return new CartResponse(cart.getGuestToken(), itemResponses, items.size(), totalAmount, tierDiscountAmount, tierDiscountRate, tierName);
     }
 
     /**
      * Hàm phụ trợ trả về một Response giỏ hàng rỗng (khi giỏ hàng chưa có).
      */
     private CartResponse emptyCartResponse() {
-        return new CartResponse(null, Collections.emptyList(), 0, BigDecimal.ZERO);
+        return new CartResponse(null, List.of(), 0, BigDecimal.ZERO, BigDecimal.ZERO, 0, null);
     }
 
     /**
      * Hàm phụ trợ trả về một Response giỏ hàng rỗng nhưng kèm theo guestToken (để FE lưu Cookie).
      */
     private CartResponse emptyCartResponse(String guestToken) {
-        return new CartResponse(guestToken, Collections.emptyList(), 0, BigDecimal.ZERO);
+        return new CartResponse(guestToken, List.of(), 0, BigDecimal.ZERO, BigDecimal.ZERO, 0, null);
     }
 }

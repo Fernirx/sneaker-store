@@ -144,8 +144,14 @@ export default function OrderDetailClient({
             </div>
             {order.discountAmount > 0 && (
               <div className="flex justify-between text-[13px]">
-                <span className="text-muted">{"Giảm giá"}:</span>
+                <span className="text-muted">{"Mã giảm giá"}:</span>
                 <span className="tabular-nums text-ok">-{formatPrice(order.discountAmount)}</span>
+              </div>
+            )}
+            {order.tierDiscountAmount > 0 && (
+              <div className="flex justify-between text-[13px]">
+                <span className="text-muted">{"Hạng thành viên"}:</span>
+                <span className="tabular-nums text-ok">-{formatPrice(order.tierDiscountAmount)}</span>
               </div>
             )}
             <div className="flex justify-between text-[13px]">

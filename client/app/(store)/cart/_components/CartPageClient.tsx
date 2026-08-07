@@ -205,12 +205,18 @@ function FaqItem({ title, body }: { title: string; body: string }) {
 function OrderSummary({
   items,
   totalAmount,
+  tierDiscountAmount,
+  tierDiscountRate,
+  tierName,
   onCheckout,
   onClear,
   clearing,
 }: {
   items: CartItemData[];
   totalAmount: number;
+  tierDiscountAmount: number;
+  tierDiscountRate: number;
+  tierName: string | null;
   onCheckout: () => void;
   onClear: () => void;
   clearing: boolean;
@@ -244,13 +250,19 @@ function OrderSummary({
           </div>
           {totalDiscount > 0 && (
             <div className="flex justify-between items-baseline text-[13px]">
-              <span className="text-muted">{"Giảm giá"}:</span>
+              <span className="text-muted">{"Giảm giá sản phẩm"}:</span>
               <span className="tabular-nums text-ok">-{formatPrice(totalDiscount)}</span>
+            </div>
+          )}
+          {tierDiscountAmount > 0 && (
+            <div className="flex justify-between items-baseline text-[13px]">
+              <span className="text-muted">Ưu đãi hạng {tierName} ({tierDiscountRate}%):</span>
+              <span className="tabular-nums text-ok">-{formatPrice(tierDiscountAmount)}</span>
             </div>
           )}
           <div className="flex justify-between items-baseline text-[13px]">
             <span className="text-muted">{"Đơn hàng"}:</span>
-            <span className="tabular-nums text-ink">{formatPrice(totalAmount)}</span>
+            <span className="tabular-nums text-ink">{formatPrice(totalAmount - tierDiscountAmount)}</span>
           </div>
         </div>
 
@@ -260,7 +272,7 @@ function OrderSummary({
             {"Tạm tính"}:
           </span>
           <span className="text-[20px] font-bold tabular-nums text-ink">
-            {formatPrice(totalAmount)}
+            {formatPrice(totalAmount - tierDiscountAmount)}
           </span>
         </div>
       </div>
@@ -388,6 +400,9 @@ export default function CartPageClient() {
         <OrderSummary
           items={items}
           totalAmount={Number(cart?.totalAmount ?? 0)}
+          tierDiscountAmount={Number(cart?.tierDiscountAmount ?? 0)}
+          tierDiscountRate={Number(cart?.tierDiscountRate ?? 0)}
+          tierName={cart?.tierName ?? null}
           onCheckout={() => router.push('/checkout')}
           onClear={handleClear}
           clearing={clearing}

@@ -10,20 +10,6 @@ const TIER_CONFIG = {
   PLATINUM: { label: 'Platinum', gradient: 'from-indigo-700 to-purple-500', ring: 'ring-indigo-400/30' },
 } as const;
 
-const TIER_THRESHOLDS: Record<string, number | null> = {
-  BRONZE: 1000,
-  SILVER: 5000,
-  GOLD: 20000,
-  PLATINUM: null,
-};
-
-const TIER_BASE: Record<string, number> = {
-  BRONZE: 0,
-  SILVER: 1000,
-  GOLD: 5000,
-  PLATINUM: 20000,
-};
-
 export default function MembershipCard({
   customer, firstName, lastName, email, createdAt, avatarPublicId,
 }: {
@@ -35,11 +21,14 @@ export default function MembershipCard({
   avatarPublicId?: string;
 }) {
   const cfg = TIER_CONFIG[customer.membershipTier];
-  const nextThreshold = TIER_THRESHOLDS[customer.membershipTier];
-  const base = TIER_BASE[customer.membershipTier];
+  const nextThreshold = customer.nextTierThreshold;
+  const base = customer.currentTierThreshold;
   const progress = nextThreshold
-    ? Math.min(((customer.loyaltyPoints - base) / (nextThreshold - base)) * 100, 100)
+    ? Math.min(((customer.totalSpent - base) / (nextThreshold - base)) * 100, 100)
     : 100;
+  
+  const nextTierLabel = customer.membershipTier === 'BRONZE' ? 'SILVER'
+                      : customer.membershipTier === 'SILVER' ? 'GOLD' : 'PLATINUM';
 
   const fullName = [firstName, lastName].filter(Boolean).join(' ');
   const joinYear = new Date(createdAt).getFullYear();
@@ -62,7 +51,7 @@ export default function MembershipCard({
           </div>
           <div className="space-y-1.5 min-w-0">
             <span className="inline-block text-[10px] font-semibold tracking-[0.14em] uppercase bg-white/20 px-2.5 py-1 rounded-sm">
-              {cfg.label} Member
+              {cfg.label} Member {customer.currentTierDiscountRate > 0 && ` (-${customer.currentTierDiscountRate}%)`}
             </span>
             <p className="font-display font-black text-xl leading-tight truncate">{fullName || email}</p>
             <p className="text-white/70 text-xs truncate">{email} · {"Thành viên từ"} {joinYear}</p>
@@ -90,11 +79,15 @@ export default function MembershipCard({
       {/* Progress to next tier */}
       {nextThreshold && (
         <div className="relative z-10 mt-4 space-y-1">
-          <div className="flex justify-between text-[11px] text-white/70">
-            <span>{customer.loyaltyPoints.toLocaleString('vi-VN')} / {nextThreshold.toLocaleString('vi-VN')} pts → {TIER_CONFIG[
-              customer.membershipTier === 'BRONZE' ? 'SILVER'
-              : customer.membershipTier === 'SILVER' ? 'GOLD' : 'PLATINUM'
-            ].label}</span>
+          <div className="flex justify-between text-[11px] text-white/90 font-medium">
+            <span>
+              Chi tiêu thêm{' '}
+              <span className="font-bold">
+                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(nextThreshold - customer.totalSpent)}
+              </span>{' '}
+              để lên hạng {TIER_CONFIG[nextTierLabel as keyof typeof TIER_CONFIG].label}
+              {customer.nextTierDiscountRate != null && customer.nextTierDiscountRate > 0 && ` (giảm ${customer.nextTierDiscountRate}%)`}
+            </span>
             <span>{Math.round(progress)}%</span>
           </div>
           <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">

@@ -11,6 +11,10 @@ import org.mapstruct.*;
         componentModel = MappingConstants.ComponentModel.SPRING
 )
 public interface CustomerMapper {
+    @Mapping(target = "currentTierThreshold", ignore = true)
+    @Mapping(target = "nextTierThreshold", ignore = true)
+    @Mapping(target = "currentTierDiscountRate", ignore = true)
+    @Mapping(target = "nextTierDiscountRate", ignore = true)
     CustomerResponse toResponse(Customer customer);
 
     @Mapping(target = "email", source = "user.email")

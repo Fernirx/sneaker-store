@@ -34,6 +34,7 @@ export interface OrderInternalResponse {
   subtotal: number;
   shippingFee: number;
   discountAmount: number;
+  tierDiscountAmount: number;
   totalAmount: number;
   couponCode: string | null;
   note: string | null;

@@ -75,7 +75,49 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponse getCustomer(Long userId) {
         Customer customer = customerRepository.findByUserId(userId)
                 .orElseThrow(() -> BusinessException.notFound("label.customer"));
-        return customerMapper.toResponse(customer);
+        
+        StoreSettingResponse storeSetting = settingService.getStoreSetting();
+        BigDecimal currentThreshold = BigDecimal.ZERO;
+        BigDecimal nextThreshold = null;
+        Integer currentDiscountRate = 0;
+        Integer nextDiscountRate = null;
+        
+        switch (customer.getMembershipTier()) {
+            case BRONZE -> {
+                currentThreshold = BigDecimal.ZERO;
+                nextThreshold = storeSetting.silverThreshold();
+                currentDiscountRate = 0;
+                nextDiscountRate = storeSetting.silverDiscountRate();
+            }
+            case SILVER -> {
+                currentThreshold = storeSetting.silverThreshold();
+                nextThreshold = storeSetting.goldThreshold();
+                currentDiscountRate = storeSetting.silverDiscountRate();
+                nextDiscountRate = storeSetting.goldDiscountRate();
+            }
+            case GOLD -> {
+                currentThreshold = storeSetting.goldThreshold();
+                nextThreshold = storeSetting.platinumThreshold();
+                currentDiscountRate = storeSetting.goldDiscountRate();
+                nextDiscountRate = storeSetting.platinumDiscountRate();
+            }
+            case PLATINUM -> {
+                currentThreshold = storeSetting.platinumThreshold();
+                nextThreshold = null;
+                currentDiscountRate = storeSetting.platinumDiscountRate();
+                nextDiscountRate = null;
+            }
+        }
+        
+        return new CustomerResponse(
+                customer.getMembershipTier(),
+                customer.getLoyaltyPoints(),
+                customer.getTotalSpent(),
+                currentThreshold,
+                nextThreshold,
+                currentDiscountRate,
+                nextDiscountRate
+        );
     }
 
     /**

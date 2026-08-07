@@ -10,5 +10,8 @@ public record StoreSettingResponse(
         BigDecimal silverThreshold,
         BigDecimal goldThreshold,
         BigDecimal platinumThreshold,
+        Integer silverDiscountRate,
+        Integer goldDiscountRate,
+        Integer platinumDiscountRate,
         LocalDateTime updatedAt
 ) {}

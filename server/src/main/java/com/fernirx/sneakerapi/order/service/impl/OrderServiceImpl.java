@@ -9,6 +9,7 @@ import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.fernirx.sneakerapi.coupon.dto.response.CouponApplyResult;
 import com.fernirx.sneakerapi.coupon.service.CouponService;
 import com.fernirx.sneakerapi.customer.entity.Customer;
+import com.fernirx.sneakerapi.customer.enums.MembershipTier;
 import com.fernirx.sneakerapi.customer.service.CustomerService;
 import com.fernirx.sneakerapi.inventory.enums.InventoryReferenceType;
 import com.fernirx.sneakerapi.inventory.enums.InventoryTransactionType;
@@ -16,6 +17,8 @@ import com.fernirx.sneakerapi.inventory.service.InventoryTransactionService;
 import com.fernirx.sneakerapi.notification.event.OrderCancelledEvent;
 import com.fernirx.sneakerapi.notification.event.OrderCreatedEvent;
 import com.fernirx.sneakerapi.order.config.OrderProperties;
+import com.fernirx.sneakerapi.setting.dto.response.StoreSettingResponse;
+import com.fernirx.sneakerapi.setting.service.SettingService;
 import com.fernirx.sneakerapi.order.dto.request.CreateOrderRequest;
 import com.fernirx.sneakerapi.order.dto.request.OrderFilterRequest;
 import com.fernirx.sneakerapi.order.dto.request.UpdateOrderStatusRequest;
@@ -101,6 +104,7 @@ public class OrderServiceImpl implements OrderService {
     private final ShipmentRepository shipmentRepository;
     private final PlatformTransactionManager transactionManager;
     private final ApplicationEventPublisher eventPublisher;
+    private final SettingService settingService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -144,7 +148,7 @@ public class OrderServiceImpl implements OrderService {
         Customer customer = isGuest ? null : customerService.getOrCreateByUserId(userId);
 
         List<ResolvedItem> resolvedItems = resolveCartItems(userId, guestToken);
-        OrderPricing pricing = calculateOrderPricing(request, resolvedItems, email);
+        OrderPricing pricing = calculateOrderPricing(request, resolvedItems, email, customer);
 
         Order order = saveOrderEntity(customer, guestToken, idempotencyKey, request, pricing, isGuest);
         List<OrderItem> savedItems = processOrderItems(order, resolvedItems, userId);
@@ -567,6 +571,7 @@ public class OrderServiceImpl implements OrderService {
             BigDecimal subtotal,
             BigDecimal shippingFee,
             BigDecimal discountAmount,
+            BigDecimal tierDiscountAmount,
             BigDecimal totalAmount,
             CouponApplyResult couponResult
     ) {}
@@ -633,7 +638,7 @@ public class OrderServiceImpl implements OrderService {
      * 3. Tính phí giao hàng (shippingFee) thông qua API GHN (hoặc rule local) dựa trên địa chỉ nhận và khối lượng hàng.
      * 4. Tính tổng tiền thanh toán (totalAmount) = Tiền hàng + Phí ship - Tiền giảm.
      */
-    private OrderPricing calculateOrderPricing(CreateOrderRequest request, List<ResolvedItem> resolvedItems, String email) {
+    private OrderPricing calculateOrderPricing(CreateOrderRequest request, List<ResolvedItem> resolvedItems, String email, Customer customer) {
         BigDecimal subtotal = resolvedItems.stream()
                 .map(ri -> ri.unitPrice().multiply(BigDecimal.valueOf(ri.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -643,6 +648,21 @@ public class OrderServiceImpl implements OrderService {
         if (StringUtils.hasText(request.couponCode())) {
             couponResult = couponService.validate(request.couponCode(), subtotal, email, request.recipientPhone());
             discountAmount = couponResult.discountAmount();
+        }
+
+        // 3. Tính tier discount dựa trên subtotal (hoặc subtotal - discountAmount, ở đây tính trên subtotal)
+        BigDecimal tierDiscountAmount = BigDecimal.ZERO;
+        if (customer != null && customer.getMembershipTier() != MembershipTier.BRONZE) {
+            StoreSettingResponse setting = settingService.getStoreSetting();
+            Integer rate = switch (customer.getMembershipTier()) {
+                case SILVER -> setting.silverDiscountRate();
+                case GOLD -> setting.goldDiscountRate();
+                case PLATINUM -> setting.platinumDiscountRate();
+                default -> 0;
+            };
+            if (rate != null && rate > 0) {
+                tierDiscountAmount = subtotal.multiply(BigDecimal.valueOf(rate)).divide(BigDecimal.valueOf(100));
+            }
         }
 
         List<ParcelItem> parcelItems = resolvedItems.stream()
@@ -656,9 +676,12 @@ public class OrderServiceImpl implements OrderService {
         );
         BigDecimal shippingFee = shippingService.calculateShippingFee(shippingFeeCommand).fee();
         
-        BigDecimal totalAmount = subtotal.add(shippingFee).subtract(discountAmount);
+        BigDecimal totalAmount = subtotal.add(shippingFee).subtract(discountAmount).subtract(tierDiscountAmount);
+        if (totalAmount.compareTo(BigDecimal.ZERO) < 0) {
+            totalAmount = BigDecimal.ZERO;
+        }
 
-        return new OrderPricing(subtotal, shippingFee, discountAmount, totalAmount, couponResult);
+        return new OrderPricing(subtotal, shippingFee, discountAmount, tierDiscountAmount, totalAmount, couponResult);
     }
 
     /**
@@ -687,6 +710,7 @@ public class OrderServiceImpl implements OrderService {
         order.setSubtotal(pricing.subtotal());
         order.setShippingFee(pricing.shippingFee());
         order.setDiscountAmount(pricing.discountAmount());
+        order.setTierDiscountAmount(pricing.tierDiscountAmount());
         order.setTotalAmount(pricing.totalAmount());
         order.setCouponCode(pricing.couponResult() != null ? pricing.couponResult().code() : null);
         order.setNote(request.note());

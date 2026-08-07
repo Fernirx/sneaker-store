@@ -26,6 +26,7 @@ public record OrderInternalResponse(
         BigDecimal subtotal,
         BigDecimal shippingFee,
         BigDecimal discountAmount,
+        BigDecimal tierDiscountAmount,
         BigDecimal totalAmount,
         String couponCode,
         String note,

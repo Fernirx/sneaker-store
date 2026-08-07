@@ -40,4 +40,16 @@ public class StoreSetting extends BaseAuditEntity {
     @Positive
     @Column(name = "platinum_threshold", nullable = false, precision = 15, scale = 2)
     private BigDecimal platinumThreshold;
+
+    @NotNull
+    @Column(name = "silver_discount_rate", nullable = false)
+    private Integer silverDiscountRate;
+
+    @NotNull
+    @Column(name = "gold_discount_rate", nullable = false)
+    private Integer goldDiscountRate;
+
+    @NotNull
+    @Column(name = "platinum_discount_rate", nullable = false)
+    private Integer platinumDiscountRate;
 }

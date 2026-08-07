@@ -18,5 +18,17 @@ public record UpdateStoreSettingRequest(
         BigDecimal goldThreshold,
 
         @Positive(message = "{validation.number.positive}")
-        BigDecimal platinumThreshold
+        BigDecimal platinumThreshold,
+
+        @jakarta.validation.constraints.Min(0)
+        @jakarta.validation.constraints.Max(100)
+        Integer silverDiscountRate,
+
+        @jakarta.validation.constraints.Min(0)
+        @jakarta.validation.constraints.Max(100)
+        Integer goldDiscountRate,
+
+        @jakarta.validation.constraints.Min(0)
+        @jakarta.validation.constraints.Max(100)
+        Integer platinumDiscountRate
 ) {}

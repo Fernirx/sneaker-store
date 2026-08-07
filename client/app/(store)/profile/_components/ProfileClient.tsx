@@ -25,6 +25,10 @@ export interface Customer {
   membershipTier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
   loyaltyPoints: number;
   totalSpent: number;
+  currentTierThreshold: number;
+  nextTierThreshold: number | null;
+  currentTierDiscountRate: number;
+  nextTierDiscountRate: number | null;
 }
 
 type Tab = 'info' | 'address' | 'security';

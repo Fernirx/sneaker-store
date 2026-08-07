@@ -10,5 +10,8 @@ public record CartResponse(
         String guestToken,
         List<CartItemResponse> items,
         int totalItems,
-        BigDecimal totalAmount
+        BigDecimal totalAmount,
+        BigDecimal tierDiscountAmount,
+        Integer tierDiscountRate,
+        String tierName
 ) {}

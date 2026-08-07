@@ -495,7 +495,9 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
     return sum + price * i.quantity;
   }, 0);
   const totalDiscount = subtotalOriginal - totalAmount;
-  const finalTotal = Math.max(0, totalAmount - couponDiscount + (shippingFee ?? 0));
+  const tierDiscountAmount = Number(cart?.tierDiscountAmount ?? 0);
+  const tierDiscountRate = Number(cart?.tierDiscountRate ?? 0);
+  const finalTotal = Math.max(0, totalAmount - couponDiscount - tierDiscountAmount + (shippingFee ?? 0));
 
   function fieldCls(field: string) {
     return `w-full h-10 px-3 border rounded-sm text-[13px] text-ink placeholder:text-faint bg-white focus:outline-none transition-colors ${
@@ -824,8 +826,14 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
                   </div>
                   {totalDiscount > 0 && (
                     <div className="flex justify-between items-baseline text-[13px]">
-                      <span className="text-muted">{"Giảm giá"}:</span>
+                      <span className="text-muted">{"Giảm giá sản phẩm"}:</span>
                       <span className="tabular-nums text-ok">-{formatPrice(totalDiscount)}</span>
+                    </div>
+                  )}
+                  {tierDiscountAmount > 0 && (
+                    <div className="flex justify-between items-baseline text-[13px]">
+                      <span className="text-muted">Ưu đãi hạng {cart?.tierName} ({tierDiscountRate}%):</span>
+                      <span className="tabular-nums text-ok">-{formatPrice(tierDiscountAmount)}</span>
                     </div>
                   )}
                   {couponCode && (
