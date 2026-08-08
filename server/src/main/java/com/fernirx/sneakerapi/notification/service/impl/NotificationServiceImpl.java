@@ -24,6 +24,7 @@ import org.owasp.html.PolicyFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -96,9 +97,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     /**
      * Đăng ký kết nối SSE (Server-Sent Events) để nhận thông báo realtime (Push Notification).
+     *
+     * <p>KHÔNG mở transaction: đây là request async sống lâu (30 phút). Nếu chạy trong
+     * transaction, JDBC connection bị giữ suốt vòng đời kết nối SSE và làm cạn HikariCP pool.
+     * Phương thức này chỉ ghi vào registry trong bộ nhớ, không truy cập DB.
      */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public SseEmitter subscribe(Long userId) {
         return sseEmitterRegistry.register(userId);
     }
