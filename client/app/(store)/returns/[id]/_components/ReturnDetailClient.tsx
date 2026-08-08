@@ -51,6 +51,7 @@ export default function ReturnDetailClient({ returnId }: { returnId: number }) {
       load();
     } catch (err) {
       setError(parseApiError(err).general);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }

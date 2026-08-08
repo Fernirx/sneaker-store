@@ -32,6 +32,7 @@ export default function EditCustomerModal({
       onSaved();
     } catch (err) {
       setError(parseApiError(err).general);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
@@ -62,7 +63,7 @@ export default function EditCustomerModal({
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-            Hạng thành viên
+            Hạng thành viên <span className="text-danger">*</span>
           </label>
           <select
             value={membershipTier}

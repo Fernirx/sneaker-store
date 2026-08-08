@@ -83,7 +83,7 @@ export default function UsersClient({
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
           >
-            Tạo người dùng
+            Thêm người dùng
           </button>
         )}
       </div>

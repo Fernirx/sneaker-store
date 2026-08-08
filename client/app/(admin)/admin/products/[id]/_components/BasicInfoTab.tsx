@@ -62,10 +62,12 @@ export default function BasicInfoTab({
         active:        form.active,
       });
       setSuccess('Đã lưu thành công.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       const parsed = parseApiError(err);
       setError(parsed.general);
       setFieldErrors(parsed.fields);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
@@ -78,16 +80,29 @@ export default function BasicInfoTab({
       {error   && <p className="text-danger text-sm">{error}</p>}
       {success && <p className="text-ok text-sm">{success}</p>}
 
-      <p className="text-xs text-muted">
-        slug: {product.slug} &nbsp;·&nbsp; brand: {product.brand.name}
-      </p>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+            Slug
+          </label>
+          <input value={product.slug} disabled
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink disabled:bg-paper text-muted" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+            Thương hiệu
+          </label>
+          <input value={product.brand.name} disabled
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink disabled:bg-paper text-muted" />
+        </div>
+      </div>
 
       {/* Name */}
       <div>
         <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
           Tên sản phẩm <span className="text-danger">*</span>
         </label>
-        <input value={form.name} onChange={e => set('name', e.target.value)} disabled={ro}
+        <input value={form.name} onChange={e => set('name', e.target.value.replace(/^\s+/, ''))} disabled={ro}
           className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink disabled:bg-paper" />
         {fieldErrors.name && <p className="text-danger text-xs mt-1">{fieldErrors.name}</p>}
       </div>
@@ -97,7 +112,7 @@ export default function BasicInfoTab({
         <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
           Mã sản phẩm <span className="text-danger">*</span>
         </label>
-        <input value={form.code} onChange={e => set('code', e.target.value)} disabled={ro}
+        <input value={form.code} onChange={e => set('code', e.target.value.replace(/^\s+/, '').toUpperCase())} disabled={ro}
           className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink disabled:bg-paper" />
         {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
       </div>
@@ -184,7 +199,7 @@ export default function BasicInfoTab({
 
       {isAdmin && (
         <div className="pt-1">
-          <button type="submit" disabled={saving}
+          <button type="submit" disabled={saving || !form.name.trim() || !form.code.trim()}
             className="px-5 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors">
             {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>

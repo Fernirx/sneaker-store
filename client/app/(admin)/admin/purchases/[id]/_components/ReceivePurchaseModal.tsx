@@ -51,6 +51,7 @@ export default function ReceivePurchaseModal({
   async function handleSubmit() {
     if (invalidRow) {
       setError(`Số lượng lỗi không được vượt số lượng nhận (SKU ${invalidRow.sku}).`);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     setSaving(true);
@@ -68,6 +69,7 @@ export default function ReceivePurchaseModal({
     } catch (err) {
       setError(parseApiError(err).general);
       setSaving(false);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -92,24 +94,24 @@ export default function ReceivePurchaseModal({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-line bg-paper">
-                  <th className="text-left px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SKU / Sản phẩm</th>
-                  <th className="text-left px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Size / Màu</th>
-                  <th className="text-right px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted w-20">SL đặt</th>
-                  <th className="text-right px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted w-28">SL nhận</th>
-                  <th className="text-right px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted w-28">SL lỗi</th>
-                  <th className="text-left px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ghi chú</th>
+                  <th className="text-left px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SKU / Sản phẩm</th>
+                  <th className="text-left px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Size / Màu</th>
+                  <th className="text-right px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-20">SL đặt</th>
+                  <th className="text-right px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-28">SL nhận</th>
+                  <th className="text-right px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-28">SL lỗi</th>
+                  <th className="text-left px-3 py-2 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Ghi chú</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map(r => (
                   <tr key={r.purchaseItemId} className="border-b border-line-2 last:border-0">
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <div className="font-body text-xs font-bold">{r.sku}</div>
                       <div className="text-xs text-muted truncate max-w-[160px]">{r.productName}</div>
                     </td>
                     <td className="px-3 py-2 text-xs text-muted whitespace-nowrap">{r.colorway} · {r.size}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{r.quantityOrdered}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">{r.quantityOrdered}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <input
                         type="number" min={0}
                         value={r.quantityReceived}
@@ -117,7 +119,7 @@ export default function ReceivePurchaseModal({
                         className="w-full border border-line rounded-sm px-2 py-1.5 text-sm text-right focus:outline-none focus:border-ink"
                       />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <input
                         type="number" min={0}
                         value={r.defectiveQty}
@@ -125,10 +127,10 @@ export default function ReceivePurchaseModal({
                         className="w-full border border-line rounded-sm px-2 py-1.5 text-sm text-right focus:outline-none focus:border-ink"
                       />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <input
                         value={r.note}
-                        onChange={e => updateRow(r.purchaseItemId, { note: e.target.value })}
+                        onChange={e => updateRow(r.purchaseItemId, { note: e.target.value.replace(/^\s+/, '') })}
                         className="w-full border border-line rounded-sm px-2 py-1.5 text-sm focus:outline-none focus:border-ink"
                       />
                     </td>

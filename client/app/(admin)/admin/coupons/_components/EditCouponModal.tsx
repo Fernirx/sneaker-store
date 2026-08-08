@@ -51,14 +51,15 @@ export default function EditCouponModal({
       const parsed = parseApiError(err);
       setError(parsed.general);
       setFieldErrors(parsed.fields);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title="Cập nhật coupon" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+    <Modal title="Cập nhật coupon" onClose={onClose} maxWidth="2xl">
+      <form onSubmit={handleSubmit} className="space-y-3">
         {error && <p className="text-danger text-sm">{error}</p>}
 
         <div className="flex items-center gap-3 py-1 px-3 bg-paper rounded-sm border border-line">
@@ -76,7 +77,7 @@ export default function EditCouponModal({
           </label>
           <textarea
             value={description}
-            onChange={e => setDescription(e.target.value)}
+            onChange={e => setDescription(e.target.value.replace(/^\s+/, ''))}
             rows={2}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink resize-none"
           />
@@ -169,22 +170,24 @@ export default function EditCouponModal({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-              Ngày bắt đầu
+              Ngày bắt đầu <span className="text-danger">*</span>
             </label>
             <input
               type="datetime-local"
               value={startDate}
+              max={endDate || undefined}
               onChange={e => setStartDate(e.target.value)}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
             />
           </div>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
-              Ngày kết thúc
+              Ngày hết hạn <span className="text-danger">*</span>
             </label>
             <input
               type="datetime-local"
               value={endDate}
+              min={startDate || undefined}
               onChange={e => setEndDate(e.target.value)}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
             />
@@ -213,7 +216,7 @@ export default function EditCouponModal({
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !discountValue.toString().trim() || !startDate || !endDate}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors"
           >
             {saving ? 'Đang lưu...' : 'Lưu'}

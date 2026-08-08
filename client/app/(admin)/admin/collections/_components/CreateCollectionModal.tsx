@@ -41,14 +41,15 @@ export default function CreateCollectionModal({
       const parsed = parseApiError(err);
       setError(parsed.general);
       setFieldErrors(parsed.fields);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title="Tạo bộ sưu tập mới" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+    <Modal title="Thêm bộ sưu tập mới" onClose={onClose} maxWidth="2xl">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
         <div>
@@ -58,7 +59,8 @@ export default function CreateCollectionModal({
           <input
             type="text"
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={e => setName(e.target.value.replace(/^\s+/, ''))}
+            maxLength={100}
             required
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
           />
@@ -83,9 +85,11 @@ export default function CreateCollectionModal({
             <input
               type="date"
               value={launchDate}
+              max={endDate || undefined}
               onChange={e => setLaunchDate(e.target.value)}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
             />
+            {fieldErrors.launchDate && <p className="text-danger text-xs mt-1">{fieldErrors.launchDate}</p>}
           </div>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
@@ -94,9 +98,11 @@ export default function CreateCollectionModal({
             <input
               type="date"
               value={endDate}
+              min={launchDate || undefined}
               onChange={e => setEndDate(e.target.value)}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
             />
+            {fieldErrors.endDate && <p className="text-danger text-xs mt-1">{fieldErrors.endDate}</p>}
           </div>
         </div>
 
@@ -110,10 +116,10 @@ export default function CreateCollectionModal({
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !name.trim()}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors"
           >
-            {saving ? 'Đang lưu...' : 'Lưu'}
+            {saving ? 'Đang thêm...' : 'Thêm'}
           </button>
         </div>
       </form>

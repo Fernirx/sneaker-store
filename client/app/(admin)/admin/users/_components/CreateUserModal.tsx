@@ -39,24 +39,28 @@ export default function CreateUserModal({
       const parsed = parseApiError(err);
       setError(parsed.general);
       setFieldErrors(parsed.fields);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title="Tạo người dùng mới" onClose={onClose}>
+    <Modal title="Thêm người dùng mới" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
             Email
+            <span className="text-danger ml-1">*</span>
           </label>
           <input
-            type="email"
+            type="text"
+            inputMode="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value.replace(/^\s+/, ''))}
+            maxLength={100}
             required
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
           />
@@ -66,11 +70,13 @@ export default function CreateUserModal({
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
             Mật khẩu
+            <span className="text-danger ml-1">*</span>
           </label>
           <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
+            maxLength={255}
             required
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
           />
@@ -80,11 +86,13 @@ export default function CreateUserModal({
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
             Họ
+            <span className="text-danger ml-1">*</span>
           </label>
           <input
             type="text"
             value={firstName}
-            onChange={e => setFirstName(e.target.value)}
+            onChange={e => setFirstName(e.target.value.replace(/^\s+/, ''))}
+            maxLength={100}
             required
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
           />
@@ -118,10 +126,10 @@ export default function CreateUserModal({
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !email.trim() || !password || !firstName.trim()}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors"
           >
-            {saving ? 'Đang lưu...' : 'Lưu'}
+            {saving ? 'Đang thêm...' : 'Thêm'}
           </button>
         </div>
       </form>

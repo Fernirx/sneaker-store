@@ -59,8 +59,8 @@ export default function CreateCategoryModal({
   }
 
   return (
-    <Modal title="Tạo danh mục mới" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+    <Modal title="Tạo danh mục mới" onClose={onClose} maxWidth="2xl">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
         <div>
@@ -70,7 +70,8 @@ export default function CreateCategoryModal({
           <input
             type="text"
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={e => setName(e.target.value.replace(/^\s+/, ''))}
+            maxLength={100}
             required
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
           />
@@ -130,10 +131,10 @@ export default function CreateCategoryModal({
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !name.trim() || displayOrder === ''}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors"
           >
-            {saving ? 'Đang lưu...' : 'Lưu'}
+            {saving ? 'Đang thêm...' : 'Thêm'}
           </button>
         </div>
       </form>

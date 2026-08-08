@@ -6,12 +6,12 @@ export default function ItemsTab({ order }: { order: OrderInternalResponse }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-line bg-paper">
-            <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Sản phẩm</th>
-            <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SKU</th>
-            <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Size / Màu</th>
-            <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SL</th>
-            <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đơn giá</th>
-            <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thành tiền</th>
+            <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Sản phẩm</th>
+            <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SKU</th>
+            <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Size / Màu</th>
+            <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SL</th>
+            <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Đơn giá</th>
+            <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thành tiền</th>
           </tr>
         </thead>
         <tbody>

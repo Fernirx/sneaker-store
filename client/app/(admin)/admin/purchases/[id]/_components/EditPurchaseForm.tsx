@@ -71,6 +71,7 @@ export default function EditPurchaseForm({
       const parsed = parseApiError(err);
       setError(parsed.general);
       setFieldErrors(parsed.fields);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
@@ -101,7 +102,8 @@ export default function EditPurchaseForm({
             <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Số hóa đơn NCC</label>
             <input
               value={supplierInvoiceNo}
-              onChange={e => setSupplierInvoiceNo(e.target.value)}
+              onChange={e => setSupplierInvoiceNo(e.target.value.replace(/^\s+/, ''))}
+              maxLength={100}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
             />
           </div>
@@ -138,7 +140,7 @@ export default function EditPurchaseForm({
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Ghi chú</label>
           <textarea
             value={notes}
-            onChange={e => setNotes(e.target.value)}
+            onChange={e => setNotes(e.target.value.replace(/^\s+/, ''))}
             rows={2}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink resize-none"
           />
@@ -161,7 +163,7 @@ export default function EditPurchaseForm({
         </button>
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || !supplierId}
           className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-5 py-2.5 rounded-sm hover:bg-accent-700 transition-colors disabled:opacity-50"
         >
           {saving ? 'Đang lưu...' : 'Lưu thay đổi'}

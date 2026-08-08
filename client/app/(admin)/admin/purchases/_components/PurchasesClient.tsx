@@ -88,7 +88,7 @@ export default function PurchasesClient({
           href="/admin/purchases/new"
           className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
         >
-          Tạo phiếu nhập
+          Thêm phiếu nhập
         </Link>
       </div>
 
@@ -145,40 +145,42 @@ export default function PurchasesClient({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Mã phiếu</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Nhà cung cấp</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thanh toán</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tổng tiền</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày tạo</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Mã phiếu</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Nhà cung cấp</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Số hóa đơn</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Trạng thái</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thanh toán</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Tổng tiền</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thời gian tạo</th>
               <th className="px-4 py-3 w-16" />
             </tr>
           </thead>
           <tbody>
             {purchases.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-14 text-muted text-sm">
+                <td colSpan={8} className="text-center py-14 text-muted text-sm">
                   Không có phiếu nhập hàng nào.
                 </td>
               </tr>
             ) : (
               purchases.map(p => (
                 <tr key={p.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-body font-bold text-sm">{p.purchaseCode}</td>
-                  <td className="px-4 py-3 text-sm">{p.supplierName}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 font-body font-bold text-sm whitespace-nowrap">{p.purchaseCode}</td>
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">{p.supplierName}</td>
+                  <td className="px-4 py-3 text-sm text-muted whitespace-nowrap">{p.supplierInvoiceNo ?? '—'}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${STATUS_COLORS[p.status]}`}>
                       {STATUS_LABELS[p.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${PAYMENT_STATUS_COLORS[p.paymentStatus]}`}>
                       {PAYMENT_STATUS_LABELS[p.paymentStatus]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold text-sm tabular-nums">{formatPrice(p.totalCost)}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{formatDateTime(p.createdAt)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right font-semibold text-sm tabular-nums whitespace-nowrap">{formatPrice(p.totalCost)}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDateTime(p.createdAt)}</td>
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
                     <Link href={`/admin/purchases/${p.id}`} className="text-xs font-bold text-muted hover:text-ink transition-colors">
                       Xem
                     </Link>

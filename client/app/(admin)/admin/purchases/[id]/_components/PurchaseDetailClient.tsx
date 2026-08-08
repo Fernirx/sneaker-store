@@ -145,10 +145,10 @@ export default function PurchaseDetailClient({
         <div className="bg-white border border-line rounded-sm p-5 space-y-3">
           <h3 className="font-display font-bold text-xs uppercase tracking-wide text-muted mb-2">Nhà cung cấp</h3>
           <Row label="Nhà cung cấp" value={purchase.supplierName} />
-          {purchase.supplierInvoiceNo && <Row label="Số hóa đơn NCC" value={purchase.supplierInvoiceNo} />}
+          <Row label="Số hóa đơn NCC" value={purchase.supplierInvoiceNo || <span className="text-muted italic">Không có</span>} />
           <Row label="Người tạo" value={purchase.createdByEmail ?? '—'} />
           {purchase.receivedByEmail && <Row label="Người nhận hàng" value={purchase.receivedByEmail} />}
-          {purchase.notes && <Row label="Ghi chú" value={purchase.notes} />}
+          <Row label="Ghi chú" value={purchase.notes || <span className="text-muted italic">Không có</span>} />
         </div>
 
         <div className="bg-white border border-line rounded-sm p-5 space-y-3">
@@ -158,7 +158,7 @@ export default function PurchaseDetailClient({
           {purchase.taxAmount > 0 && <Row label="Thuế" value={formatPrice(purchase.taxAmount)} />}
           {purchase.shippingCost > 0 && <Row label="Phí vận chuyển" value={formatPrice(purchase.shippingCost)} />}
           <Row label="Tổng chi phí" value={<span className="font-bold">{formatPrice(purchase.totalCost)}</span>} />
-          <Row label="Ngày tạo" value={formatDateTime(purchase.createdAt)} />
+          <Row label="Thời gian tạo" value={formatDateTime(purchase.createdAt)} />
           {purchase.confirmedAt && <Row label="Ngày xác nhận" value={formatDateTime(purchase.confirmedAt)} />}
           {purchase.receivedAt && <Row label="Ngày nhận hàng" value={formatDateTime(purchase.receivedAt)} />}
         </div>
@@ -168,30 +168,30 @@ export default function PurchaseDetailClient({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SKU / Sản phẩm</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Size / Màu</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SL đặt</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SL nhận</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SL lỗi</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đơn giá</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thành tiền</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SKU / Sản phẩm</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Size / Màu</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SL đặt</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SL nhận</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SL lỗi</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Đơn giá</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thành tiền</th>
             </tr>
           </thead>
           <tbody>
             {purchase.items.map(item => (
               <tr key={item.id} className="border-b border-line-2 last:border-0">
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <div className="font-body text-xs font-bold">{item.sku}</div>
                   <div className="text-xs text-muted">{item.productName}</div>
                 </td>
-                <td className="px-4 py-3 text-xs text-muted">{item.colorway} · {item.size}</td>
-                <td className="px-4 py-3 text-right tabular-nums">{item.quantityOrdered}</td>
-                <td className="px-4 py-3 text-right tabular-nums">{item.quantityReceived}</td>
-                <td className="px-4 py-3 text-right tabular-nums">
+                <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{item.colorway} · {item.size}</td>
+                <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">{item.quantityOrdered}</td>
+                <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">{item.quantityReceived}</td>
+                <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
                   <span className={item.defectiveQty > 0 ? 'text-danger font-bold' : ''}>{item.defectiveQty}</span>
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">{formatPrice(item.unitCost)}</td>
-                <td className="px-4 py-3 text-right tabular-nums font-semibold">{formatPrice(item.lineTotal)}</td>
+                <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">{formatPrice(item.unitCost)}</td>
+                <td className="px-4 py-3 text-right tabular-nums font-semibold whitespace-nowrap">{formatPrice(item.lineTotal)}</td>
               </tr>
             ))}
           </tbody>

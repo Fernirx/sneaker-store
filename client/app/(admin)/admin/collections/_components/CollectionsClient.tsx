@@ -79,7 +79,7 @@ export default function CollectionsClient({
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
           >
-            Tạo bộ sưu tập
+            Thêm bộ sưu tập
           </button>
         )}
       </div>
@@ -89,7 +89,7 @@ export default function CollectionsClient({
           type="text"
           placeholder="Tìm theo tên..."
           value={pendingSearch}
-          onChange={e => handleSearchChange(e.target.value)}
+          onChange={e => handleSearchChange(e.target.value.replace(/^\s+/, ''))}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm w-64 focus:outline-none focus:border-ink"
         />
         <select

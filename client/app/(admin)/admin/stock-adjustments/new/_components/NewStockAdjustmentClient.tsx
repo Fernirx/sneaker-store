@@ -48,6 +48,7 @@ export default function NewStockAdjustmentClient() {
       const parsed = parseApiError(err);
       setError(parsed.general);
       setFieldErrors(parsed.fields);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
@@ -95,8 +96,9 @@ export default function NewStockAdjustmentClient() {
             </label>
             <textarea
               value={reason}
-              onChange={e => setReason(e.target.value)}
+              onChange={e => setReason(e.target.value.replace(/^\s+/, ''))}
               required
+              maxLength={255}
               rows={2}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink resize-none"
             />
@@ -115,10 +117,10 @@ export default function NewStockAdjustmentClient() {
           </Link>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !reason.trim()}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-5 py-2.5 rounded-sm hover:bg-accent-700 transition-colors disabled:opacity-50"
           >
-            {saving ? 'Đang lưu...' : 'Tạo phiếu (Nháp)'}
+            {saving ? 'Đang thêm...' : 'Thêm phiếu (Nháp)'}
           </button>
         </div>
       </form>

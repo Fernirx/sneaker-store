@@ -48,7 +48,9 @@ function toForm(data: StoreSetting | null): StoreSettingForm {
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+        {label} <span className="text-danger">*</span>
+      </label>
       {children}
       {hint && <p className="text-xs text-muted mt-1">{hint}</p>}
     </div>
@@ -80,10 +82,28 @@ export default function StoreSettingClient({ initialData }: { initialData: Store
     const e: Record<string, string> = {};
     (Object.keys(form) as (keyof StoreSettingForm)[]).forEach(key => {
       const value = Number(form[key]);
-      if (!form[key].trim() || Number.isNaN(value) || value <= 0) {
-        e[key] = "Phải là số dương";
+      if (!form[key].trim() || Number.isNaN(value)) {
+        e[key] = "Không hợp lệ";
+      } else if (key.includes('DiscountRate')) {
+        if (value < 0 || value > 100) e[key] = "Từ 0 đến 100";
+      } else {
+        if (value <= 0) e[key] = "Phải là số dương";
       }
     });
+
+    if (Object.keys(e).length === 0) {
+      const s = Number(form.silverThreshold);
+      const g = Number(form.goldThreshold);
+      const p = Number(form.platinumThreshold);
+      if (s >= g) e.goldThreshold = "Phải > Bạc";
+      if (g >= p) e.platinumThreshold = "Phải > Vàng";
+
+      const sd = Number(form.silverDiscountRate);
+      const gd = Number(form.goldDiscountRate);
+      const pd = Number(form.platinumDiscountRate);
+      if (sd > gd) e.goldDiscountRate = "Phải >= Bạc";
+      if (gd > pd) e.platinumDiscountRate = "Phải >= Vàng";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }

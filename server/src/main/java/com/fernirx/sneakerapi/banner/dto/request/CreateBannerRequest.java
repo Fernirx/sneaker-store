@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
+import com.fernirx.sneakerapi.common.annotation.ValidDateRange;
+
+@ValidDateRange(startField = "startAt", endField = "endAt")
 public record CreateBannerRequest(
         @NotBlank(message = "{validation.field.not_blank}") @Size(max = 150, message = "{validation.size.max}") String title,
         @NotBlank(message = "{validation.field.not_blank}") @Size(max = 255, message = "{validation.size.max}") String imagePublicId,

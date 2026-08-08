@@ -91,8 +91,6 @@ public class CollectionServiceImpl implements CollectionService {
             throw BusinessException.alreadyExists("label.collection");
         }
         
-        validateDates(request.launchDate(), request.endDate());
-        
         String slug = generateUniqueSlug(request.name());
         Collection collection = new Collection();
         collection.setName(request.name());
@@ -132,10 +130,7 @@ public class CollectionServiceImpl implements CollectionService {
             }
         }
         
-        // Kiểm tra logic thời gian với data mới (nếu request truyền null thì lấy field cũ)
-        LocalDate launchDate = request.launchDate() != null ? request.launchDate() : collection.getLaunchDate();
-        LocalDate endDate = request.endDate() != null ? request.endDate() : collection.getEndDate();
-        validateDates(launchDate, endDate);
+        // validation now handled by @ValidCollectionDates on the DTO
         
         collectionMapper.updateCollection(request, collection);
         String cleanDesc = request.description() != null
@@ -179,15 +174,7 @@ public class CollectionServiceImpl implements CollectionService {
 
     // ---- Private helpers ----
 
-    /**
-     * Kiểm tra tính hợp lệ của mốc thời gian: 
-     * Ngày kết thúc không được phép diễn ra trước ngày ra mắt.
-     */
-    private void validateDates(LocalDate launchDate, LocalDate endDate) {
-        if (launchDate != null && endDate != null && endDate.isBefore(launchDate)) {
-            throw BusinessException.bad("label.collection");
-        }
-    }
+
 
     /**
      * Tự động sinh ra chuỗi slug URL-safe từ tên. 

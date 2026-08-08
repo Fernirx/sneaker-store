@@ -145,9 +145,9 @@ export default function StockAdjustmentDetailClient({
         <Row label="Lý do" value={adjustment.reason} />
         <Row label="Người tạo" value={adjustment.createdByEmail ?? '—'} />
         {adjustment.approvedByEmail && <Row label="Người duyệt" value={adjustment.approvedByEmail} />}
-        <Row label="Ngày tạo" value={formatDateTime(adjustment.createdAt)} />
-        {adjustment.approvedAt && <Row label="Ngày duyệt" value={formatDateTime(adjustment.approvedAt)} />}
-        {adjustment.confirmedAt && <Row label="Ngày áp dụng" value={formatDateTime(adjustment.confirmedAt)} />}
+        <Row label="Thời gian tạo" value={formatDateTime(adjustment.createdAt)} />
+        {adjustment.approvedAt && <Row label="Thời gian duyệt" value={formatDateTime(adjustment.approvedAt)} />}
+        {adjustment.confirmedAt && <Row label="Thời gian áp dụng" value={formatDateTime(adjustment.confirmedAt)} />}
       </div>
 
       {isTentative && (
@@ -160,30 +160,30 @@ export default function StockAdjustmentDetailClient({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SKU / Sản phẩm</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Size / Màu</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thay đổi</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tồn trước</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tồn sau</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ghi chú</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SKU / Sản phẩm</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Size / Màu</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thay đổi</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Tồn trước</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Tồn sau</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Ghi chú</th>
             </tr>
           </thead>
           <tbody>
             {adjustment.items.map(item => (
               <tr key={item.id} className="border-b border-line-2 last:border-0">
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <div className="font-body text-xs font-bold">{item.sku}</div>
                   <div className="text-xs text-muted">{item.productName}</div>
                 </td>
-                <td className="px-4 py-3 text-xs text-muted">{item.colorway} · {item.size}</td>
-                <td className="px-4 py-3 text-right tabular-nums font-bold">
+                <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{item.colorway} · {item.size}</td>
+                <td className="px-4 py-3 text-right tabular-nums font-bold whitespace-nowrap">
                   <span className={item.quantityChange < 0 ? 'text-danger' : 'text-ok'}>
                     {item.quantityChange > 0 ? `+${item.quantityChange}` : item.quantityChange}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums text-muted">{item.quantityBefore}</td>
-                <td className="px-4 py-3 text-right tabular-nums text-muted">{item.quantityAfter}</td>
-                <td className="px-4 py-3 text-xs text-muted">{item.note ?? '—'}</td>
+                <td className="px-4 py-3 text-right tabular-nums text-muted whitespace-nowrap">{item.quantityBefore}</td>
+                <td className="px-4 py-3 text-right tabular-nums text-muted whitespace-nowrap">{item.quantityAfter}</td>
+                <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{item.note ?? '—'}</td>
               </tr>
             ))}
           </tbody>

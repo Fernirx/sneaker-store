@@ -25,11 +25,11 @@ export default function PaymentsTab({ orderId }: { orderId: number }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Mã giao dịch</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Mã phản hồi</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Số tiền</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thời gian</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Mã giao dịch</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Mã phản hồi</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Số tiền</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Trạng thái</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thời gian</th>
             </tr>
           </thead>
           <tbody>
@@ -38,14 +38,14 @@ export default function PaymentsTab({ orderId }: { orderId: number }) {
                 <td className="px-4 py-3 font-body text-xs">{p.transactionId ?? '—'}</td>
                 <td className="px-4 py-3 font-body text-xs text-muted">{p.responseCode ?? '—'}</td>
                 <td className="px-4 py-3 text-right tabular-nums">{formatPrice(p.amount)}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                     p.status === 'SUCCESS' ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'
                   }`}>
                     {p.status === 'SUCCESS' ? 'Thành công' : 'Thất bại'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-xs text-muted">{formatDateTime(p.createdAt)}</td>
+                <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDateTime(p.createdAt)}</td>
               </tr>
             ))}
           </tbody>

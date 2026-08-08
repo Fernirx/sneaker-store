@@ -144,7 +144,7 @@ export default function ImagesTab({ productId, isAdmin }: { productId: number; i
         const { data: uploaded } = await clientAxios.post('/api/upload', fd);
 
         await clientAxios.post(`/api/admin/products/${productId}/images`, {
-          colorway:      colorway.trim(),
+          colorway:      colorway,
           colorHex:      colorHex || null,
           imagePublicId: uploaded.publicId,
           primaryImage:  i === primaryIdx,
@@ -159,6 +159,7 @@ export default function ImagesTab({ productId, isAdmin }: { productId: number; i
       load();
     } catch (err) {
       setAddError(parseApiError(err).general || 'Upload thất bại, thử lại.');
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setAddSaving(false);
       setAddProgress('');
@@ -185,6 +186,7 @@ export default function ImagesTab({ productId, isAdmin }: { productId: number; i
       load();
     } catch (err) {
       setEditError(parseApiError(err).general);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setEditSaving(false);
     }
@@ -300,7 +302,7 @@ export default function ImagesTab({ productId, isAdmin }: { productId: number; i
               <div className="flex gap-2">
                 <input
                   value={colorway}
-                  onChange={e => setColorway(e.target.value)}
+                  onChange={e => setColorway(e.target.value.replace(/^\s+/, ''))}
                   placeholder="Tên colorway"
                   className="flex-1 border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
                 />
@@ -386,7 +388,7 @@ export default function ImagesTab({ productId, isAdmin }: { productId: number; i
               </button>
               <button
                 type="submit"
-                disabled={addSaving}
+                disabled={addSaving || !colorway.trim() || pendingFiles.length === 0}
                 className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 min-w-[100px]"
               >
                 {addSaving

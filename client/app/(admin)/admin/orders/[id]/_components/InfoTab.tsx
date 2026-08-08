@@ -156,12 +156,12 @@ export default function InfoTab({
         <h3 className="font-display font-bold text-xs uppercase tracking-wide text-muted mb-2">
           Khách hàng &amp; Giao hàng
         </h3>
-        <Row label="Khách hàng" value={order.customerEmail ?? 'Khách vãng lai'} />
+        <Row label="Email khách hàng" value={order.customerEmail ?? 'Khách vãng lai'} />
         {order.guestToken && <Row label="Guest token" value={order.guestToken} mono />}
         <Row label="Người nhận" value={order.recipientName} />
         <Row label="Điện thoại" value={order.recipientPhone} />
         <Row label="Địa chỉ" value={fullAddress} />
-        {order.note && <Row label="Ghi chú khách" value={order.note} />}
+        <Row label="Ghi chú khách" value={order.note || <span className="text-muted italic">Không có</span>} />
       </div>
 
       <div className="bg-white border border-line rounded-sm p-5 space-y-3">
@@ -183,7 +183,7 @@ export default function InfoTab({
         {order.tierDiscountAmount > 0 && <Row label="Hạng thành viên" value={`-${formatPrice(order.tierDiscountAmount)}`} />}
         <Row label="Tổng tiền" value={<span className="font-bold">{formatPrice(order.totalAmount)}</span>} />
         <Row label="Hết hạn TT" value={formatDateTime(order.expiredAt)} />
-        <Row label="Ngày tạo" value={formatDateTime(order.createdAt)} />
+        <Row label="Thời gian tạo" value={formatDateTime(order.createdAt)} />
       </div>
 
       <div className="bg-white border border-line rounded-sm p-5 space-y-3 lg:col-span-2">
@@ -260,22 +260,22 @@ export default function InfoTab({
           <h3 className="font-display font-bold text-xs uppercase tracking-wide text-muted mb-2">
             Cập nhật trạng thái
           </h3>
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(180px,auto)_1fr_auto] items-end gap-3">
             <div>
-              <label className="block text-xs font-semibold text-muted mb-1">Trạng thái</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Trạng thái</label>
               <select
                 value={status}
                 onChange={e => setStatus(e.target.value as OrderStatus)}
-                className="border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
+                className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
               >
                 {statusOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs font-semibold text-muted mb-1">Ghi chú (không bắt buộc)</label>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Ghi chú</label>
               <input
                 value={note}
-                onChange={e => setNote(e.target.value)}
+                onChange={e => setNote(e.target.value.replace(/^\s+/, ''))}
                 className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
               />
             </div>

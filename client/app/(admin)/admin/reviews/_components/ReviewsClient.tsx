@@ -127,9 +127,9 @@ export default function ReviewsClient({
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Sản phẩm</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Sao</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Nội dung</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày tạo</th>
-              {isAdmin && <th className="px-4 py-3 w-32" />}
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Trạng thái</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Ngày tạo</th>
+              {isAdmin && <th className="px-4 py-3 w-32 whitespace-nowrap" />}
             </tr>
           </thead>
           <tbody>
@@ -142,7 +142,7 @@ export default function ReviewsClient({
             ) : (
               pageData.data.map(row => (
                 <tr key={row.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors align-top">
-                  <td className="px-4 py-3 text-xs">{row.userEmail}</td>
+                  <td className="px-4 py-3 text-xs truncate max-w-[150px]" title={row.userEmail}>{row.userEmail}</td>
                   <td className="px-4 py-3 text-xs font-semibold max-w-[160px] truncate">{row.productName}</td>
                   <td className="px-4 py-3"><Stars value={row.rating} /></td>
                   <td className="px-4 py-3 text-xs max-w-[260px]">
@@ -152,14 +152,14 @@ export default function ReviewsClient({
                       <p className="text-faint mt-0.5">{row.images.length} ảnh</p>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       row.approved ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'
                     }`}>
                       {row.approved ? 'Đang hiển thị' : 'Đã ẩn'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted">{formatDate(row.createdAt)}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDate(row.createdAt)}</td>
                   {isAdmin && (
                     <td className="px-4 py-3">
                       <div className="flex gap-3 justify-end">

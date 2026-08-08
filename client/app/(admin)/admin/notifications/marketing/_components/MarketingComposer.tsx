@@ -56,6 +56,7 @@ export default function MarketingComposer() {
     } catch (err) {
       const { general } = parseApiError(err);
       setError(general);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSubmitting(false);
     }
@@ -94,24 +95,30 @@ export default function MarketingComposer() {
 
       {targetType === 'USER' && (
         <div>
-          <label className="block text-xs font-bold text-ink-2 mb-1.5">Chọn khách hàng</label>
+          <label className="block text-xs font-bold text-ink-2 mb-1.5">
+            Chọn khách hàng <span className="text-danger">*</span>
+          </label>
           <CustomerPicker selected={customers} onChange={setCustomers} />
         </div>
       )}
 
       <div>
-        <label className="block text-xs font-bold text-ink-2 mb-1.5">Tiêu đề</label>
+        <label className="block text-xs font-bold text-ink-2 mb-1.5">
+          Tiêu đề <span className="text-danger">*</span>
+        </label>
         <input
           type="text"
           value={title}
-          onChange={e => setTitle(e.target.value)}
+          onChange={e => setTitle(e.target.value.replace(/^\s+/, ''))}
           maxLength={255}
           className="w-full border border-line bg-white rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-ink-2 mb-1.5">Nội dung</label>
+        <label className="block text-xs font-bold text-ink-2 mb-1.5">
+          Nội dung <span className="text-danger">*</span>
+        </label>
         <TiptapEditor value={message} onChange={setMessage} />
       </div>
 
@@ -120,7 +127,7 @@ export default function MarketingComposer() {
         <input
           type="text"
           value={link}
-          onChange={e => setLink(e.target.value)}
+          onChange={e => setLink(e.target.value.replace(/^\s+/, ''))}
           placeholder="/products/air-max-1 hoặc /coupons"
           maxLength={500}
           className="w-full border border-line bg-white rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
@@ -129,7 +136,7 @@ export default function MarketingComposer() {
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || !title.trim() || !message.trim() || (targetType === 'USER' && customers.length === 0)}
         className="text-[12px] font-bold uppercase tracking-widest bg-ink text-white px-6 py-3 rounded-sm hover:bg-accent transition-colors disabled:opacity-50"
       >
         {submitting ? 'Đang gửi...' : 'Gửi thông báo'}

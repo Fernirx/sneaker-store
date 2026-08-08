@@ -103,7 +103,7 @@ public class CouponServiceImpl implements CouponService {
             throw BusinessException.alreadyExists("label.coupon");
         }
         
-        validateBusinessRules(request.discountType(), request.discountValue(), request.startDate(), request.endDate());
+        validateBusinessRules(request.discountType(), request.discountValue());
         
         Coupon coupon = new Coupon();
         coupon.setCode(request.code().toUpperCase());
@@ -140,7 +140,7 @@ public class CouponServiceImpl implements CouponService {
         LocalDateTime startDate = request.startDate() != null ? request.startDate() : coupon.getStartDate();
         LocalDateTime endDate = request.endDate() != null ? request.endDate() : coupon.getEndDate();
         
-        validateBusinessRules(type, discountValue, startDate, endDate);
+        validateBusinessRules(type, discountValue);
         
         couponMapper.updateCoupon(request, coupon);
         return couponMapper.toInternalResponse(couponRepository.save(coupon));
@@ -239,10 +239,7 @@ public class CouponServiceImpl implements CouponService {
      * 1. Thời gian: Ngày kết thúc không được nhỏ hơn ngày bắt đầu.
      * 2. Giá trị: Nếu là PERCENTAGE, % giảm không được lớn hơn 100.
      */
-    private void validateBusinessRules(DiscountType type, BigDecimal discountValue, LocalDateTime startDate, LocalDateTime endDate) {
-        if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
-            throw BusinessException.bad("label.coupon");
-        }
+    private void validateBusinessRules(DiscountType type, BigDecimal discountValue) {
         if (type == DiscountType.PERCENTAGE && discountValue != null && discountValue.compareTo(new BigDecimal("100")) > 0) {
             throw BusinessException.bad("label.coupon");
         }

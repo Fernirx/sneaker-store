@@ -42,6 +42,10 @@ public class SettingServiceImpl implements SettingService {
         if (storeSettingRepository.count() > 0) {
             throw BusinessException.alreadyExists("label.storeSetting");
         }
+        validateThresholdLogic(
+                request.silverThreshold(), request.goldThreshold(), request.platinumThreshold(),
+                request.silverDiscountRate(), request.goldDiscountRate(), request.platinumDiscountRate()
+        );
         StoreSetting entity = storeSettingMapper.toStoreSetting(request);
         storeSettingRepository.save(entity);
         return storeSettingMapper.toResponse(entity);
@@ -55,6 +59,16 @@ public class SettingServiceImpl implements SettingService {
     @CacheEvict(value = "store_setting", allEntries = true)
     public StoreSettingResponse updateStoreSetting(UpdateStoreSettingRequest request) {
         StoreSetting entity = findStoreSetting();
+        
+        java.math.BigDecimal sThreshold = request.silverThreshold() != null ? request.silverThreshold() : entity.getSilverThreshold();
+        java.math.BigDecimal gThreshold = request.goldThreshold() != null ? request.goldThreshold() : entity.getGoldThreshold();
+        java.math.BigDecimal pThreshold = request.platinumThreshold() != null ? request.platinumThreshold() : entity.getPlatinumThreshold();
+        Integer sRate = request.silverDiscountRate() != null ? request.silverDiscountRate() : entity.getSilverDiscountRate();
+        Integer gRate = request.goldDiscountRate() != null ? request.goldDiscountRate() : entity.getGoldDiscountRate();
+        Integer pRate = request.platinumDiscountRate() != null ? request.platinumDiscountRate() : entity.getPlatinumDiscountRate();
+        
+        validateThresholdLogic(sThreshold, gThreshold, pThreshold, sRate, gRate, pRate);
+
         storeSettingMapper.updateStoreSetting(request, entity);
         storeSettingRepository.save(entity);
         return storeSettingMapper.toResponse(entity);
@@ -67,5 +81,21 @@ public class SettingServiceImpl implements SettingService {
     private StoreSetting findStoreSetting() {
         return storeSettingRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> BusinessException.notFound("label.storeSetting"));
+    }
+
+    private void validateThresholdLogic(java.math.BigDecimal silver, java.math.BigDecimal gold, java.math.BigDecimal platinum, 
+                                        Integer sRate, Integer gRate, Integer pRate) {
+        if (silver.compareTo(gold) >= 0) {
+            throw BusinessException.bad("Ngưỡng Vàng phải lớn hơn ngưỡng Bạc");
+        }
+        if (gold.compareTo(platinum) >= 0) {
+            throw BusinessException.bad("Ngưỡng Bạch kim phải lớn hơn ngưỡng Vàng");
+        }
+        if (sRate > gRate) {
+            throw BusinessException.bad("Giảm giá Vàng phải lớn hơn hoặc bằng Bạc");
+        }
+        if (gRate > pRate) {
+            throw BusinessException.bad("Giảm giá Bạch kim phải lớn hơn hoặc bằng Vàng");
+        }
     }
 }

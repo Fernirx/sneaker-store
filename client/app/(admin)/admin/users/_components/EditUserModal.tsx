@@ -35,6 +35,7 @@ export default function EditUserModal({
       onSaved();
     } catch (err) {
       setError(parseApiError(err).general);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }

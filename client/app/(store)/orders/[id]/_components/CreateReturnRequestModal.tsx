@@ -131,6 +131,7 @@ export default function CreateReturnRequestModal({
       onCreated(data.data as ReturnRequestResponse);
     } catch (err) {
       setError(parseApiError(err, 'Không thể tạo yêu cầu đổi/trả').general);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
@@ -172,7 +173,9 @@ export default function CreateReturnRequestModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">Chọn sản phẩm</label>
+            <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+              Chọn sản phẩm <span className="text-danger">*</span>
+            </label>
             {loadingItems ? (
               <p className="text-sm text-muted">Đang tải...</p>
             ) : loadError ? (
@@ -238,8 +241,10 @@ export default function CreateReturnRequestModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">Lý do đổi/trả</label>
-            <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3}
+            <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+              Lý do đổi/trả <span className="text-danger">*</span>
+            </label>
+            <textarea value={reason} onChange={e => setReason(e.target.value.replace(/^\s+/, ''))} rows={3}
               placeholder="Vd: sản phẩm không vừa size, giao sai màu..."
               className="w-full border border-line rounded px-3 py-2.5 text-sm focus:outline-none focus:border-ink transition-colors resize-none" />
           </div>
@@ -274,7 +279,7 @@ export default function CreateReturnRequestModal({
               className="flex-1 border border-line rounded py-2.5 text-sm font-semibold text-ink-2 hover:border-ink hover:text-ink transition-colors disabled:opacity-40">
               Hủy
             </button>
-            <button type="submit" disabled={saving || loadingItems}
+            <button type="submit" disabled={saving || loadingItems || selectedEntries.length === 0 || !reason.trim() || (resolutionType === 'EXCHANGE' && selectedEntries.some(([, v]) => !v.exchangeVariantId))}
               className="flex-1 bg-accent hover:bg-accent-700 disabled:opacity-40 text-white font-display font-bold text-sm uppercase tracking-wider py-2.5 rounded transition-colors">
               {saving ? '...' : 'Gửi yêu cầu'}
             </button>

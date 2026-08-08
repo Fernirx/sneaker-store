@@ -121,13 +121,13 @@ export default function ReturnsClient({ initialData }: { initialData: PageData }
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Mã yêu cầu</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đơn hàng</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Khách hàng</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Hình thức</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày tạo</th>
-              <th className="px-4 py-3 w-16" />
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Mã yêu cầu</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Đơn hàng</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Email khách hàng</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Hình thức</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Trạng thái</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thời gian tạo</th>
+              <th className="px-4 py-3 w-16 whitespace-nowrap" />
             </tr>
           </thead>
           <tbody>
@@ -140,16 +140,16 @@ export default function ReturnsClient({ initialData }: { initialData: PageData }
             ) : (
               returns.map(r => (
                 <tr key={r.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-body font-bold text-sm">{r.code}</td>
-                  <td className="px-4 py-3 text-sm">{r.orderCode}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{r.customerEmail}</td>
-                  <td className="px-4 py-3 text-sm">{RESOLUTION_TYPE_LABELS[r.resolutionType]}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 font-body font-bold text-sm whitespace-nowrap">{r.code}</td>
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">{r.orderCode}</td>
+                  <td className="px-4 py-3 text-xs text-muted truncate max-w-[150px]" title={r.customerEmail}>{r.customerEmail}</td>
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">{RESOLUTION_TYPE_LABELS[r.resolutionType]}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${STATUS_COLORS[r.status]}`}>
                       {STATUS_LABELS[r.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted">{formatDateTime(r.createdAt)}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDateTime(r.createdAt)}</td>
                   <td className="px-4 py-3 text-right">
                     <Link href={`/admin/returns/${r.id}`} className="text-xs font-bold text-muted hover:text-ink transition-colors">
                       Xem

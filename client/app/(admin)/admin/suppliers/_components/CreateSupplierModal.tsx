@@ -46,13 +46,14 @@ export default function CreateSupplierModal({
       const parsed = parseApiError(err);
       setError(parsed.general);
       setFieldErrors(parsed.fields);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title="Tạo nhà cung cấp mới" onClose={onClose}>
+    <Modal title="Thêm nhà cung cấp mới" onClose={onClose} maxWidth="2xl">
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
@@ -64,8 +65,9 @@ export default function CreateSupplierModal({
             <input
               type="text"
               value={code}
-              onChange={e => setCode(e.target.value)}
+              onChange={e => setCode(e.target.value.replace(/^\s+/, '').toUpperCase())}
               required
+              maxLength={50}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink"
             />
             {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
@@ -77,8 +79,9 @@ export default function CreateSupplierModal({
             <input
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => setName(e.target.value.replace(/^\s+/, ''))}
               required
+              maxLength={200}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
             />
             {fieldErrors.name && <p className="text-danger text-xs mt-1">{fieldErrors.name}</p>}
@@ -88,9 +91,11 @@ export default function CreateSupplierModal({
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Email</label>
           <input
-            type="email"
+            type="text"
+            inputMode="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value.replace(/^\s+/, ''))}
+            maxLength={100}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
           />
           {fieldErrors.email && <p className="text-danger text-xs mt-1">{fieldErrors.email}</p>}
@@ -106,7 +111,8 @@ export default function CreateSupplierModal({
           <input
             type="text"
             value={contactPerson}
-            onChange={e => setContactPerson(e.target.value)}
+            onChange={e => setContactPerson(e.target.value.replace(/^\s+/, ''))}
+            maxLength={100}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
           />
         </div>
@@ -115,7 +121,7 @@ export default function CreateSupplierModal({
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Địa chỉ</label>
           <textarea
             value={address}
-            onChange={e => setAddress(e.target.value)}
+            onChange={e => setAddress(e.target.value.replace(/^\s+/, ''))}
             rows={2}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink resize-none"
           />
@@ -125,7 +131,7 @@ export default function CreateSupplierModal({
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Ghi chú</label>
           <textarea
             value={notes}
-            onChange={e => setNotes(e.target.value)}
+            onChange={e => setNotes(e.target.value.replace(/^\s+/, ''))}
             rows={2}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink resize-none"
           />
@@ -141,10 +147,10 @@ export default function CreateSupplierModal({
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !code.trim() || !name.trim()}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors"
           >
-            {saving ? 'Đang lưu...' : 'Lưu'}
+            {saving ? 'Đang thêm...' : 'Thêm'}
           </button>
         </div>
       </form>

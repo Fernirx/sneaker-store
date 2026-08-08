@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import clientAxios from '@/lib/axios/clientAxios';
 import {
-  formatDate, formatDiscount, formatPrice,
+  formatDate, formatDateTime, formatDiscount, formatPrice,
   type CouponRow, type PageData, type DiscountType,
 } from './types';
 import CreateCouponModal from './CreateCouponModal';
@@ -64,7 +64,7 @@ export default function CouponsClient({
     }, 350);
   }
 
-  const colCount = canWrite ? 8 : 7;
+  const colCount = canWrite ? 10 : 9;
 
   return (
     <div className="space-y-5">
@@ -75,7 +75,7 @@ export default function CouponsClient({
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
           >
-            Tạo coupon
+            Thêm coupon
           </button>
         )}
       </div>
@@ -111,18 +111,19 @@ export default function CouponsClient({
 
       {/* Table */}
       <div className={`bg-white border border-line rounded-sm overflow-x-auto transition-opacity duration-150 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Mã</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Loại</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Giảm giá</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đơn tối thiểu</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đã dùng</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày bắt đầu</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Hết hạn</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              {canWrite && <th className="px-4 py-3 w-24" />}
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[12%]">Mã</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[8%]">Loại</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[14%]">Giảm giá</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[12%]">Đơn tối thiểu</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[10%]">Đã dùng</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[10%]">Ngày bắt đầu</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[10%]">Ngày hết hạn</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[10%]">Trạng thái</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[14%]">Ngày tạo</th>
+              {canWrite && <th className="px-4 py-3 w-16" />}
             </tr>
           </thead>
           <tbody>
@@ -135,8 +136,8 @@ export default function CouponsClient({
             ) : (
               pageData.data.map(coupon => (
                 <tr key={coupon.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-body font-bold text-sm">{coupon.code}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 font-body font-bold text-sm whitespace-nowrap">{coupon.code}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       coupon.discountType === 'PERCENTAGE'
                         ? 'bg-blue-100 text-blue-700'
@@ -145,7 +146,7 @@ export default function CouponsClient({
                       {coupon.discountType === 'PERCENTAGE' ? '%' : '₫'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-semibold text-sm">
+                  <td className="px-4 py-3 font-semibold text-sm tabular-nums whitespace-nowrap">
                     {formatDiscount(coupon.discountType, coupon.discountValue)}
                     {coupon.maxDiscountAmount != null && (
                       <span className="block text-[11px] text-muted font-normal">
@@ -153,24 +154,25 @@ export default function CouponsClient({
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted">
+                  <td className="px-4 py-3 text-xs text-muted tabular-nums whitespace-nowrap">
                     {coupon.minOrderAmount != null ? formatPrice(coupon.minOrderAmount) : '—'}
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted tabular-nums">
+                  <td className="px-4 py-3 text-xs text-muted tabular-nums whitespace-nowrap">
                     {coupon.usedCount}
                     {coupon.usageLimit != null
                       ? ` / ${coupon.usageLimit}`
                       : ' / ∞'}
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted">{formatDate(coupon.startDate)}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{formatDate(coupon.endDate)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDate(coupon.startDate)}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDate(coupon.endDate)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       coupon.active ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'
                     }`}>
                       {coupon.active ? 'Hoạt động' : 'Ẩn'}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDate(coupon.createdAt)}</td>
                   {canWrite && (
                     <td className="px-4 py-3">
                       <div className="flex gap-3 justify-end">

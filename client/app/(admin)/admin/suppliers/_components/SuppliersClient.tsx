@@ -70,7 +70,7 @@ export default function SuppliersClient({
     setCurrentPage(0);
   }
 
-  const colCount = canWrite ? 6 : 5;
+  const colCount = canWrite ? 9 : 8;
 
   return (
     <div className="space-y-5">
@@ -81,7 +81,7 @@ export default function SuppliersClient({
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
           >
-            Tạo nhà cung cấp
+            Thêm nhà cung cấp
           </button>
         )}
       </div>
@@ -109,11 +109,14 @@ export default function SuppliersClient({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Mã</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tên</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Liên hệ</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày tạo</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Mã</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Tên</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Email</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SĐT</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Người liên hệ</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SĐT liên hệ</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Trạng thái</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Ngày tạo</th>
               {canWrite && <th className="px-4 py-3 w-24" />}
             </tr>
           </thead>
@@ -127,18 +130,18 @@ export default function SuppliersClient({
             ) : (
               pageData.data.map(supplier => (
                 <tr key={supplier.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-body font-bold text-sm">{supplier.code}</td>
-                  <td className="px-4 py-3 font-semibold">{supplier.name}</td>
-                  <td className="px-4 py-3 text-xs text-muted">
-                    {supplier.contactPerson ?? '—'}
-                    {supplier.contactPhone && <span className="block">{supplier.contactPhone}</span>}
-                  </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 font-body font-bold text-sm whitespace-nowrap">{supplier.code}</td>
+                  <td className="px-4 py-3 font-semibold whitespace-nowrap">{supplier.name}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{supplier.email ?? '—'}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{supplier.phone ?? '—'}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{supplier.contactPerson ?? '—'}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{supplier.contactPhone ?? '—'}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${supplier.active ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'}`}>
                       {supplier.active ? 'Hoạt động' : 'Ẩn'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted text-xs">{formatDate(supplier.createdAt)}</td>
+                  <td className="px-4 py-3 text-muted text-xs whitespace-nowrap">{formatDate(supplier.createdAt)}</td>
                   {canWrite && (
                     <td className="px-4 py-3">
                       <div className="flex gap-3 justify-end">

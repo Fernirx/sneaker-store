@@ -42,13 +42,14 @@ export default function CreateBannerModal({
       const parsed = parseApiError(err);
       setError(parsed.general);
       setFieldErrors(parsed.fields);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title="Tạo banner mới" onClose={onClose}>
+    <Modal title="Thêm banner mới" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
         {error && <p className="text-danger text-sm">{error}</p>}
 
@@ -59,15 +60,18 @@ export default function CreateBannerModal({
           <input
             type="text"
             value={title}
-            onChange={e => setTitle(e.target.value)}
+            onChange={e => setTitle(e.target.value.replace(/^\s+/, ''))}
             required
+            maxLength={150}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
           />
           {fieldErrors.title && <p className="text-danger text-xs mt-1">{fieldErrors.title}</p>}
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Ảnh</label>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+            Ảnh <span className="text-danger">*</span>
+          </label>
           <ImageUpload value={imagePublicId} folder="banners" onChange={setImagePublicId} />
           {fieldErrors.imagePublicId && <p className="text-danger text-xs mt-1">{fieldErrors.imagePublicId}</p>}
         </div>
@@ -80,7 +84,8 @@ export default function CreateBannerModal({
             type="text"
             placeholder="/collections/xyz hoặc /products?onSale=true"
             value={linkUrl}
-            onChange={e => setLinkUrl(e.target.value)}
+            onChange={e => setLinkUrl(e.target.value.replace(/^\s+/, ''))}
+            maxLength={500}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
           />
           {fieldErrors.linkUrl && <p className="text-danger text-xs mt-1">{fieldErrors.linkUrl}</p>}
@@ -106,6 +111,7 @@ export default function CreateBannerModal({
             <input
               type="datetime-local"
               value={startAt}
+              max={endAt || undefined}
               onChange={e => setStartAt(e.target.value)}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
             />
@@ -117,6 +123,7 @@ export default function CreateBannerModal({
             <input
               type="datetime-local"
               value={endAt}
+              min={startAt || undefined}
               onChange={e => setEndAt(e.target.value)}
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink"
             />
@@ -134,10 +141,10 @@ export default function CreateBannerModal({
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !title.trim() || !imagePublicId.trim()}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors"
           >
-            {saving ? 'Đang lưu...' : 'Lưu'}
+            {saving ? 'Đang lưu...' : 'Thêm'}
           </button>
         </div>
       </form>

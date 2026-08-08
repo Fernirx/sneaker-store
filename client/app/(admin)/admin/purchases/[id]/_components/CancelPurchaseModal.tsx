@@ -30,6 +30,7 @@ export default function CancelPurchaseModal({
     } catch (err) {
       setError(parseApiError(err).general);
       setSaving(false);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -42,7 +43,7 @@ export default function CancelPurchaseModal({
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Lý do (không bắt buộc)</label>
           <textarea
             value={reason}
-            onChange={e => setReason(e.target.value)}
+            onChange={e => setReason(e.target.value.replace(/^\s+/, ''))}
             rows={3}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink resize-none"
           />

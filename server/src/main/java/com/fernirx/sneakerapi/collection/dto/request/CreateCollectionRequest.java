@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
+import com.fernirx.sneakerapi.common.annotation.ValidDateRange;
+
+@ValidDateRange(startField = "launchDate", endField = "endDate", message = "{validation.collection.date_invalid}")
 public record CreateCollectionRequest(
         @NotBlank(message = "{validation.field.not_blank}") @Size(max = 100, message = "{validation.size.max}") String name,
         @NullableNotBlank String description,

@@ -7,7 +7,7 @@ import { productUrl } from '@/lib/cloudinaryUrl';
 import {
   type ProductRow, type PageData,
   type VariantGroup,
-  GENDER_OPTIONS, formatPrice,
+  GENDER_OPTIONS, formatPrice, formatDate,
 } from './types';
 import { Fragment } from 'react';
 import CreateProductModal from './CreateProductModal';
@@ -108,7 +108,7 @@ export default function ProductsClient({
     }
   }
 
-  const colCount = isAdmin ? 8 : 7;
+  const colCount = isAdmin ? 9 : 8;
 
   return (
     <div className="space-y-5">
@@ -119,7 +119,7 @@ export default function ProductsClient({
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
           >
-            Tạo sản phẩm
+            Thêm sản phẩm
           </button>
         )}
       </div>
@@ -167,11 +167,12 @@ export default function ProductsClient({
             <tr className="border-b border-line bg-paper">
               <th className="w-8 px-2 py-3"></th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted w-16">Ảnh</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tên / Mã</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thương hiệu</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Giới tính</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Khoảng giá</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted max-w-[250px]">Tên</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Mã SP</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted max-w-[200px]">Slug</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted w-40 whitespace-nowrap">Khoảng giá</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted w-28 whitespace-nowrap">Trạng thái</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Ngày tạo</th>
               {isAdmin && <th className="px-4 py-3 w-28" />}
             </tr>
           </thead>
@@ -208,10 +209,9 @@ export default function ProductsClient({
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3">
-                    <p className="font-bold text-sm leading-snug">{p.name}</p>
-                    <p className="text-xs text-muted mt-0.5">{p.code}</p>
-                    <div className="flex gap-1 mt-1">
+                  <td className="px-4 py-3 max-w-[250px]">
+                    <p className="font-bold text-sm leading-snug truncate" title={p.name}>{p.name}</p>
+                    <div className="flex gap-1 mt-1.5">
                       {p.newArrival && (
                         <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[9px] font-bold rounded">MỚI</span>
                       )}
@@ -220,19 +220,20 @@ export default function ProductsClient({
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm">{p.brand.name}</td>
-                  <td className="px-4 py-3 text-sm text-muted">
-                    {GENDER_OPTIONS.find(o => o.value === p.gender)?.label ?? p.gender}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium">
+                  <td className="px-4 py-3 text-sm font-bold">{p.code}</td>
+                  <td className="px-4 py-3 text-xs text-muted font-mono max-w-[200px] break-all">{p.slug}</td>
+                  <td className="px-4 py-3 text-sm font-medium whitespace-nowrap">
                     {p.minPrice != null 
                       ? (p.maxPrice != null && p.maxPrice !== p.minPrice ? `${formatPrice(p.minPrice)} - ${formatPrice(p.maxPrice)}` : formatPrice(p.minPrice))
                       : <span className="text-muted font-normal text-xs">Chưa có giá</span>}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p.active ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'}`}>
                       {p.active ? 'Hoạt động' : 'Ẩn'}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">
+                    {formatDate(p.createdAt)}
                   </td>
                   {isAdmin && (
                     <td className="px-4 py-3">

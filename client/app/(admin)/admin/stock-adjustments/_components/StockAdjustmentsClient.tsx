@@ -79,7 +79,7 @@ export default function StockAdjustmentsClient({ initialData }: { initialData: P
           href="/admin/stock-adjustments/new"
           className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
         >
-          Tạo phiếu điều chỉnh
+          Thêm phiếu điều chỉnh
         </Link>
       </div>
 
@@ -126,15 +126,15 @@ export default function StockAdjustmentsClient({ initialData }: { initialData: P
       </div>
 
       <div className={`bg-white border border-line rounded-sm overflow-x-auto transition-opacity duration-150 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Mã phiếu</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Loại</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Lý do</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SL dòng</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày tạo</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[17%]">Mã phiếu</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[15%]">Loại</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[15%]">Lý do</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[16%]">Trạng thái</th>
+              <th className="text-center px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[12%]">Số dòng</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[21%]">Thời gian tạo</th>
               <th className="px-4 py-3 w-16" />
             </tr>
           </thead>
@@ -148,17 +148,17 @@ export default function StockAdjustmentsClient({ initialData }: { initialData: P
             ) : (
               adjustments.map(a => (
                 <tr key={a.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-body font-bold text-sm">{a.code}</td>
-                  <td className="px-4 py-3 text-sm">{TYPE_LABELS[a.type]}</td>
-                  <td className="px-4 py-3 text-xs text-muted truncate max-w-[240px]">{a.reason}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 font-body font-bold text-sm truncate">{a.code}</td>
+                  <td className="px-4 py-3 text-sm truncate">{TYPE_LABELS[a.type]}</td>
+                  <td className="px-4 py-3 text-xs text-muted truncate">{a.reason}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${STATUS_COLORS[a.status]}`}>
                       {STATUS_LABELS[a.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums">{a.items.length}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{formatDateTime(a.createdAt)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-center tabular-nums whitespace-nowrap">{a.items.length}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDateTime(a.createdAt)}</td>
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
                     <Link href={`/admin/stock-adjustments/${a.id}`} className="text-xs font-bold text-muted hover:text-ink transition-colors">
                       Xem
                     </Link>

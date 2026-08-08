@@ -51,7 +51,7 @@ const EMPTY: VForm = {
 function InlineModal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-line sticky top-0 bg-white">
           <h3 className="font-display font-black text-sm uppercase tracking-wide">{title}</h3>
           <button onClick={onClose} className="text-muted hover:text-ink text-xl leading-none">&times;</button>
@@ -83,7 +83,7 @@ function VariantForm({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Colorway <span className="text-danger">*</span></label>
-          <input value={form.colorway} onChange={e => s('colorway', e.target.value)} required
+          <input value={form.colorway} onChange={e => s('colorway', e.target.value.replace(/^\s+/, ''))} required
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
           {fieldErrors.colorway && <p className="text-danger text-xs mt-1">{fieldErrors.colorway}</p>}
         </div>
@@ -122,7 +122,7 @@ function VariantForm({
         </div>
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">SKU <span className="text-danger">*</span></label>
-          <input value={form.sku} onChange={e => s('sku', e.target.value)} required
+          <input value={form.sku} onChange={e => s('sku', e.target.value.replace(/^\s+/, '').toUpperCase())} required
             className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
           {fieldErrors.sku && <p className="text-danger text-xs mt-1">{fieldErrors.sku}</p>}
         </div>
@@ -195,9 +195,9 @@ function VariantForm({
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" onClick={onClose}
           className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper">Hủy</button>
-        <button type="submit" disabled={saving}
+        <button type="submit" disabled={saving || !form.colorway.trim() || !form.sku.trim() || !form.size}
           className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60">
-          {saving ? 'Đang lưu...' : 'Lưu'}
+          {saving ? (isEdit ? 'Đang lưu...' : 'Đang thêm...') : (isEdit ? 'Lưu' : 'Thêm')}
         </button>
       </div>
     </form>
@@ -271,6 +271,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
       const p = parseApiError(err);
       setAddError(p.general);
       setAddFieldErrors(p.fields);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setAddSaving(false);
     }
@@ -330,6 +331,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
       const p = parseApiError(err);
       setEditError(p.general);
       setEditFieldErrors(p.fields);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setEditSaving(false);
     }
@@ -350,6 +352,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
       load();
     } catch (err) {
       setEditGroupError(parseApiError(err).general);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setEditGroupSaving(false);
     }
@@ -380,7 +383,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
         {isAdmin && (
           <button onClick={() => { setAddOpen(true); setAddForm({ ...EMPTY }); }}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors">
-            Thêm variant
+            Thêm biến thể
           </button>
         )}
       </div>
@@ -490,14 +493,14 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
       )}
 
       {addOpen && (
-        <InlineModal title="Thêm variant" onClose={() => setAddOpen(false)}>
+        <InlineModal title="Thêm biến thể" onClose={() => setAddOpen(false)}>
           <VariantForm form={addForm} setForm={setAddForm} error={addError} fieldErrors={addFieldErrors}
             saving={addSaving} isEdit={false} onSubmit={handleAdd} onClose={() => setAddOpen(false)} />
         </InlineModal>
       )}
 
       {editTarget && (
-        <InlineModal title="Cập nhật variant" onClose={() => setEditTarget(null)}>
+        <InlineModal title="Cập nhật biến thể" onClose={() => setEditTarget(null)}>
           <VariantForm form={editForm} setForm={setEditForm} error={editError} fieldErrors={editFieldErrors}
             saving={editSaving} isEdit={true} onSubmit={handleEdit} onClose={() => setEditTarget(null)} />
         </InlineModal>
@@ -528,7 +531,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
             <p className="text-xs text-muted mb-2">Thao tác này sẽ cập nhật màu sắc cho <b>tất cả {editGroupTarget.variants.length} variant</b> trong nhóm này.</p>
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Colorway <span className="text-danger">*</span></label>
-              <input value={editGroupForm.colorway} onChange={e => setEditGroupForm(f => ({ ...f, colorway: e.target.value }))} required
+              <input value={editGroupForm.colorway} onChange={e => setEditGroupForm(f => ({ ...f, colorway: e.target.value.replace(/^\s+/, '') }))} required
                 className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
             </div>
             <div>
@@ -547,7 +550,7 @@ export default function VariantsTab({ productId, isAdmin }: { productId: number;
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={() => setEditGroupTarget(null)} className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper">Hủy</button>
-              <button type="submit" disabled={editGroupSaving} className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60">
+              <button type="submit" disabled={editGroupSaving || !editGroupForm.colorway.trim()} className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60">
                 {editGroupSaving ? 'Đang lưu...' : 'Lưu tất cả'}
               </button>
             </div>

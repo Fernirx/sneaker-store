@@ -136,14 +136,14 @@ export default function OrdersClient({ initialData }: { initialData: PageResult 
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Mã đơn</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Khách hàng</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thanh toán</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Phương thức</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tổng tiền</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày tạo</th>
-              <th className="px-4 py-3 w-16" />
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Mã đơn</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Email khách hàng</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Trạng thái</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thanh toán</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Phương thức</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Tổng tiền</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thời gian tạo</th>
+              <th className="px-4 py-3 w-16 whitespace-nowrap" />
             </tr>
           </thead>
           <tbody>
@@ -156,9 +156,9 @@ export default function OrdersClient({ initialData }: { initialData: PageResult 
             ) : (
               orders.map(order => (
                 <tr key={order.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-body font-bold text-sm">{order.code}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{order.customerEmail ?? 'Khách vãng lai'}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 font-body font-bold text-sm whitespace-nowrap">{order.code}</td>
+                  <td className="px-4 py-3 text-xs text-muted truncate max-w-[150px]" title={order.customerEmail ?? 'Khách vãng lai'}>{order.customerEmail ?? 'Khách vãng lai'}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${STATUS_COLORS[order.status]}`}>
                       {STATUS_LABELS[order.status]}
                     </span>
@@ -166,14 +166,14 @@ export default function OrdersClient({ initialData }: { initialData: PageResult 
                       <p className="text-[10px] text-muted mt-1">Dự kiến: {formatDateTime(order.shipment.expectedDeliveryAt)}</p>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${PAYMENT_STATUS_COLORS[order.paymentStatus]}`}>
                       {PAYMENT_STATUS_LABELS[order.paymentStatus]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted">{PAYMENT_METHOD_LABELS[order.paymentMethod]}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-sm tabular-nums">{formatPrice(order.totalAmount)}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{formatDateTime(order.createdAt)}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{PAYMENT_METHOD_LABELS[order.paymentMethod]}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-sm tabular-nums whitespace-nowrap">{formatPrice(order.totalAmount)}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDateTime(order.createdAt)}</td>
                   <td className="px-4 py-3 text-right">
                     <Link href={`/admin/orders/${order.id}`} className="text-xs font-bold text-muted hover:text-ink transition-colors">
                       Xem

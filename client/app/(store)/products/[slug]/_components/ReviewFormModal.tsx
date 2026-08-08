@@ -105,6 +105,7 @@ export default function ReviewFormModal({
       onSaved(data.data as ReviewItem);
     } catch (err) {
       setError(parseApiError(err, "Không thể lưu đánh giá").general);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }

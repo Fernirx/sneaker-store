@@ -38,14 +38,14 @@ export default function MarketingListClient({ initialData }: { initialData: Page
         <h2 className="font-display font-bold text-sm uppercase tracking-wide text-ink">Lịch sử đã gửi</h2>
 
         <div className={`bg-white border border-line rounded-sm overflow-x-auto transition-opacity duration-150 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead>
               <tr className="border-b border-line bg-paper">
-                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tiêu đề</th>
-                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Loại</th>
-                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đối tượng</th>
-                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày gửi</th>
-                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
+                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[35%]">Tiêu đề</th>
+                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[15%]">Loại</th>
+                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[15%]">Đối tượng</th>
+                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[20%]">Thời gian gửi</th>
+                <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap w-[15%]">Trạng thái</th>
                 <th className="px-4 py-3 w-24" />
               </tr>
             </thead>
@@ -55,11 +55,11 @@ export default function MarketingListClient({ initialData }: { initialData: Page
               ) : (
                 notifications.map(n => (
                   <tr key={n.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-sm max-w-xs truncate">{n.title}</td>
-                    <td className="px-4 py-3 text-xs text-muted">{TYPE_LABELS[n.type]}</td>
-                    <td className="px-4 py-3 text-xs text-muted">{TARGET_TYPE_LABELS[n.targetType]}</td>
-                    <td className="px-4 py-3 text-xs text-muted">{formatDateTime(n.createdAt)}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 font-medium text-sm truncate">{n.title}</td>
+                    <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{TYPE_LABELS[n.type]}</td>
+                    <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{TARGET_TYPE_LABELS[n.targetType]}</td>
+                    <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{formatDateTime(n.createdAt)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${n.active ? 'bg-ok-bg text-ok' : 'bg-line-2 text-muted'}`}>
                         {n.active ? 'Đang hiển thị' : 'Đã ẩn'}
                       </span>

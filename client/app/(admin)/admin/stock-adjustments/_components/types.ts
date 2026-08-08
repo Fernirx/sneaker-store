@@ -44,8 +44,8 @@ export interface PageData {
 }
 
 export const TYPE_OPTIONS = [
-  { value: 'EXPORT',    label: 'Xuất kho (hỏng/mất/tặng/demo)' },
-  { value: 'STOCKTAKE', label: 'Kiểm kê (phát hiện dư)' },
+  { value: 'EXPORT',    label: 'Xuất kho' },
+  { value: 'STOCKTAKE', label: 'Kiểm kê' },
 ] as const;
 
 export const TYPE_LABELS: Record<StockAdjustmentType, string> = {

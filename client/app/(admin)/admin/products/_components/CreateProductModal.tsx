@@ -61,14 +61,15 @@ export default function CreateProductModal({
       const parsed = parseApiError(err);
       setError(parsed.general);
       setFieldErrors(parsed.fields);
+      document.querySelector('.overflow-y-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title="Tạo sản phẩm mới" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+    <Modal title="Thêm sản phẩm mới" onClose={onClose} maxWidth="2xl">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-danger text-sm">{error}</p>}
 
         {/* Name */}
@@ -76,7 +77,7 @@ export default function CreateProductModal({
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
             Tên sản phẩm <span className="text-danger">*</span>
           </label>
-          <input value={form.name} onChange={e => set('name', e.target.value)} required
+          <input value={form.name} onChange={e => set('name', e.target.value.replace(/^\s+/, ''))} required
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
           {fieldErrors.name && <p className="text-danger text-xs mt-1">{fieldErrors.name}</p>}
         </div>
@@ -86,7 +87,7 @@ export default function CreateProductModal({
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
             Mã SP <span className="text-danger">*</span>
           </label>
-          <input value={form.code} onChange={e => set('code', e.target.value)} required
+          <input value={form.code} onChange={e => set('code', e.target.value.replace(/^\s+/, '').toUpperCase())} required
             className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink" />
           {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
         </div>
@@ -148,16 +149,16 @@ export default function CreateProductModal({
           </label>
         </div>
 
-        <p className="text-xs text-muted">Sau khi tạo, bạn có thể thêm variant, ảnh và danh mục trong trang chỉnh sửa.</p>
+        <p className="text-xs text-muted">Sau khi thêm sản phẩm với thông tin cơ bản sẽ chuyển tới trang thêm biến thể</p>
 
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onClose}
             className="px-4 py-2 border border-line text-sm rounded-sm hover:bg-paper transition-colors">
             Hủy
           </button>
-          <button type="submit" disabled={saving}
+          <button type="submit" disabled={saving || !form.name.trim() || !form.code.trim() || !form.brandId}
             className="px-4 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors">
-            {saving ? 'Đang tạo...' : 'Tạo & tiếp tục'}
+            {saving ? 'Đang tạo...' : 'Thêm & tiếp tục'}
           </button>
         </div>
       </form>

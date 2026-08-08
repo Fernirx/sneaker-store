@@ -68,7 +68,7 @@ export default function CategoriesClient({
     setCurrentPage(0);
   }
 
-  const colCount = isAdmin ? 6 : 5;
+  const colCount = isAdmin ? 7 : 6;
 
   return (
     <div className="space-y-5">
@@ -79,7 +79,7 @@ export default function CategoriesClient({
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
           >
-            Tạo danh mục
+            Thêm danh mục
           </button>
         )}
       </div>
@@ -89,7 +89,7 @@ export default function CategoriesClient({
           type="text"
           placeholder="Tìm theo tên..."
           value={pendingSearch}
-          onChange={e => handleSearchChange(e.target.value)}
+          onChange={e => handleSearchChange(e.target.value.replace(/^\s+/, ''))}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm w-64 focus:outline-none focus:border-ink"
         />
         <select
@@ -108,8 +108,9 @@ export default function CategoriesClient({
           <thead>
             <tr className="border-b border-line bg-paper">
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tên</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Slug</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Danh mục cha</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thứ tự</th>
+              <th className="text-center px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thứ tự</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày tạo</th>
               {isAdmin && <th className="px-4 py-3 w-24" />}
@@ -129,8 +130,9 @@ export default function CategoriesClient({
                     {cat.parentId && <span className="text-muted mr-1">↳</span>}
                     {cat.name}
                   </td>
+                  <td className="px-4 py-3 text-xs text-muted">{cat.slug}</td>
                   <td className="px-4 py-3 text-sm text-muted">{cat.parentName ?? '—'}</td>
-                  <td className="px-4 py-3 text-sm">{cat.displayOrder}</td>
+                  <td className="px-4 py-3 text-sm text-center">{cat.displayOrder}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${cat.active ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'}`}>
                       {cat.active ? 'Hoạt động' : 'Ẩn'}

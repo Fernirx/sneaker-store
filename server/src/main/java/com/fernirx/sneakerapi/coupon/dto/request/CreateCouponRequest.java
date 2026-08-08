@@ -10,6 +10,9 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fernirx.sneakerapi.common.annotation.ValidDateRange;
+
+@ValidDateRange(startField = "startDate", endField = "endDate")
 public record CreateCouponRequest(
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 50, message = "{validation.size.max}")

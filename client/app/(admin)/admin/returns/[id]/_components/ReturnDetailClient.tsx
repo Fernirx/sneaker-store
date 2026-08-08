@@ -183,7 +183,7 @@ export default function ReturnDetailClient({
       {rejectOpen && (
         <div className="border border-danger/30 rounded-sm p-4 bg-danger/5 space-y-3">
           <p className="text-sm font-semibold text-ink">Lý do từ chối</p>
-          <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} rows={2}
+          <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value.replace(/^\s+/, ''))} rows={2}
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
           <div className="flex gap-2">
             <button onClick={handleReject} disabled={busy || !rejectReason.trim()}
@@ -205,11 +205,11 @@ export default function ReturnDetailClient({
               : 'Xác nhận không đạt kiểm tra — trả lại hàng cho khách, không hoàn tiền/đổi'}
           </p>
           {processOpen === 'fail' && (
-            <textarea value={processRejectReason} onChange={e => setProcessRejectReason(e.target.value)} rows={2}
+            <textarea value={processRejectReason} onChange={e => setProcessRejectReason(e.target.value.replace(/^\s+/, ''))} rows={2}
               placeholder="Lý do không đạt (bắt buộc)..."
               className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
           )}
-          <textarea value={processNote} onChange={e => setProcessNote(e.target.value)} rows={2}
+          <textarea value={processNote} onChange={e => setProcessNote(e.target.value.replace(/^\s+/, ''))} rows={2}
             placeholder="Ghi chú nội bộ (tùy chọn)..."
             className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink" />
           <div className="flex gap-2">
@@ -227,12 +227,12 @@ export default function ReturnDetailClient({
       <div className="bg-white border border-line rounded-sm p-5 space-y-3">
         <h3 className="font-display font-bold text-xs uppercase tracking-wide text-muted mb-2">Thông tin</h3>
         <Row label="Đơn hàng" value={<Link href={`/admin/orders/${item.orderId}`} className="underline hover:text-accent">{item.orderCode}</Link>} />
-        <Row label="Khách hàng" value={item.customerEmail} />
+        <Row label="Email khách hàng" value={item.customerEmail} />
         <Row label="Lý do" value={item.reason} />
         {item.rejectReason && <Row label="Lý do từ chối" value={<span className="text-danger">{item.rejectReason}</span>} />}
         {item.trackingCode && <Row label="Mã vận đơn khách gửi" value={item.trackingCode} />}
         {item.approvedByEmail && <Row label="Người duyệt" value={item.approvedByEmail} />}
-        <Row label="Ngày tạo" value={formatDateTime(item.createdAt)} />
+        <Row label="Thời gian tạo" value={formatDateTime(item.createdAt)} />
         {item.approvedAt && <Row label="Ngày duyệt" value={formatDateTime(item.approvedAt)} />}
         {item.receivedAt && <Row label="Ngày nhận hàng" value={formatDateTime(item.receivedAt)} />}
         {item.completedAt && <Row label="Ngày hoàn tất" value={formatDateTime(item.completedAt)} />}
@@ -240,18 +240,18 @@ export default function ReturnDetailClient({
         {item.refundedAt && <Row label="Đã hoàn tiền lúc" value={formatDateTime(item.refundedAt)} />}
         {item.exchangeShippingOrderCode && <Row label="Mã vận đơn hàng đổi" value={item.exchangeShippingOrderCode} />}
         {item.exchangeExpectedDeliveryAt && <Row label="Dự kiến giao hàng đổi" value={formatDateTime(item.exchangeExpectedDeliveryAt)} />}
-        {item.adminNote && <Row label="Ghi chú nội bộ" value={item.adminNote} />}
+        <Row label="Ghi chú nội bộ" value={item.adminNote || <span className="text-muted italic">Không có</span>} />
       </div>
 
       <div className="bg-white border border-line rounded-sm overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SKU / Sản phẩm</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Size / Màu</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">SL</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đổi sang</th>
-              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Giá trị</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SKU / Sản phẩm</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Size / Màu</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">SL</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Đổi sang</th>
+              <th className="text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Giá trị</th>
             </tr>
           </thead>
           <tbody>
@@ -261,12 +261,12 @@ export default function ReturnDetailClient({
                   <div className="font-body text-xs font-bold">{i.variantSku}</div>
                   <div className="text-xs text-muted">{i.productName}</div>
                 </td>
-                <td className="px-4 py-3 text-xs text-muted">{i.variantColor} · {i.variantSize}</td>
+                <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{i.variantColor} · {i.variantSize}</td>
                 <td className="px-4 py-3 text-right tabular-nums">{i.quantity}</td>
-                <td className="px-4 py-3 text-xs text-muted">
+                <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">
                   {i.exchangeVariantId ? `${i.exchangeVariantColorway} · ${i.exchangeVariantSize}` : '—'}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums font-bold">{formatPrice(i.refundAmount)}</td>
+                <td className="px-4 py-3 text-right tabular-nums font-bold whitespace-nowrap">{formatPrice(i.refundAmount)}</td>
               </tr>
             ))}
           </tbody>

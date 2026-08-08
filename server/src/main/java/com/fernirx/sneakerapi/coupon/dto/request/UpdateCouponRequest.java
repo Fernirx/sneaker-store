@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fernirx.sneakerapi.common.annotation.ValidDateRange;
+
+@ValidDateRange(startField = "startDate", endField = "endDate")
 public record UpdateCouponRequest(
         @NullableNotBlank
         String description,

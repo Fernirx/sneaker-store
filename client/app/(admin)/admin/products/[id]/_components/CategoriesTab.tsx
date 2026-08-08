@@ -56,8 +56,10 @@ export default function CategoriesTab({ productId, isAdmin }: { productId: numbe
         categoryIds: Array.from(selected),
       });
       setSuccess('Đã lưu danh mục.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(parseApiError(err).general);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSaving(false);
     }
@@ -66,7 +68,7 @@ export default function CategoriesTab({ productId, isAdmin }: { productId: numbe
   if (loading) return <p className="text-muted text-sm py-10 text-center">Đang tải...</p>;
 
   return (
-    <div className="max-w-lg space-y-4">
+    <div className="max-w-2xl space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-display font-bold text-sm uppercase tracking-wide text-muted">
           Đã chọn: {selected.size} danh mục

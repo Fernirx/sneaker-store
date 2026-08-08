@@ -82,7 +82,7 @@ export default function BannersClient({
             onClick={() => setCreateOpen(true)}
             className="bg-accent text-white font-display font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded-sm hover:bg-accent-700 transition-colors"
           >
-            Tạo banner
+            Thêm banner
           </button>
         )}
       </div>
@@ -107,15 +107,15 @@ export default function BannersClient({
       </div>
 
       <div className={`bg-white border border-line rounded-sm overflow-x-auto transition-opacity duration-150 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
-        <table className="w-full text-sm">
+        <table className="table-fixed w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-paper">
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Tiêu đề</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Thứ tự</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Bắt đầu</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Kết thúc</th>
-              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
-              {showActionCol && <th className="px-4 py-3 w-24" />}
+              <th className="w-[40%] text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Tiêu đề</th>
+              <th className="w-[10%] text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Thứ tự</th>
+              <th className="w-[15%] text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Bắt đầu</th>
+              <th className="w-[15%] text-right px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Kết thúc</th>
+              <th className="w-[10%] text-center px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted whitespace-nowrap">Trạng thái</th>
+              {showActionCol && <th className="w-[10%] px-4 py-3 whitespace-nowrap" />}
             </tr>
           </thead>
           <tbody>
@@ -128,17 +128,17 @@ export default function BannersClient({
             ) : (
               pageData.data.map(b => (
                 <tr key={b.id} className="border-b border-line-2 last:border-0 hover:bg-paper/50 transition-colors">
-                  <td className="px-4 py-3 font-bold text-sm">{b.title}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{b.displayOrder}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{formatDateTime(b.startAt)}</td>
-                  <td className="px-4 py-3 text-xs text-muted">{formatDateTime(b.endAt)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 font-bold text-sm truncate">{b.title}</td>
+                  <td className="px-4 py-3 text-xs text-muted text-right tabular-nums whitespace-nowrap">{b.displayOrder}</td>
+                  <td className="px-4 py-3 text-xs text-muted text-right tabular-nums whitespace-nowrap">{formatDateTime(b.startAt)}</td>
+                  <td className="px-4 py-3 text-xs text-muted text-right tabular-nums whitespace-nowrap">{formatDateTime(b.endAt)}</td>
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${b.active ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger'}`}>
                       {b.active ? 'Hoạt động' : 'Ẩn'}
                     </span>
                   </td>
                   {showActionCol && (
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex gap-3 justify-end">
                         {canUpdate && (
                           <button

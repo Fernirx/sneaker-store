@@ -48,7 +48,7 @@ export default function Sidebar({ roles }: { roles: string[] }) {
   }
 
   return (
-    <aside className="w-56 shrink-0 border-r border-line bg-white min-h-screen flex flex-col">
+    <aside className="w-48 shrink-0 border-r border-line bg-white min-h-screen flex flex-col">
       <div className="h-14 flex items-center gap-2 px-5 border-b border-line">
         <span className="w-2.5 h-2.5 bg-accent rounded-xs rotate-45 shrink-0" />
         <span className="font-display font-black text-lg uppercase tracking-tight">STRIDE</span>
@@ -132,13 +132,13 @@ export default function Sidebar({ roles }: { roles: string[] }) {
             </p>
             <div className="space-y-0.5">
               <NavItem href="/admin/coupons" label="Coupon" icon={ICONS.coupons} active={isActive('/admin/coupons')} />
+              <NavItem href="/admin/banners" label="Banner" icon={ICONS.banners} active={isActive('/admin/banners')} />
               {hasAnyRole(roles, ['ROLE_ADMIN']) && (
                 <NavItem href="/admin/notifications/marketing" label="Soạn thông báo" icon={ICONS.marketingCompose} active={isActive('/admin/notifications/marketing')} />
               )}
               {hasAnyRole(roles, ['ROLE_ADMIN']) && (
                 <NavItem href="/admin/settings/store" label="Chính sách giá" icon={ICONS.pricingSetting} active={isActive('/admin/settings/store')} />
               )}
-              <NavItem href="/admin/banners" label="Banner" icon={ICONS.banners} active={isActive('/admin/banners')} />
             </div>
           </div>
         )}
