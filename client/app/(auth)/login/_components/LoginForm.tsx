@@ -83,7 +83,7 @@ export default function LoginForm() {
     clearErrors();
     start(async () => {
       try {
-        const { data } = await clientAxios.post('/api/auth/login', { email: loginEmail, password: loginPass });
+        const { data } = await clientAxios.post('/api/auth/login', { email: loginEmail.trim(), password: loginPass });
         const roles: string[] = data.roles ?? [];
         router.replace(isStaffRole(roles) ? '/admin' : '/');
       } catch (err) {
@@ -106,11 +106,11 @@ export default function LoginForm() {
     start(async () => {
       try {
         await clientAxios.post('/api/auth/register', {
-          email: regEmail,
+          email: regEmail.trim(),
           password: regPass,
           confirmPassword: regConfirm,
-          firstName: regFirst || undefined,
-          lastName: regLast || undefined,
+          firstName: regFirst.trim(),
+          lastName: regLast.trim() || undefined,
         });
         setOtpEmail(regEmail);
         startResendTimer();
@@ -272,15 +272,23 @@ export default function LoginForm() {
               {tab === 'login' ? (
                 <div className="space-y-3.5">
                   <div>
-                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Email"}</label>
-                    <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
-                      placeholder={"ban@email.com"} className={inputCls('email')} />
+                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+                      {"Email"}
+                      <span className="text-danger ml-1">*</span>
+                    </label>
+                    <input type="text" inputMode="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value.replace(/^\s+/, ''))}
+                      maxLength={100}
+                      placeholder={"your-email@email.com"} className={inputCls('email')} />
                     <FieldError msg={fieldErrors['email']} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Mật khẩu"}</label>
+                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+                      {"Mật khẩu"}
+                      <span className="text-danger ml-1">*</span>
+                    </label>
                     <div className="relative">
                       <input type={showLoginPass ? 'text' : 'password'} value={loginPass} onChange={e => setLoginPass(e.target.value)}
+                        maxLength={255}
                         onKeyDown={e => e.key === 'Enter' && handleLogin()}
                         className={`${inputCls('password')} pr-10`} />
                       <button type="button" onClick={() => setShowLoginPass(v => !v)}
@@ -295,7 +303,7 @@ export default function LoginForm() {
                       {"Quên mật khẩu?"}
                     </Link>
                   </div>
-                  <button onClick={handleLogin} disabled={pending || !loginEmail || !loginPass}
+                  <button onClick={handleLogin} disabled={pending || !loginEmail.trim() || !loginPass}
                     className="w-full bg-accent hover:bg-accent-700 disabled:opacity-40 text-white font-display font-bold text-sm uppercase tracking-wider py-3 rounded transition-colors">
                     {pending ? "Đang đăng nhập..." : "Đăng nhập"}
                   </button>
@@ -304,28 +312,41 @@ export default function LoginForm() {
                 <div className="space-y-3.5">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Họ"}</label>
-                      <input value={regFirst} onChange={e => setRegFirst(e.target.value)}
+                      <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+                        {"Họ"}
+                        <span className="text-danger ml-1">*</span>
+                      </label>
+                      <input value={regFirst} onChange={e => setRegFirst(e.target.value.replace(/^\s+/, ''))}
+                        maxLength={100}
                         placeholder={"Nguyễn"} className={inputCls('firstName')} />
                       <FieldError msg={fieldErrors['firstName']} />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Tên"}</label>
-                      <input value={regLast} onChange={e => setRegLast(e.target.value)}
+                      <input value={regLast} onChange={e => setRegLast(e.target.value.replace(/^\s+/, ''))}
+                        maxLength={100}
                         placeholder={"An"} className={inputCls('lastName')} />
                       <FieldError msg={fieldErrors['lastName']} />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Email"}</label>
-                    <input type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)}
-                      placeholder={"ban@email.com"} className={inputCls('email')} />
+                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+                      {"Email"}
+                      <span className="text-danger ml-1">*</span>
+                    </label>
+                    <input type="text" inputMode="email" value={regEmail} onChange={e => setRegEmail(e.target.value.replace(/^\s+/, ''))}
+                      maxLength={100}
+                      placeholder={"your-email@email.com"} className={inputCls('email')} />
                     <FieldError msg={fieldErrors['email']} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Mật khẩu"}</label>
+                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+                      {"Mật khẩu"}
+                      <span className="text-danger ml-1">*</span>
+                    </label>
                     <div className="relative">
                       <input type={showRegPass ? 'text' : 'password'} value={regPass} onChange={e => setRegPass(e.target.value)}
+                        maxLength={255}
                         className={`${inputCls('password')} pr-10`} />
                       <button type="button" onClick={() => setShowRegPass(v => !v)}
                         className="absolute inset-y-0 right-3 flex items-center text-muted hover:text-ink transition-colors">
@@ -335,9 +356,13 @@ export default function LoginForm() {
                     <FieldError msg={fieldErrors['password']} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Xác nhận mật khẩu"}</label>
+                    <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+                      {"Xác nhận mật khẩu"}
+                      <span className="text-danger ml-1">*</span>
+                    </label>
                     <div className="relative">
                       <input type={showRegConfirm ? 'text' : 'password'} value={regConfirm} onChange={e => setRegConfirm(e.target.value)}
+                        maxLength={255}
                         onKeyDown={e => e.key === 'Enter' && handleRegister()}
                         className={`${inputCls('confirmPassword')} pr-10`} />
                       <button type="button" onClick={() => setShowRegConfirm(v => !v)}
@@ -347,7 +372,7 @@ export default function LoginForm() {
                     </div>
                     <FieldError msg={fieldErrors['confirmPassword']} />
                   </div>
-                  <button onClick={handleRegister} disabled={pending || !regEmail || !regPass}
+                  <button onClick={handleRegister} disabled={pending || !regEmail.trim() || !regPass || !regConfirm || !regFirst.trim()}
                     className="w-full bg-accent hover:bg-accent-700 disabled:opacity-40 text-white font-display font-bold text-sm uppercase tracking-wider py-3 rounded transition-colors">
                     {pending ? "Đang đăng ký..." : "Tạo tài khoản"}
                   </button>

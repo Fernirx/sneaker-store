@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import clientAxios from '@/lib/axios/clientAxios';
+import * as Slider from '@radix-ui/react-slider';
 import ProductCard from '../products/_components/ProductCard';
 import { type PageData } from '../products/_components/types';
 
@@ -51,6 +52,19 @@ export default function SlugProductsClient({
   const [currentPage, setCurrentPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [sliderVal, setSliderVal] = useState([
+    initialFilters?.minPrice ? Number(initialFilters.minPrice) : 0,
+    initialFilters?.maxPrice ? Number(initialFilters.maxPrice) : 10000000
+  ]);
+
+  useEffect(() => {
+    setSliderVal([
+      filters.minPrice ? Number(filters.minPrice) : 0,
+      filters.maxPrice ? Number(filters.maxPrice) : 10000000
+    ]);
+  }, [filters.minPrice, filters.maxPrice]);
+
   const mounted = useRef(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -161,15 +175,32 @@ export default function SlugProductsClient({
       </div>
 
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">{"Khoảng giá"}</p>
-        <div className="flex gap-2 items-center">
-          <input type="number" placeholder={"Từ"} value={filters.minPrice} min={0}
-            onChange={e => setFilters(f => ({ ...f, minPrice: e.target.value }))}
-            className="w-full border border-line rounded-sm px-2 py-1.5 text-sm focus:outline-none focus:border-ink" />
-          <span className="text-muted text-sm flex-shrink-0">—</span>
-          <input type="number" placeholder={"Đến"} value={filters.maxPrice} min={0}
-            onChange={e => setFilters(f => ({ ...f, maxPrice: e.target.value }))}
-            className="w-full border border-line rounded-sm px-2 py-1.5 text-sm focus:outline-none focus:border-ink" />
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-4">{"Khoảng giá"}</p>
+        <div className="px-2">
+          <Slider.Root
+            className="relative flex items-center select-none touch-none w-full h-6"
+            value={sliderVal}
+            max={10000000}
+            step={100000}
+            onValueChange={setSliderVal}
+            onValueCommit={val => {
+              setFilters(f => ({
+                ...f,
+                minPrice: val[0] > 0 ? String(val[0]) : '',
+                maxPrice: val[1] < 10000000 ? String(val[1]) : ''
+              }));
+            }}
+          >
+            <Slider.Track className="bg-line relative grow rounded-full h-1.5 overflow-hidden">
+              <Slider.Range className="absolute bg-ink h-full" />
+            </Slider.Track>
+            <Slider.Thumb className="block w-5 h-5 bg-white border-[3px] border-ink rounded-full shadow-md focus:outline-none focus:ring-4 focus:ring-ink/20 cursor-grab active:cursor-grabbing hover:scale-110 transition-all" aria-label="Min price" />
+            <Slider.Thumb className="block w-5 h-5 bg-white border-[3px] border-ink rounded-full shadow-md focus:outline-none focus:ring-4 focus:ring-ink/20 cursor-grab active:cursor-grabbing hover:scale-110 transition-all" aria-label="Max price" />
+          </Slider.Root>
+        </div>
+        <div className="flex justify-between items-center text-xs font-bold text-ink mt-4">
+          <span>{sliderVal[0].toLocaleString('vi-VN')}đ</span>
+          <span>{sliderVal[1] === 10000000 ? '10.000.000đ+' : sliderVal[1].toLocaleString('vi-VN') + 'đ'}</span>
         </div>
       </div>
 

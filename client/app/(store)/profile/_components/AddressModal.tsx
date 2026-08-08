@@ -65,20 +65,16 @@ export default function AddressModal({
     setErrors(e => { const next = { ...e }; delete next[key]; return next; });
   }
 
-  function validate() {
-    const e: Record<string, string> = {};
-    if (!form.name.trim()) e.name = "Bắt buộc";
-    if (!form.phone.trim()) e.phone = "Bắt buộc";
-    if (!form.street.trim()) e.street = "Bắt buộc";
-    if (!form.district.trim()) e.district = "Bắt buộc";
-    if (!form.ward.trim()) e.ward = "Bắt buộc";
-    if (!form.province.trim()) e.province = "Bắt buộc";
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  }
+  const isFormValid = Boolean(
+    form.name.trim() &&
+    form.phone.trim() &&
+    form.street.trim() &&
+    form.provinceCode &&
+    form.districtCode &&
+    form.wardCode
+  );
 
   async function handleSave() {
-    if (!validate()) return;
     setPending(true);
     setGeneralError('');
     try {
@@ -117,7 +113,8 @@ export default function AddressModal({
         <div className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Field label={"Họ tên người nhận"} required>
-              <input value={form.name} onChange={e => set('name', e.target.value)}
+              <input value={form.name} onChange={e => set('name', e.target.value.replace(/^\s+/, ''))}
+                maxLength={200}
                 className={inputCls(errors.name)} />
               {errors.name && <p className="text-xs text-danger mt-1">{errors.name}</p>}
             </Field>
@@ -128,6 +125,7 @@ export default function AddressModal({
                 </span>
                 <input
                   type="tel"
+                  maxLength={15}
                   value={form.phone.startsWith('+84') ? form.phone.slice(3) : form.phone}
                   onChange={e => {
                     const val = e.target.value.replace(/\D/g, '');
@@ -141,7 +139,8 @@ export default function AddressModal({
           </div>
 
           <Field label={"Địa chỉ cụ thể (số nhà, tên đường)"} required>
-            <input value={form.street} onChange={e => set('street', e.target.value)}
+            <input value={form.street} onChange={e => set('street', e.target.value.replace(/^\s+/, ''))}
+              maxLength={255}
               placeholder={"123 Đường ABC"} className={inputCls(errors.street)} />
             {errors.street && <p className="text-xs text-danger mt-1">{errors.street}</p>}
           </Field>
@@ -169,7 +168,8 @@ export default function AddressModal({
           />
 
           <Field label={"Mã bưu chính"}>
-            <input value={form.postalCode} onChange={e => set('postalCode', e.target.value)}
+            <input value={form.postalCode} onChange={e => set('postalCode', e.target.value.replace(/^\s+/, ''))}
+              maxLength={20}
               className={inputCls(errors.postalCode)} />
             {errors.postalCode && <p className="text-xs text-danger mt-1">{errors.postalCode}</p>}
           </Field>
@@ -192,7 +192,7 @@ export default function AddressModal({
             className="flex-1 border border-line rounded py-2.5 text-sm font-semibold text-ink-2 hover:border-ink hover:text-ink transition-colors disabled:opacity-40">
             {"Hủy"}
           </button>
-          <button onClick={handleSave} disabled={pending}
+          <button onClick={handleSave} disabled={pending || !isFormValid}
             className="flex-1 bg-accent hover:bg-accent-700 disabled:opacity-40 text-white font-display font-bold text-sm uppercase tracking-wider py-2.5 rounded transition-colors">
             {pending ? '...' : "Lưu"}
           </button>

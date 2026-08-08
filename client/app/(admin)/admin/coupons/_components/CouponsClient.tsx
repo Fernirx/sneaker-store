@@ -119,6 +119,7 @@ export default function CouponsClient({
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Giảm giá</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đơn tối thiểu</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Đã dùng</th>
+              <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Ngày bắt đầu</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Hết hạn</th>
               <th className="text-left px-4 py-3 font-display font-bold text-[11px] uppercase tracking-wide text-muted">Trạng thái</th>
               {canWrite && <th className="px-4 py-3 w-24" />}
@@ -161,6 +162,7 @@ export default function CouponsClient({
                       ? ` / ${coupon.usageLimit}`
                       : ' / ∞'}
                   </td>
+                  <td className="px-4 py-3 text-xs text-muted">{formatDate(coupon.startDate)}</td>
                   <td className="px-4 py-3 text-xs text-muted">{formatDate(coupon.endDate)}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${

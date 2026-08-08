@@ -10,13 +10,13 @@ const MAX_IMAGES = 5;
 
 function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-2">
       {[1, 2, 3, 4, 5].map(n => (
         <button
           key={n}
           type="button"
           onClick={() => onChange(n)}
-          className={`text-2xl leading-none transition-colors ${n <= value ? 'text-accent' : 'text-line'}`}
+          className={`text-3xl leading-none transition-all hover:scale-110 ${n <= value ? 'text-accent drop-shadow-sm' : 'text-line'}`}
           aria-label={`${n} sao`}
         >
           ★
@@ -111,14 +111,14 @@ export default function ReviewFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-line">
-          <h3 className="font-display font-black text-base uppercase tracking-tight">
+          <h3 className="font-display font-black text-lg uppercase tracking-tight">
             {isEdit ? "Sửa đánh giá" : "Viết đánh giá"}
           </h3>
-          <button onClick={onClose} className="text-muted hover:text-ink transition-colors p-1">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button onClick={onClose} className="text-muted hover:text-ink transition-transform hover:rotate-90 p-1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
@@ -129,70 +129,77 @@ export default function ReviewFormModal({
             <p className="text-sm text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2">{error}</p>
           )}
 
-          <div>
-            <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">Đánh giá của bạn</label>
-            <StarPicker value={rating} onChange={setRating} />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">Tiêu đề (tùy chọn)</label>
-            <input
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              maxLength={255}
-              className="w-full border border-line rounded px-3 py-2.5 text-sm focus:outline-none focus:border-ink transition-colors"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">Nội dung (tùy chọn)</label>
-            <textarea
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              rows={4}
-              className="w-full border border-line rounded px-3 py-2.5 text-sm focus:outline-none focus:border-ink transition-colors resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
-              Ảnh ({totalImageCount}/{MAX_IMAGES})
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {existingImages.map(img => (
-                <div key={img.id} className="relative">
-                  <img src={reviewUrl(img.imagePublicId, 72, 72)} alt="" className="w-16 h-16 object-cover rounded-sm border border-line" />
-                  <button
-                    type="button"
-                    onClick={() => removeExisting(img.id)}
-                    className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-danger text-white rounded-full text-[10px] font-bold flex items-center justify-center leading-none hover:opacity-80"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              {previews.map((src, i) => (
-                <div key={i} className="relative">
-                  <img src={src} alt="" className="w-16 h-16 object-cover rounded-sm border border-line" />
-                  <button
-                    type="button"
-                    onClick={() => removePending(i)}
-                    className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-danger text-white rounded-full text-[10px] font-bold flex items-center justify-center leading-none hover:opacity-80"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              {totalImageCount < MAX_IMAGES && (
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="w-16 h-16 border border-dashed border-line rounded-sm flex items-center justify-center text-muted hover:border-ink hover:text-ink transition-colors text-xl"
-                >
-                  +
-                </button>
-              )}
+          <div className="space-y-6 p-2">
+            <div>
+              <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-2 uppercase">
+                Đánh giá của bạn
+                <span className="text-danger ml-1">*</span>
+              </label>
+              <StarPicker value={rating} onChange={setRating} />
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-2 uppercase">Tiêu đề</label>
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value.replace(/^\s+/, ''))}
+                maxLength={255}
+                placeholder="Ví dụ: Giày rất êm và đẹp!"
+                className="w-full bg-paper border border-line rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-ink focus:border-ink transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-2 uppercase">Nội dung</label>
+              <textarea
+                value={comment}
+                onChange={e => setComment(e.target.value.replace(/^\s+/, ''))}
+                maxLength={1000}
+                rows={4}
+                placeholder="Chia sẻ thêm cảm nhận của bạn về chất liệu, độ thoải mái..."
+                className="w-full bg-paper border border-line rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-ink focus:border-ink transition-all resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-2 uppercase">
+                Ảnh ({totalImageCount}/{MAX_IMAGES})
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {existingImages.map(img => (
+                  <div key={img.id} className="relative group">
+                    <img src={reviewUrl(img.imagePublicId, 96, 96)} alt="" className="w-20 h-20 object-cover rounded-md border border-line" />
+                    <button
+                      type="button"
+                      onClick={() => removeExisting(img.id)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-danger text-white rounded-full text-xs font-bold flex items-center justify-center leading-none opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {previews.map((src, i) => (
+                  <div key={i} className="relative group">
+                    <img src={src} alt="" className="w-20 h-20 object-cover rounded-md border border-line" />
+                    <button
+                      type="button"
+                      onClick={() => removePending(i)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-danger text-white rounded-full text-xs font-bold flex items-center justify-center leading-none opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {totalImageCount < MAX_IMAGES && (
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="w-20 h-20 border-2 border-dashed border-line bg-paper rounded-md flex flex-col items-center justify-center text-muted hover:border-ink hover:text-ink hover:bg-white transition-colors"
+                  >
+                    <span className="text-2xl leading-none font-light">+</span>
+                  </button>
+                )}
+              </div>
             <input
               ref={fileRef}
               type="file"
@@ -203,14 +210,16 @@ export default function ReviewFormModal({
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          </div>
+          
+          <div className="flex gap-3 pt-4 border-t border-line mt-2">
             <button type="button" onClick={onClose} disabled={saving}
-              className="flex-1 border border-line rounded py-2.5 text-sm font-semibold text-ink-2 hover:border-ink hover:text-ink transition-colors disabled:opacity-40">
+              className="flex-1 bg-paper border border-line rounded-md py-3 text-sm font-bold text-ink-2 hover:border-ink hover:text-ink transition-colors disabled:opacity-40">
               Hủy
             </button>
             <button type="submit" disabled={saving}
-              className="flex-1 bg-accent hover:bg-accent-700 disabled:opacity-40 text-white font-display font-bold text-sm uppercase tracking-wider py-2.5 rounded transition-colors">
-              {saving ? '...' : "Lưu"}
+              className="flex-1 bg-accent hover:bg-accent-700 disabled:opacity-40 text-white font-display font-bold text-sm uppercase tracking-wider py-3 rounded-md transition-colors shadow-md">
+              {saving ? 'Đang lưu...' : "Lưu đánh giá"}
             </button>
           </div>
         </form>

@@ -14,7 +14,7 @@ public class NameValidator implements ConstraintValidator<ValidName, String> {
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext constraintValidatorContext) {
-        if (value == null) return allowNull;
+        if (value == null || (allowNull && value.isEmpty())) return true;
         return !value.isBlank() && value.matches(PatternConstants.NAME);
     }
 }

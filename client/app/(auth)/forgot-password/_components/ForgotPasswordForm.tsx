@@ -57,7 +57,7 @@ export default function ForgotPasswordForm() {
     clearErrors();
     start(async () => {
       try {
-        await clientAxios.post('/api/auth/forgot-password', { email });
+        await clientAxios.post('/api/auth/forgot-password', { email: email.trim() });
         startResendTimer();
         setStep('otp');
       } catch (err) {
@@ -163,14 +163,18 @@ export default function ForgotPasswordForm() {
               {generalError && <p className="text-sm text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2">{generalError}</p>}
 
               <div>
-                <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Email"}</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+                  {"Email"}
+                  <span className="text-danger ml-1">*</span>
+                </label>
+                <input type="text" inputMode="email" value={email} onChange={e => setEmail(e.target.value.replace(/^\s+/, ''))}
+                  maxLength={100}
                   onKeyDown={e => e.key === 'Enter' && handleSendOtp()}
-                  placeholder={"ban@email.com"} className={inputCls('email')} />
+                  placeholder={"your-email@email.com"} className={inputCls('email')} />
                 <FieldError msg={fieldErrors['email']} />
               </div>
 
-              <button onClick={handleSendOtp} disabled={pending || !email}
+              <button onClick={handleSendOtp} disabled={pending || !email.trim()}
                 className="w-full bg-accent hover:bg-accent-700 disabled:opacity-40 text-white font-display font-bold text-sm uppercase tracking-wider py-3 rounded transition-colors mt-2">
                 {pending ? "Đang gửi..." : "Gửi mã xác minh"}
               </button>
@@ -229,9 +233,13 @@ export default function ForgotPasswordForm() {
               {generalError && <p className="text-sm text-danger bg-danger-bg border border-danger/20 rounded px-3 py-2">{generalError}</p>}
 
               <div>
-                <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Mật khẩu mới"}</label>
+                <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+                  {"Mật khẩu mới"}
+                  <span className="text-danger ml-1">*</span>
+                </label>
                 <div className="relative">
                   <input type={showPass ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                    maxLength={255}
                     className={`${inputCls('password')} pr-10`} />
                   <button type="button" onClick={() => setShowPass(v => !v)}
                     className="absolute inset-y-0 right-3 flex items-center text-muted hover:text-ink transition-colors">
@@ -242,9 +250,13 @@ export default function ForgotPasswordForm() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Xác nhận mật khẩu"}</label>
+                <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+                  {"Xác nhận mật khẩu"}
+                  <span className="text-danger ml-1">*</span>
+                </label>
                 <div className="relative">
                   <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                    maxLength={255}
                     onKeyDown={e => e.key === 'Enter' && handleResetPassword()}
                     className={`${inputCls('confirmPassword')} pr-10`} />
                   <button type="button" onClick={() => setShowConfirm(v => !v)}

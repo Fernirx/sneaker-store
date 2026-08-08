@@ -17,7 +17,7 @@ function EyeIcon({ open }: { open: boolean }) {
 }
 
 function PasswordField({
-  label, value, onChange, show, onToggle, error,
+  label, value, onChange, show, onToggle, error, required,
 }: {
   label: string;
   value: string;
@@ -25,15 +25,20 @@ function PasswordField({
   show: boolean;
   onToggle: () => void;
   error?: string;
+  required?: boolean;
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+        {label}
+        {required && <span className="text-danger ml-1">*</span>}
+      </label>
       <div className="relative">
         <input
           type={show ? 'text' : 'password'}
           value={value}
           onChange={e => onChange(e.target.value)}
+          maxLength={255}
           className={`w-full border rounded px-3 py-2.5 pr-10 text-sm focus:outline-none transition-colors ${
             error ? 'border-danger focus:border-danger' : 'border-line focus:border-ink'
           }`}
@@ -114,6 +119,7 @@ export default function ChangePasswordForm({ hasPassword }: { hasPassword: boole
           show={showCurrent}
           onToggle={() => setShowCurrent(v => !v)}
           error={fieldErrors['currentPassword']}
+          required
         />
       )}
 
@@ -124,6 +130,7 @@ export default function ChangePasswordForm({ hasPassword }: { hasPassword: boole
         show={showNew}
         onToggle={() => setShowNew(v => !v)}
         error={fieldErrors['password']}
+        required
       />
 
       <PasswordField
@@ -133,6 +140,7 @@ export default function ChangePasswordForm({ hasPassword }: { hasPassword: boole
         show={showConfirm}
         onToggle={() => setShowConfirm(v => !v)}
         error={fieldErrors['confirmPassword']}
+        required
       />
 
       {generalError && (

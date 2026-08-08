@@ -42,8 +42,8 @@ export default function ProfileForm({
       try {
         const { data } = await clientAxios.patch('/api/me', {
           firstName: firstName.trim() || undefined,
-          lastName: lastName.trim() || undefined,
-          phone: phone.trim() || undefined,
+          lastName: lastName.trim(),
+          phone: phone.trim(),
           dateOfBirth: dateOfBirth || undefined,
         });
         onUpdated(data.data as Profile);
@@ -75,14 +75,19 @@ export default function ProfileForm({
       {/* Name */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Họ"}</label>
-          <input value={firstName} onChange={e => setFirstName(e.target.value)}
+          <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">
+            {"Họ"}
+            <span className="text-danger ml-1">*</span>
+          </label>
+          <input value={firstName} onChange={e => setFirstName(e.target.value.replace(/^\s+/, ''))}
+            maxLength={100}
             className={inputCls(fieldErrors['firstName'])} />
           <FieldError msg={fieldErrors['firstName']} />
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-2 tracking-wide mb-1.5">{"Tên"}</label>
-          <input value={lastName} onChange={e => setLastName(e.target.value)}
+          <input value={lastName} onChange={e => setLastName(e.target.value.replace(/^\s+/, ''))}
+            maxLength={100}
             className={inputCls(fieldErrors['lastName'])} />
           <FieldError msg={fieldErrors['lastName']} />
         </div>
@@ -97,6 +102,7 @@ export default function ProfileForm({
           </span>
           <input
             type="tel"
+            maxLength={15}
             value={phone.startsWith('+84') ? phone.slice(3) : phone}
             onChange={e => {
               const val = e.target.value.replace(/\D/g, '');

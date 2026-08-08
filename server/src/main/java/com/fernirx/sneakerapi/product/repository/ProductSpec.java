@@ -45,8 +45,13 @@ public class ProductSpec {
     }
 
     private static Specification<Product> hasGender(Gender gender) {
-        return (root, query, cb) -> gender == null ? null
-                : cb.equal(root.get("gender"), gender);
+        return (root, query, cb) -> {
+            if (gender == null) return null;
+            if (gender == Gender.MEN || gender == Gender.WOMEN) {
+                return root.get("gender").in(gender, Gender.UNISEX);
+            }
+            return cb.equal(root.get("gender"), gender);
+        };
     }
 
     private static Specification<Product> hasBrands(List<String> brandSlugs) {

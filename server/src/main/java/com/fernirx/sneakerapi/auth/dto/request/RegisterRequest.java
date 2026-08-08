@@ -26,9 +26,9 @@ public record RegisterRequest(
         @StrongPassword
         String confirmPassword,
 
-        @NullableNotBlank
+        @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
-        @ValidName(allowNull = true)
+        @ValidName(allowNull = false)
         String firstName,
 
         @NullableNotBlank

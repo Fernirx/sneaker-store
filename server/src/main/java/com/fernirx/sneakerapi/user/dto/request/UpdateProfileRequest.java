@@ -14,7 +14,6 @@ public record UpdateProfileRequest(
         @ValidName(allowNull = true)
         String firstName,
 
-        @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         @ValidName(allowNull = true)
         String lastName,

@@ -372,7 +372,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
 
   function handleField(field: keyof ShippingForm) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      setForm(prev => ({ ...prev, [field]: e.target.value }));
+      setForm(prev => ({ ...prev, [field]: e.target.value.replace(/^\s+/, '') }));
     };
   }
 
@@ -505,6 +505,16 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
     }`;
   }
 
+  const isFormValid = Boolean(
+    form.recipientName.trim() &&
+    form.recipientPhone.trim() &&
+    form.shippingStreet.trim() &&
+    form.shippingWard.trim() &&
+    form.shippingDistrict.trim() &&
+    form.shippingProvince.trim() &&
+    (isLoggedIn || (guestEmail.trim() && otpCode.trim()))
+  );
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
 
@@ -535,9 +545,11 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
                     <FloatingInput
                       id="guestEmail"
                       label="Email"
-                      type="email"
+                      type="text"
+                      inputMode="email"
                       value={guestEmail}
-                      onChange={e => setGuestEmail(e.target.value)}
+                      onChange={e => setGuestEmail(e.target.value.replace(/^\s+/, ''))}
+                      maxLength={255}
                       error={fieldErrors.guestEmail}
                     />
                   </div>
@@ -657,6 +669,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
                 type="text"
                 value={form.recipientName}
                 onChange={handleField('recipientName')}
+                maxLength={200}
                 error={fieldErrors.recipientName}
               />
               <FloatingInput
@@ -682,6 +695,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
                 type="text"
                 value={form.shippingStreet}
                 onChange={handleField('shippingStreet')}
+                maxLength={255}
                 error={fieldErrors.shippingStreet}
               />
 
@@ -719,6 +733,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
                 label="Ghi chú"
                 value={form.note}
                 onChange={handleField('note')}
+                maxLength={1000}
                 rows={3}
               />
             </div>
@@ -764,7 +779,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
 
           <button
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || !isFormValid}
             className="w-full bg-ink text-white text-[12px] font-bold uppercase tracking-widest py-3.5 rounded-sm hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? (
@@ -888,7 +903,8 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
                           <input
                             type="text"
                             value={couponInput}
-                            onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                            onChange={e => setCouponInput(e.target.value.replace(/^\s+/, '').toUpperCase())}
+                            maxLength={50}
                             placeholder="Nhập mã..."
                             className="w-full h-9 px-3 border border-line rounded-sm text-[12px] text-ink placeholder:text-faint bg-white focus:outline-none focus:border-ink uppercase transition-colors"
                           />

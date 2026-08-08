@@ -179,7 +179,8 @@ export default function InfoTab({
         />
         <Row label="Tạm tính" value={formatPrice(order.subtotal)} />
         <Row label="Phí giao hàng" value={formatPrice(order.shippingFee)} />
-        {order.discountAmount > 0 && <Row label="Giảm giá" value={`-${formatPrice(order.discountAmount)}`} />}
+        {order.discountAmount > 0 && <Row label="Mã giảm giá" value={`-${formatPrice(order.discountAmount)}`} />}
+        {order.tierDiscountAmount > 0 && <Row label="Hạng thành viên" value={`-${formatPrice(order.tierDiscountAmount)}`} />}
         <Row label="Tổng tiền" value={<span className="font-bold">{formatPrice(order.totalAmount)}</span>} />
         <Row label="Hết hạn TT" value={formatDateTime(order.expiredAt)} />
         <Row label="Ngày tạo" value={formatDateTime(order.createdAt)} />
@@ -243,7 +244,7 @@ export default function InfoTab({
                   {creatingShipment ? 'Đang tạo...' : 'Tạo vận đơn GHN'}
                 </button>
                 {order.status !== 'CONFIRMED' && (
-                  <span className="text-xs text-muted">Chỉ tạo được khi đơn đã "Đã xác nhận".</span>
+                  <span className="text-xs text-muted">Chỉ tạo được khi đơn đã &quot;Đã xác nhận&quot;.</span>
                 )}
               </div>
             ) : (
