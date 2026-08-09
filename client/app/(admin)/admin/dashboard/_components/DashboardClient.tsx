@@ -54,7 +54,7 @@ function StatusTooltip({ active, payload }: { active?: boolean; payload?: { payl
   );
 }
 
-export default function DashboardClient({ initialData }: { initialData: DashboardSummary }) {
+export default function DashboardClient({ initialData, roles }: { initialData: DashboardSummary, roles: string[] }) {
   const [data, setData] = useState(initialData);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -77,6 +77,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
   }));
 
   const stockAlertCount = data.lowStockCount + data.outOfStockCount;
+  const isAdmin = roles.includes('ROLE_ADMIN');
 
   return (
     <div className="space-y-6">
@@ -93,9 +94,13 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
       </div>
 
       {/* Stat tiles */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatTile label="Doanh thu hôm nay" value={formatPrice(data.revenueToday)} />
-        <StatTile label="Doanh thu tháng này" value={formatPrice(data.revenueThisMonth)} />
+      <div className={`grid grid-cols-2 ${isAdmin ? 'md:grid-cols-4' : 'md:grid-cols-2'} gap-4`}>
+        {isAdmin && (
+          <>
+            <StatTile label="Doanh thu hôm nay" value={formatPrice(data.revenueToday ?? 0)} />
+            <StatTile label="Doanh thu tháng này" value={formatPrice(data.revenueThisMonth ?? 0)} />
+          </>
+        )}
         <StatTile label="Khách hàng mới (tháng)" value={String(data.newCustomersThisMonth)} href="/admin/customers" />
         <StatTile
           label="Cảnh báo tồn kho"
@@ -106,36 +111,38 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ChartCard title="Doanh thu 14 ngày gần nhất">
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={data.revenueByDay} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ff3d14" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#ff3d14" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid vertical={false} stroke="#e2e8f0" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatShortDate}
-                tick={{ fontSize: 11, fill: '#64748b' }}
-                axisLine={{ stroke: '#e2e8f0' }}
-                tickLine={false}
-              />
-              <YAxis
-                tickFormatter={formatCompactPrice}
-                tick={{ fontSize: 11, fill: '#64748b' }}
-                axisLine={false}
-                tickLine={false}
-                width={48}
-              />
-              <Tooltip content={<RevenueTooltip />} />
-              <Area type="monotone" dataKey="revenue" stroke="#ff3d14" strokeWidth={2} fill="url(#revenueFill)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartCard>
+      <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-2' : 'lg:grid-cols-1'} gap-4`}>
+        {isAdmin && data.revenueByDay && (
+          <ChartCard title="Doanh thu 14 ngày gần nhất">
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={data.revenueByDay} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ff3d14" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="#ff3d14" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatShortDate}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  axisLine={{ stroke: '#e2e8f0' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={formatCompactPrice}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={48}
+                />
+                <Tooltip content={<RevenueTooltip />} />
+                <Area type="monotone" dataKey="revenue" stroke="#ff3d14" strokeWidth={2} fill="url(#revenueFill)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        )}
 
         <ChartCard title="Đơn hàng theo trạng thái">
           <ResponsiveContainer width="100%" height={220}>

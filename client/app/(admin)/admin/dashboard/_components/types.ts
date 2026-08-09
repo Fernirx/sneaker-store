@@ -1,8 +1,8 @@
 export interface DashboardSummary {
-  revenueToday: number;
-  revenueThisMonth: number;
+  revenueToday: number | null;
+  revenueThisMonth: number | null;
   orderCountByStatus: Record<string, number>;
-  revenueByDay: { date: string; revenue: number }[];
+  revenueByDay: { date: string; revenue: number }[] | null;
   lowStockCount: number;
   outOfStockCount: number;
   lowStockVariants: {

@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.fernirx.sneakerapi.security.model.CustomUserDetails;
+
 @RestController
 @RequestMapping("/internal/dashboard")
 @RequiredArgsConstructor
@@ -22,7 +25,10 @@ public class InternalDashboardController {
     @GetMapping("/summary")
     @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'WAREHOUSE')")
     @Operation(summary = "Tổng quan doanh thu, đơn hàng, tồn kho, sản phẩm bán chạy, khách hàng mới")
-    public ResponseEntity<SuccessResponse<DashboardSummaryResponse>> getSummary() {
-        return ResponseEntity.ok(SuccessResponse.of(dashboardService.getSummary()));
+    public ResponseEntity<SuccessResponse<DashboardSummaryResponse>> getSummary(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return ResponseEntity.ok(SuccessResponse.of(dashboardService.getSummary(isAdmin)));
     }
 }

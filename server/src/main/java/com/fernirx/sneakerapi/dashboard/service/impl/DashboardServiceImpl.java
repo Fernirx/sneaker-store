@@ -49,7 +49,7 @@ public class DashboardServiceImpl implements DashboardService {
      * Các dữ liệu này được query trực tiếp từ database, có thể sẽ nặng nếu dữ liệu lớn.
      */
     @Override
-    public DashboardSummaryResponse getSummary() {
+    public DashboardSummaryResponse getSummary(boolean isAdmin) {
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
         LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
 
@@ -70,14 +70,25 @@ public class DashboardServiceImpl implements DashboardService {
                 .map(row -> new TopProduct((String) row[0], (String) row[1], (Long) row[2]))
                 .toList();
 
-        BigDecimal todayRevenue = orderRepository.sumRevenueSince(startOfToday);
-        BigDecimal monthRevenue = orderRepository.sumRevenueSince(startOfMonth);
+        BigDecimal todayRevenue = null;
+        BigDecimal monthRevenue = null;
+        List<DailyRevenue> revenueByDay = null;
+
+        if (isAdmin) {
+            BigDecimal rawTodayRevenue = orderRepository.sumRevenueSince(startOfToday);
+            todayRevenue = rawTodayRevenue != null ? rawTodayRevenue : BigDecimal.ZERO;
+
+            BigDecimal rawMonthRevenue = orderRepository.sumRevenueSince(startOfMonth);
+            monthRevenue = rawMonthRevenue != null ? rawMonthRevenue : BigDecimal.ZERO;
+
+            revenueByDay = buildRevenueByDay();
+        }
 
         return new DashboardSummaryResponse(
-                todayRevenue != null ? todayRevenue : BigDecimal.ZERO,
-                monthRevenue != null ? monthRevenue : BigDecimal.ZERO,
+                todayRevenue,
+                monthRevenue,
                 orderCountByStatus,
-                buildRevenueByDay(),
+                revenueByDay,
                 productVariantRepository.countLowStock(),
                 productVariantRepository.countOutOfStock(),
                 lowStockVariants,

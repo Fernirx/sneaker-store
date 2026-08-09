@@ -11,7 +11,7 @@ export default async function DashboardPage() {
   try {
     const api = await createServerAxios();
     const { data } = await api.get('/internal/dashboard/summary');
-    return <DashboardClient initialData={data.data as DashboardSummary} />;
+    return <DashboardClient initialData={data.data as DashboardSummary} roles={session.roles} />;
   } catch {
     redirect('/login');
   }
