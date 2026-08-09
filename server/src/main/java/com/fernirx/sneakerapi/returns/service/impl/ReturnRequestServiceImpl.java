@@ -295,6 +295,30 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
     }
 
     /**
+     * Admin xác nhận đã chuyển tiền hoàn lại cho khách hàng (Nhánh REFUND).
+     * Chuyển trạng thái từ REFUND_PENDING -> COMPLETED, thu hồi điểm thưởng và bắn event.
+     */
+    @Override
+    public ReturnRequestInternalResponse markAsRefunded(Long id, Long refundedByUserId) {
+        ReturnRequest returnRequest = findById(id);
+        requireStatus(returnRequest, ReturnStatus.REFUND_PENDING);
+
+        returnRequest.setStatus(ReturnStatus.COMPLETED);
+        returnRequest.setRefundedAt(LocalDateTime.now());
+        returnRequest.setCompletedAt(LocalDateTime.now());
+
+        customerService.revokePartial(returnRequest.getCustomer().getId(), returnRequest.getOrder().getId(),
+                returnRequest.getId(), returnRequest.getRefundAmount());
+
+        returnRequest = returnRequestRepository.save(returnRequest);
+
+        eventPublisher.publishEvent(new ReturnRequestCompletedEvent(
+                returnRequest.getId(), returnRequest.getCode(), returnRequest.getCustomer().getUser().getId(), true));
+
+        return buildInternalResponse(returnRequest);
+    }
+
+    /**
      * Admin gọi retry thử tạo lại vận đơn GHN nếu bước process trước đó gọi GHN bị lỗi.
      * Bước 4: retry thủ công (giống nguyên tắc đã chốt cho OrderServiceImpl.createShipment - lỗi thì để
      * admin bấm thử lại, không tự động). Chỉ cho phép khi COMPLETED + EXCHANGE + chưa có vận đơn.
@@ -340,25 +364,19 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
             totalRefund = totalRefund.add(item.getRefundAmount());
         }
 
-        returnRequest.setStatus(ReturnStatus.COMPLETED);
-        returnRequest.setCompletedAt(LocalDateTime.now());
         returnRequest.setAdminNote(request.adminNote());
 
-        if (returnRequest.getResolutionType() == ReturnResolutionType.REFUND) {
-            returnRequest.setRefundAmount(totalRefund);
-            returnRequest.setRefundedAt(LocalDateTime.now());
-            // Đổi hàng (EXCHANGE) không đổi tổng chi tiêu của khách nên KHÔNG thu hồi điểm loyalty - chỉ REFUND mới gọi.
-            customerService.revokePartial(returnRequest.getCustomer().getId(), returnRequest.getOrder().getId(),
-                    returnRequest.getId(), totalRefund);
+        if (returnRequest.getResolutionType() == ReturnResolutionType.EXCHANGE) {
+            returnRequest.setStatus(ReturnStatus.COMPLETED);
+            returnRequest.setCompletedAt(LocalDateTime.now());
+            returnRequestRepository.save(returnRequest);
+            eventPublisher.publishEvent(new ReturnRequestCompletedEvent(
+                    returnRequest.getId(), returnRequest.getCode(), returnRequest.getCustomer().getUser().getId(), false));
+        } else {
+            returnRequest.setStatus(ReturnStatus.REFUND_PENDING);
+            returnRequest.setRefundAmount(totalRefund); // Lưu số tiền cần hoàn để hiển thị cho UI
+            returnRequestRepository.save(returnRequest);
         }
-
-        returnRequestRepository.save(returnRequest);
-
-        // Publish trong cùng transaction (completeReturnWithoutShipment luôn chạy bên trong
-        // runInNewTransaction ở process()) - AFTER_COMMIT chỉ gắn đúng nếu publish trước khi transaction
-        // này commit, không phải sau khi đã rời khỏi block.
-        eventPublisher.publishEvent(new ReturnRequestCompletedEvent(
-                returnRequest.getId(), returnRequest.getCode(), returnRequest.getCustomer().getUser().getId()));
     }
 
     /**

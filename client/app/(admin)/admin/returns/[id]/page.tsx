@@ -21,6 +21,7 @@ export default async function ReturnDetailPage({
         returnRequest={data.data as ReturnRequestInternalResponse}
         canApprove={session.roles.includes('ROLE_ADMIN') || session.roles.includes('ROLE_SALE')}
         canWarehouse={session.roles.includes('ROLE_ADMIN') || session.roles.includes('ROLE_WAREHOUSE')}
+        canRefund={session.roles.includes('ROLE_ADMIN')}
       />
     );
   } catch {

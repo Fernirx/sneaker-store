@@ -83,6 +83,16 @@ public class InternalReturnRequestController {
         return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.return.processed"), response));
     }
 
+    @PatchMapping("/{id}/refund")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Xác nhận đã chuyển tiền hoàn lại (Nhánh REFUND)")
+    public ResponseEntity<SuccessResponse<ReturnRequestInternalResponse>> markAsRefunded(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id) {
+        ReturnRequestInternalResponse response = returnRequestService.markAsRefunded(id, userDetails.getId());
+        return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.return.refunded"), response));
+    }
+
     @PatchMapping("/{id}/retry-shipment")
     @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
     @Operation(summary = "Thử tạo lại vận đơn GHN cho hàng đổi (khi lần tạo trước đó thất bại)")

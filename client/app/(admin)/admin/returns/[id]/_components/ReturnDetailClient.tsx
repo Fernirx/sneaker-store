@@ -24,10 +24,12 @@ export default function ReturnDetailClient({
   returnRequest: initial,
   canApprove,
   canWarehouse,
+  canRefund,
 }: {
   returnRequest: ReturnRequestInternalResponse;
   canApprove: boolean;
   canWarehouse: boolean;
+  canRefund: boolean;
 }) {
   const [item, setItem] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -89,6 +91,18 @@ export default function ReturnDetailClient({
       });
       setItem(data.data);
       setProcessOpen(null);
+    } catch (err) {
+      setError(parseApiError(err).general);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleMarkAsRefunded() {
+    setBusy(true); setError('');
+    try {
+      const { data } = await clientAxios.patch(`/api/admin/returns/${item.id}/refund`);
+      setItem(data.data);
     } catch (err) {
       setError(parseApiError(err).general);
     } finally {
@@ -169,6 +183,12 @@ export default function ReturnDetailClient({
               </button>
             </>
           )}
+          {item.status === 'REFUND_PENDING' && canRefund && (
+            <button onClick={handleMarkAsRefunded} disabled={busy}
+              className="bg-accent text-white text-sm font-bold px-4 py-2 rounded-sm hover:bg-accent-700 disabled:opacity-50 transition-colors">
+              {busy ? 'Đang xử lý...' : 'Đã chuyển tiền'}
+            </button>
+          )}
           {needsShipmentRetry && canWarehouse && (
             <button onClick={handleRetryShipment} disabled={busy}
               className="bg-accent text-white text-sm font-bold px-4 py-2 rounded-sm hover:bg-accent-700 disabled:opacity-50 transition-colors">
@@ -201,7 +221,7 @@ export default function ReturnDetailClient({
         <div className={`border rounded-sm p-4 space-y-3 ${processOpen === 'pass' ? 'border-ok/30 bg-ok/5' : 'border-danger/30 bg-danger/5'}`}>
           <p className="text-sm font-semibold text-ink">
             {processOpen === 'pass'
-              ? (item.resolutionType === 'REFUND' ? 'Xác nhận đạt kiểm tra — hoàn tiền + hoàn kho' : 'Xác nhận đạt kiểm tra — hoàn kho + gửi hàng đổi')
+              ? (item.resolutionType === 'REFUND' ? 'Xác nhận đạt kiểm tra — hoàn kho và chuyển sang Chờ hoàn tiền' : 'Xác nhận đạt kiểm tra — hoàn kho + gửi hàng đổi')
               : 'Xác nhận không đạt kiểm tra — trả lại hàng cho khách, không hoàn tiền/đổi'}
           </p>
           {processOpen === 'fail' && (

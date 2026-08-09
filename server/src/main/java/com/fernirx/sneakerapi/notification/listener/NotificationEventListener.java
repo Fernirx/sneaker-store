@@ -136,7 +136,9 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onReturnRequestCompleted(ReturnRequestCompletedEvent event) {
         String title = "Yêu cầu đổi/trả #" + event.code() + " đã hoàn tất";
-        String message = "Yêu cầu đổi/trả #" + event.code() + " của bạn đã hoàn tất.";
+        String message = event.isRefund()
+                ? "Yêu cầu hoàn tiền #" + event.code() + " đã hoàn tất. Chúng tôi đã chuyển tiền hoàn lại cho bạn."
+                : "Yêu cầu đổi hàng #" + event.code() + " đã hoàn tất. Sản phẩm đổi đang được giao đến bạn.";
         String link = "/returns/" + event.returnRequestId();
         notifyUser(NotificationType.RETURN, event.customerUserId(), title, message, link);
     }

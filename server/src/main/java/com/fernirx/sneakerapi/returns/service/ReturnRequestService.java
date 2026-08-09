@@ -29,5 +29,6 @@ public interface ReturnRequestService {
     ReturnRequestInternalResponse reject(Long id, RejectReturnRequest request);
     ReturnRequestInternalResponse markReceived(Long id);
     ReturnRequestInternalResponse process(Long id, Long processedByUserId, ProcessReturnRequest request);
+    ReturnRequestInternalResponse markAsRefunded(Long id, Long refundedByUserId);
     ReturnRequestInternalResponse retryExchangeShipment(Long id);
 }
