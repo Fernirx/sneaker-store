@@ -275,7 +275,9 @@ export default function OrderDetailClient({
                 <div key={h.id} className="flex items-start gap-3 text-[13px]">
                   <span className="w-1.5 h-1.5 rounded-full bg-ink mt-1.5 shrink-0" />
                   <div className="flex-1">
-                    <p className="text-ink font-medium">{STATUS_LABELS[h.newStatus]}</p>
+                    <p className="text-ink font-medium">
+                      {h.oldStatus === h.newStatus ? 'Cập nhật đơn hàng' : STATUS_LABELS[h.newStatus]}
+                    </p>
                     {h.note && <p className="text-[12px] text-muted mt-0.5">{h.note}</p>}
                     <p className="text-[11px] text-faint mt-0.5">{formatDateTime(h.createdAt)}</p>
                   </div>

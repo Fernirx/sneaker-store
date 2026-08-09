@@ -29,6 +29,7 @@ export default function InfoTab({
   const canManageShipment = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_WAREHOUSE');
   const canConfirmOrder   = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_SALE');
   const canForceDeliver   = roles.includes('ROLE_ADMIN');
+  const canRefund         = roles.includes('ROLE_ADMIN');
   const canUpdateStatus   = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_SALE');
   // Xác nhận đơn (PENDING -> CONFIRMED) là quyết định CSKH, WAREHOUSE không có quyền này (BE chặn) -
   // ẩn luôn option để không cho chọn 1 hành động chắc chắn sẽ bị từ chối. Tương tự, đánh dấu DELIVERED thủ
@@ -142,6 +143,23 @@ export default function InfoTab({
     }
   }
 
+  const [refunding, setRefunding] = useState(false);
+
+  async function handleRefund() {
+    if (!window.confirm('Xác nhận đã chuyển khoản hoàn tiền cho đơn hàng này?')) return;
+    setShipmentError('');
+    setRefunding(true);
+    try {
+      const { data } = await clientAxios.patch(`/api/admin/orders/${order.id}/refund`);
+      onUpdated(data.data);
+    } catch (err) {
+      const { general } = parseApiError(err);
+      setShipmentError(general);
+    } finally {
+      setRefunding(false);
+    }
+  }
+
   const fullAddress = [order.shippingStreet, order.shippingWard, order.shippingDistrict, order.shippingProvince]
     .filter(Boolean)
     .join(', ');
@@ -173,9 +191,20 @@ export default function InfoTab({
         <Row
           label="Trạng thái TT"
           value={
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${PAYMENT_STATUS_COLORS[order.paymentStatus]}`}>
-              {PAYMENT_STATUS_LABELS[order.paymentStatus]}
-            </span>
+            <div className="flex flex-col items-end gap-2">
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${PAYMENT_STATUS_COLORS[order.paymentStatus]}`}>
+                {PAYMENT_STATUS_LABELS[order.paymentStatus]}
+              </span>
+              {order.status === 'CANCELLED' && order.paymentStatus === 'PAID' && canRefund && (
+                <button
+                  onClick={handleRefund}
+                  disabled={refunding}
+                  className="bg-purple-600 text-white font-display font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-sm hover:bg-purple-700 transition-colors disabled:opacity-40"
+                >
+                  {refunding ? 'Đang cập nhật...' : 'Đánh dấu đã hoàn tiền'}
+                </button>
+              )}
+            </div>
           }
         />
         <Row label="Tạm tính" value={formatPrice(order.subtotal)} />

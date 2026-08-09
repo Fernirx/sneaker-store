@@ -423,7 +423,7 @@ public class OrderServiceImpl implements OrderService {
             if (GHN_CANCEL_STATUS.equals(result.status())) {
                 cancelOrder(orderId, "GHN báo trạng thái: " + result.status());
             } else if (GHN_DELIVERED_STATUS.equals(result.status())) {
-                if (freshOrder.getPaymentStatus() != OrderPaymentStatus.PAID) {
+                if (freshOrder.getPaymentStatus() == OrderPaymentStatus.UNPAID) {
                     freshOrder.setPaymentStatus(OrderPaymentStatus.PAID);
                     orderRepository.save(freshOrder);
                 }
@@ -434,6 +434,31 @@ public class OrderServiceImpl implements OrderService {
                 changeStatus(orderId, OrderStatus.SHIPPING, changedByUserId, "Đồng bộ trạng thái GHN: " + result.status());
             }
         });
+
+        return buildInternalResponse(orderId);
+    }
+
+    @Override
+    @Transactional
+    public OrderInternalResponse markAsRefunded(Long orderId, Long changedByUserId) {
+        Order order = findEntityByIdForUpdate(orderId);
+        if (order.getStatus() != OrderStatus.CANCELLED) {
+            throw BusinessException.bad("label.status");
+        }
+        if (order.getPaymentStatus() != OrderPaymentStatus.PAID) {
+            throw BusinessException.bad("label.status");
+        }
+
+        order.setPaymentStatus(OrderPaymentStatus.REFUNDED);
+        orderRepository.save(order);
+
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setChangedBy(changedByUserId != null ? entityManager.getReference(User.class, changedByUserId) : null);
+        history.setOldStatus(order.getStatus());
+        history.setNewStatus(order.getStatus());
+        history.setNote("Đã hoàn tiền cho khách (Admin)");
+        orderStatusHistoryRepository.save(history);
 
         return buildInternalResponse(orderId);
     }

@@ -28,7 +28,11 @@ export default function HistoryTab({ orderId }: { orderId: number }) {
               <span className="w-1.5 h-1.5 rounded-full bg-ink mt-1.5 shrink-0" />
               <div className="flex-1">
                 <p className="font-medium">
-                  {h.oldStatus ? `${STATUS_LABELS[h.oldStatus]} → ${STATUS_LABELS[h.newStatus]}` : STATUS_LABELS[h.newStatus]}
+                  {h.oldStatus === h.newStatus
+                    ? 'Cập nhật đơn hàng'
+                    : h.oldStatus
+                      ? `${STATUS_LABELS[h.oldStatus]} → ${STATUS_LABELS[h.newStatus]}`
+                      : STATUS_LABELS[h.newStatus]}
                 </p>
                 {h.note && <p className="text-xs text-muted mt-0.5">{h.note}</p>}
                 <p className="text-xs text-faint mt-0.5">{formatDateTime(h.createdAt)}</p>

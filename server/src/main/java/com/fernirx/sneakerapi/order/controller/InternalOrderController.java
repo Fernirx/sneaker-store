@@ -98,4 +98,14 @@ public class InternalOrderController {
         OrderInternalResponse response = orderService.syncShipmentStatus(id, userDetails.getId());
         return ResponseEntity.ok(SuccessResponse.of(response));
     }
+
+    @PatchMapping("/{id}/refund")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Đánh dấu đơn hàng đã được hoàn tiền (chỉ dành cho đơn hủy)")
+    public ResponseEntity<SuccessResponse<OrderInternalResponse>> markAsRefunded(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id) {
+        OrderInternalResponse response = orderService.markAsRefunded(id, userDetails.getId());
+        return ResponseEntity.ok(SuccessResponse.of("Đã cập nhật trạng thái hoàn tiền thành công", response));
+    }
 }

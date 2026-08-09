@@ -1,5 +1,5 @@
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED';
-export type OrderPaymentStatus = 'UNPAID' | 'PAID';
+export type OrderPaymentStatus = 'UNPAID' | 'PAID' | 'REFUNDED';
 export type PaymentMethod = 'VNPAY' | 'COD';
 
 export interface OrderItemResponse {
@@ -92,6 +92,7 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
 export const PAYMENT_STATUS_LABELS: Record<OrderPaymentStatus, string> = {
   UNPAID: 'Chưa thanh toán',
   PAID: 'Đã thanh toán',
+  REFUNDED: 'Đã hoàn tiền',
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {

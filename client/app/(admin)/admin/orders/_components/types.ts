@@ -1,5 +1,5 @@
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED';
-export type OrderPaymentStatus = 'UNPAID' | 'PAID';
+export type OrderPaymentStatus = 'UNPAID' | 'PAID' | 'REFUNDED';
 export type PaymentMethod = 'VNPAY' | 'COD';
 export type PaymentTxnStatus = 'SUCCESS' | 'FAILED';
 
@@ -122,16 +122,19 @@ export const STATUS_COLORS: Record<OrderStatus, string> = {
 export const PAYMENT_STATUS_OPTIONS = [
   { value: 'UNPAID', label: 'Chưa thanh toán' },
   { value: 'PAID',   label: 'Đã thanh toán' },
+  { value: 'REFUNDED', label: 'Đã hoàn tiền' },
 ] as const;
 
 export const PAYMENT_STATUS_LABELS: Record<OrderPaymentStatus, string> = {
   UNPAID: 'Chưa thanh toán',
   PAID: 'Đã thanh toán',
+  REFUNDED: 'Đã hoàn tiền',
 };
 
 export const PAYMENT_STATUS_COLORS: Record<OrderPaymentStatus, string> = {
   UNPAID: 'bg-warn-bg text-warn',
   PAID: 'bg-ok-bg text-ok',
+  REFUNDED: 'bg-purple-100 text-purple-700',
 };
 
 export const PAYMENT_METHOD_OPTIONS = [
