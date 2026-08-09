@@ -11,6 +11,7 @@ import {
   type OrderResponse, type OrderStatusHistoryResponse, type OrderStatus,
 } from '../../_components/types';
 import ReturnRequestSection from './ReturnRequestSection';
+import OrderDetailSkeleton from './OrderDetailSkeleton';
 
 function StatusBadge({ status }: { status: OrderStatus }) {
   return (
@@ -20,39 +21,47 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   );
 }
 
-function OrderDetailSkeleton() {
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
-      <div className="h-8 w-64 bg-line rounded-sm animate-pulse" />
-      <div className="h-48 bg-line rounded-sm animate-pulse" />
-      <div className="h-32 bg-line rounded-sm animate-pulse" />
-    </div>
-  );
-}
-
 export default function OrderDetailClient({
   orderId,
   isLoggedIn,
   orderTokenFromUrl,
+  initialOrder,
+  isTrackingMode = false,
+  initialHistory,
 }: {
-  orderId: number;
-  isLoggedIn: boolean;
-  orderTokenFromUrl: string | null;
+  orderId: number | string;
+  isLoggedIn?: boolean;
+  orderTokenFromUrl?: string | null;
+  initialOrder?: OrderResponse;
+  isTrackingMode?: boolean;
+  initialHistory?: OrderStatusHistoryResponse[];
 }) {
-  // Khách vãng lai mở đơn qua link trong email xác nhận (kèm ?orderToken=) - lưu vào localStorage
-  // ngay trong render (trước mọi effect) để guestHeaders() ở effect load() bên dưới dùng được luôn,
-  // không cần đợi thêm 1 vòng effect. saveGuestToken tự bỏ qua nếu token rỗng/không hợp lệ.
-  if (orderTokenFromUrl) saveGuestToken(orderTokenFromUrl);
+  useEffect(() => {
+    if (orderTokenFromUrl) {
+      saveGuestToken(orderTokenFromUrl);
+    }
+  }, [orderTokenFromUrl]);
 
-  const [order, setOrder] = useState<OrderResponse | null>(null);
-  const [history, setHistory] = useState<OrderStatusHistoryResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [order, setOrder] = useState<OrderResponse | null>(initialOrder || null);
+  const [history, setHistory] = useState<OrderStatusHistoryResponse[]>(initialHistory || []);
+  const [loading, setLoading] = useState(!initialOrder);
   const [notFound, setNotFound] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState('');
+  const [trackingLink, setTrackingLink] = useState('');
+
+  useEffect(() => {
+    if (!isLoggedIn && typeof window !== 'undefined' && order?.trackingToken) {
+        setTrackingLink(`${window.location.origin}/tracking/${order.trackingToken}`);
+    }
+  }, [isLoggedIn, order?.trackingToken]);
 
   const load = useCallback(() => {
+    if (isTrackingMode) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setNotFound(false);
     Promise.all([
@@ -65,7 +74,7 @@ export default function OrderDetailClient({
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
-  }, [orderId]);
+  }, [orderId, isTrackingMode]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -91,10 +100,10 @@ export default function OrderDetailClient({
       <div className="max-w-3xl mx-auto px-4 py-28 flex flex-col items-center gap-5">
         <p className="text-muted text-[14px]">{"Không tìm thấy đơn hàng."}</p>
         <Link
-          href="/orders"
+          href={isTrackingMode ? "/tracking" : "/orders"}
           className="text-[12px] font-bold uppercase tracking-widest bg-ink text-white px-6 py-3 rounded-sm hover:bg-accent transition-colors"
         >
-          {"Quay lại danh sách"}
+          {isTrackingMode ? "Quay lại trang tra cứu" : "Quay lại danh sách"}
         </Link>
       </div>
     );
@@ -109,7 +118,7 @@ export default function OrderDetailClient({
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-1">
-        <Link href="/orders" className="text-muted hover:text-ink transition-colors">
+        <Link href={isTrackingMode ? "/tracking" : "/orders"} className="text-muted hover:text-ink transition-colors">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5M11 6l-6 6 6 6"/>
           </svg>
@@ -118,6 +127,32 @@ export default function OrderDetailClient({
         <StatusBadge status={order.status} />
       </div>
       <p className="text-[12px] text-muted mb-8 ml-7">{formatDateTime(order.createdAt)}</p>
+
+      {trackingLink && !isTrackingMode && (
+        <div className="mb-6 p-4 bg-ink/5 border border-ink/10 rounded-sm">
+          <p className="text-[13px] font-semibold text-ink mb-1">
+            {order.status === 'PENDING' ? "Đơn hàng của bạn đã được ghi nhận!" : "Đường dẫn tra cứu đơn hàng"}
+          </p>
+          <p className="text-[12px] text-muted mb-3">
+            {order.status === 'PENDING' 
+              ? "Vui lòng lưu lại đường link dưới đây để tra cứu trạng thái đơn hàng (nhất là khi bạn không cung cấp Email):"
+              : "Bạn có thể lưu lại đường link này để tiếp tục tra cứu trạng thái đơn hàng về sau:"}
+          </p>
+          <div className="flex gap-2">
+            <input 
+              readOnly 
+              value={trackingLink} 
+              className="flex-1 px-3 py-2 text-[12px] bg-white border border-line rounded-sm outline-none text-muted"
+            />
+            <button 
+              onClick={() => { navigator.clipboard.writeText(trackingLink); alert("Đã copy link!"); }}
+              className="px-4 py-2 bg-ink text-white text-[12px] font-bold rounded-sm hover:bg-accent transition-colors shrink-0"
+            >
+              {"Copy"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
 
@@ -251,7 +286,7 @@ export default function OrderDetailClient({
         )}
 
         {/* Return/Exchange */}
-        {order.status === 'DELIVERED' && (
+        {order.status === 'DELIVERED' && !isTrackingMode && (
           <ReturnRequestSection
             orderId={order.id}
             deliveredAt={history.find(h => h.newStatus === 'DELIVERED')?.createdAt ?? null}
@@ -260,7 +295,7 @@ export default function OrderDetailClient({
         )}
 
         {/* Actions (Cancel / Pay Again) */}
-        {order.status === 'PENDING' && (
+        {order.status === 'PENDING' && !isTrackingMode && (
           <div className="pt-2 flex flex-col items-start gap-3">
             {error && (
               <p className="text-[12px] text-danger bg-danger/5 border border-danger/20 rounded-sm px-3 py-2.5 w-full">

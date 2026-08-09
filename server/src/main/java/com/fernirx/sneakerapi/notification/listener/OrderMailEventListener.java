@@ -29,10 +29,7 @@ public class OrderMailEventListener {
         if (!StringUtils.hasText(event.email())) {
             return;
         }
-        String orderUrl = frontendUrl + "/orders/" + event.orderId()
-                + (StringUtils.hasText(event.guestToken())
-                        ? "?orderToken=" + event.guestToken()
-                        : "");
-        mailService.sendOrderConfirmation(event.email(), event.recipientName(), event.orderCode(), event.totalAmount(), orderUrl);
+        String trackingUrl = frontendUrl + "/tracking/" + event.trackingToken();
+        mailService.sendOrderConfirmation(event.email(), event.recipientName(), event.orderCode(), event.totalAmount(), event.trackingToken(), trackingUrl);
     }
 }

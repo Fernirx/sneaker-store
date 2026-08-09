@@ -12,6 +12,7 @@ import java.util.List;
 public record OrderResponse(
         Long id,
         String code,
+        String trackingToken,
         OrderStatus status,
         OrderPaymentStatus paymentStatus,
         PaymentMethod paymentMethod,

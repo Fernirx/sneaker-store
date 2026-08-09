@@ -34,6 +34,7 @@ export const SHIPMENT_STATUS_LABELS: Record<string, string> = {
 export interface OrderResponse {
   id: number;
   code: string;
+  trackingToken?: string;
   status: OrderStatus;
   paymentStatus: OrderPaymentStatus;
   paymentMethod: PaymentMethod;

@@ -32,7 +32,7 @@ export default async function Footer() {
       items: [
         { label: "Hướng dẫn mua hàng", href: '/help#buying' },
         { label: "Đổi trả & Bảo hành", href: '/help#returns' },
-        { label: "Tra cứu đơn hàng", href: '/orders' },
+        { label: "Tra cứu đơn hàng", href: '/tracking' },
       ],
     },
     {

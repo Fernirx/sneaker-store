@@ -25,6 +25,7 @@ export interface OrderInternalResponse {
   paymentMethod: PaymentMethod;
   customerEmail: string | null;
   guestToken: string | null;
+  trackingToken: string | null;
   recipientName: string;
   recipientPhone: string;
   shippingStreet: string;

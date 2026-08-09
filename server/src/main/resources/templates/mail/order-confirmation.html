@@ -30,9 +30,13 @@
     <div class="order-box">
       <div class="order-code" th:text="${orderCode}">ORD000000</div>
       <div class="total" th:text="#{mail.order_confirmation.total(${totalAmountFormatted})}">Tổng tiền: 0đ</div>
+      
+      <div style="margin-top: 20px; font-size: 14px; color: #555;">
+          <p th:text="#{mail.order_confirmation.tracking_code(${trackingToken})}">Mã tra cứu đơn hàng: 12345</p>
+      </div>
     </div>
     <div class="cta-box">
-      <a class="cta" th:href="${orderUrl}" th:text="#{mail.order_confirmation.cta}">Xem chi tiết đơn hàng</a>
+      <a class="cta" th:href="${trackingUrl}" th:text="#{mail.order_confirmation.cta}">Tra cứu đơn tại đây</a>
     </div>
   </div>
   <div class="footer">

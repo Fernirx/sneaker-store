@@ -114,6 +114,13 @@ export default function HeaderNav({ brands, categories }: { brands: BrandItem[];
           )}
         </div>
       )}
+
+      <Link
+        href="/tracking"
+        className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted hover:text-ink transition-colors rounded"
+      >
+        {"Tra cứu"}
+      </Link>
     </nav>
   );
 }

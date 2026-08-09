@@ -49,6 +49,9 @@ public record CreateOrderRequest(
         @Email(message = "{validation.format.invalid}")
         String guestEmail,
 
-        @NullableNotBlank
-        String otpCode
+        String hpAddress,
+
+        String hpPhone,
+
+        String hpEmail
 ) {}

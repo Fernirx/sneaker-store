@@ -43,27 +43,17 @@ public class MailServiceImpl implements MailService {
     }
 
     /**
-     * Gửi email mã OTP xác thực đơn hàng cho khách vãng lai (Guest).
-     */
-    @Override
-    @Async
-    public void sendOrderVerificationOtp(String to, String username, String otpCode, int expiryMinutes) {
-        Context context = buildOtpContext(username, otpCode, expiryMinutes);
-        String html = templateEngine.process("mail/guest-order-otp", context);
-        mailProvider.send(to, MessageUtil.getMessage("mail.guest_order.subject"), html);
-    }
-
-    /**
      * Gửi email xác nhận đơn hàng thành công kèm theo link tra cứu đơn hàng.
      */
     @Override
     @Async
-    public void sendOrderConfirmation(String to, String recipientName, String orderCode, BigDecimal totalAmount, String orderUrl) {
+    public void sendOrderConfirmation(String to, String recipientName, String orderCode, BigDecimal totalAmount, String trackingToken, String trackingUrl) {
         Context context = new Context();
         context.setVariable("recipientName", recipientName);
         context.setVariable("orderCode", orderCode);
         context.setVariable("totalAmountFormatted", NumberFormat.getInstance(new Locale("vi", "VN")).format(totalAmount) + "đ");
-        context.setVariable("orderUrl", orderUrl);
+        context.setVariable("trackingToken", trackingToken);
+        context.setVariable("trackingUrl", trackingUrl);
         String html = templateEngine.process("mail/order-confirmation", context);
         mailProvider.send(to, MessageUtil.getMessage("mail.order_confirmation.subject", orderCode), html);
     }

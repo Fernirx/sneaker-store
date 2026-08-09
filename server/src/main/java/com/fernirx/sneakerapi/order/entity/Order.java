@@ -56,6 +56,10 @@ public class Order extends BaseAuditEntity {
     @Column(name = "idempotency_key", length = 36)
     private String idempotencyKey;
 
+    @Size(max = 36)
+    @Column(name = "tracking_token", length = 36, unique = true)
+    private String trackingToken;
+
     @NotNull
     @ColumnDefault("'PENDING'")
     @Enumerated(EnumType.STRING)

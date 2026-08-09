@@ -4,7 +4,6 @@ import com.fernirx.sneakerapi.common.response.PageResponse;
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
 import com.fernirx.sneakerapi.common.utils.MessageUtil;
 import com.fernirx.sneakerapi.order.dto.request.CreateOrderRequest;
-import com.fernirx.sneakerapi.order.dto.request.GuestOtpRequest;
 import com.fernirx.sneakerapi.order.dto.response.OrderResponse;
 import com.fernirx.sneakerapi.order.dto.response.OrderStatusHistoryResponse;
 import com.fernirx.sneakerapi.order.service.OrderService;
@@ -27,13 +26,6 @@ import java.util.List;
 @Tag(name = "Order API", description = "Đặt hàng — hỗ trợ cả user và guest")
 public class OrderController {
     private final OrderService orderService;
-
-    @PostMapping("/guest/otp")
-    @Operation(summary = "Gửi OTP xác minh email cho guest đặt hàng")
-    public ResponseEntity<SuccessResponse<Void>> sendGuestOtp(@Valid @RequestBody GuestOtpRequest request) {
-        orderService.sendGuestOtp(request.email());
-        return ResponseEntity.ok(SuccessResponse.of(MessageUtil.getMessage("success.order.guest_otp_sent")));
-    }
 
     @PostMapping
     @Operation(summary = "Tạo đơn hàng")
@@ -64,6 +56,22 @@ public class OrderController {
             @PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(
                 orderService.getMyOrderDetail(id, userId(userDetails), guestToken)));
+    }
+
+    @GetMapping("/track/{trackingToken}")
+    @Operation(summary = "Tra cứu đơn hàng bằng token")
+    public ResponseEntity<SuccessResponse<OrderResponse>> trackOrder(
+            @PathVariable String trackingToken) {
+        return ResponseEntity.ok(SuccessResponse.of(
+                orderService.trackOrder(trackingToken)));
+    }
+
+    @GetMapping("/track/{trackingToken}/history")
+    @Operation(summary = "Lịch sử trạng thái của đơn hàng tra cứu")
+    public ResponseEntity<SuccessResponse<List<OrderStatusHistoryResponse>>> trackOrderHistory(
+            @PathVariable String trackingToken) {
+        return ResponseEntity.ok(SuccessResponse.of(
+                orderService.trackOrderHistory(trackingToken)));
     }
 
     @GetMapping("/{id}/history")

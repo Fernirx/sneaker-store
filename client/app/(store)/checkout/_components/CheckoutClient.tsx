@@ -209,10 +209,9 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('VNPAY');
 
   const [guestEmail, setGuestEmail] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [resendSeconds, setResendSeconds] = useState(0);
+  const [hpAddress, setHpAddress] = useState('');
+  const [hpPhone, setHpPhone] = useState('');
+  const [hpEmail, setHpEmail] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -408,31 +407,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
     setCouponError('');
   }
 
-  function startResendTimer() {
-    setResendSeconds(60);
-    const iv = setInterval(() => {
-      setResendSeconds(s => { if (s <= 1) { clearInterval(iv); return 0; } return s - 1; });
-    }, 1000);
-  }
 
-  async function handleSendOtp() {
-    setError('');
-    if (!guestEmail.trim()) {
-      setError("Vui lòng nhập email và mã xác nhận.");
-      return;
-    }
-    setSendingOtp(true);
-    try {
-      await clientAxios.post('/api/orders/guest-otp', { email: guestEmail.trim() });
-      setOtpSent(true);
-      startResendTimer();
-    } catch (err) {
-      const { general } = parseApiError(err, "Không thể đặt hàng. Vui lòng thử lại.");
-      setError(general);
-    } finally {
-      setSendingOtp(false);
-    }
-  }
 
   async function handleSubmit() {
     setError('');
@@ -447,10 +422,6 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
       !form.shippingProvince.trim();
     if (missingRequired) {
       setError("Vui lòng điền đầy đủ các trường bắt buộc.");
-      return;
-    }
-    if (!isLoggedIn && (!guestEmail.trim() || !otpCode.trim())) {
-      setError("Vui lòng nhập email và mã xác nhận.");
       return;
     }
 
@@ -468,7 +439,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
           paymentMethod,
           couponCode: couponCode || undefined,
           note: form.note.trim() || undefined,
-          ...(isLoggedIn ? {} : { guestEmail: guestEmail.trim(), otpCode: otpCode.trim() }),
+          ...(isLoggedIn ? {} : { guestEmail: guestEmail.trim() || undefined, hpAddress, hpPhone, hpEmail }),
         },
         { headers: { ...guestHeaders(), 'Idempotency-Key': idempotencyKeyRef.current! } },
       );
@@ -511,8 +482,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
     form.shippingStreet.trim() &&
     form.shippingWard.trim() &&
     form.shippingDistrict.trim() &&
-    form.shippingProvince.trim() &&
-    (isLoggedIn || (guestEmail.trim() && otpCode.trim()))
+    form.shippingProvince.trim()
   );
 
   return (
@@ -539,50 +509,23 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
               <h2 className="text-[16px] font-bold text-ink mb-3">
                 {"Thông tin liên hệ"}
               </h2>
-              <div className="space-y-4">
-                <div className="flex gap-2 items-start">
-                  <div className="flex-1">
-                    <FloatingInput
-                      id="guestEmail"
-                      label="Email"
-                      type="text"
-                      inputMode="email"
-                      value={guestEmail}
-                      onChange={e => setGuestEmail(e.target.value.replace(/^\s+/, ''))}
-                      maxLength={255}
-                      error={fieldErrors.guestEmail}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSendOtp}
-                    disabled={sendingOtp || resendSeconds > 0 || !guestEmail.trim()}
-                    className="shrink-0 px-4 h-12 text-[11px] font-bold uppercase tracking-wide border border-line rounded-sm hover:bg-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-                  >
-                    {sendingOtp
-                      ? "Đang gửi..."
-                      : resendSeconds > 0
-                        ? `Gửi lại sau ${resendSeconds}s`
-                        : otpSent ? "Gửi lại mã" : "Gửi mã xác nhận"}
-                  </button>
-                </div>
-
-                {otpSent && (
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted mb-1.5">
-                      {"Mã xác nhận (OTP)"}
-                    </label>
-                    <p className="text-[12px] text-muted mb-1.5">
-                      {`Mã xác nhận đã được gửi đến ${guestEmail}`}
-                    </p>
-                    <input
-                      value={otpCode}
-                      onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      placeholder="000000"
-                      className={`${fieldCls('otpCode')} font-body text-center tracking-[0.3em]`}
-                    />
-                    <FieldError msg={fieldErrors.otpCode} />
-                  </div>
-                )}
+              <div className="space-y-4 relative">
+                <FloatingInput
+                  id="guestEmail"
+                  label="Email"
+                  type="text"
+                  inputMode="email"
+                  value={guestEmail}
+                  required={false}
+                  onChange={e => setGuestEmail(e.target.value.replace(/^\s+/, ''))}
+                  maxLength={255}
+                  error={fieldErrors.guestEmail}
+                />
+                
+                {/* Honeypots for bots */}
+                <input type="text" name="address" aria-hidden="true" className="absolute opacity-0 w-0 h-0 -z-10" tabIndex={-1} autoComplete="new-password" onChange={e => setHpAddress(e.target.value)} />
+                <input type="text" name="phone" aria-hidden="true" className="absolute opacity-0 w-0 h-0 -z-10" tabIndex={-1} autoComplete="new-password" onChange={e => setHpPhone(e.target.value)} />
+                <input type="email" name="email" aria-hidden="true" className="absolute opacity-0 w-0 h-0 -z-10" tabIndex={-1} autoComplete="new-password" onChange={e => setHpEmail(e.target.value)} />
               </div>
             </section>
           )}

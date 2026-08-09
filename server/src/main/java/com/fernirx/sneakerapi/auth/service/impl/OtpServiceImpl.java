@@ -65,8 +65,6 @@ public class OtpServiceImpl implements OtpService {
                     email, displayName, rawOtp, otpProperties.getTtl());
             case FORGOT_PASSWORD -> mailService.sendForgotPasswordOtp(
                     email, displayName, rawOtp, otpProperties.getTtl());
-            case GUEST_ORDER -> mailService.sendOrderVerificationOtp(
-                    email, displayName, rawOtp, otpProperties.getTtl());
         }
     }
 
@@ -106,12 +104,8 @@ public class OtpServiceImpl implements OtpService {
             throw BusinessException.bad("label.otp");
         }
 
-        // Giữ lại OTP cho Guest Order để tránh lỗi race condition (do React strict mode/double click)
-        // và giúp khách có thể đặt nhiều đơn liên tiếp trong khoảng thời gian hiệu lực mà không cần lấy OTP mới.
-        if (purpose != OtpPurpose.GUEST_ORDER) {
-            stringRedisTemplate.delete(otpKey);
-            stringRedisTemplate.delete(attemptsKey);
-        }
+        stringRedisTemplate.delete(otpKey);
+        stringRedisTemplate.delete(attemptsKey);
     }
 
     /**

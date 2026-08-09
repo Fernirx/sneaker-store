@@ -1,6 +1,5 @@
 package com.fernirx.sneakerapi.order.service.impl;
 
-import com.fernirx.sneakerapi.auth.service.OtpService;
 import com.fernirx.sneakerapi.cart.dto.response.CartItemResponse;
 import com.fernirx.sneakerapi.cart.dto.response.CartResponse;
 import com.fernirx.sneakerapi.cart.service.CartService;
@@ -50,7 +49,6 @@ import com.fernirx.sneakerapi.shipping.entity.Shipment;
 import com.fernirx.sneakerapi.shipping.repository.ShipmentRepository;
 import com.fernirx.sneakerapi.shipping.service.ShippingService;
 import com.fernirx.sneakerapi.user.entity.User;
-import com.fernirx.sneakerapi.user.enums.OtpPurpose;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -99,7 +97,6 @@ public class OrderServiceImpl implements OrderService {
     private final ProductVariantService productVariantService;
     private final CouponService couponService;
     private final InventoryTransactionService inventoryTransactionService;
-    private final OtpService otpService;
     private final ShippingService shippingService;
     private final ShipmentRepository shipmentRepository;
     private final PlatformTransactionManager transactionManager;
@@ -108,14 +105,6 @@ public class OrderServiceImpl implements OrderService {
 
     @PersistenceContext
     private EntityManager entityManager;
-
-    /**
-     * Gửi OTP xác thực cho khách vãng lai (guest) qua email.
-     */
-    @Override
-    public void sendGuestOtp(String email) {
-        otpService.sendOtp(email, null, OtpPurpose.GUEST_ORDER);
-    }
 
     /**
      * Tạo đơn hàng mới từ giỏ hàng.
@@ -141,6 +130,12 @@ public class OrderServiceImpl implements OrderService {
         if (existingOrder.isPresent()) {
             Order existing = existingOrder.get();
             return orderMapper.toResponse(existing, mapItems(existing), findShipment(existing));
+        }
+
+        if (StringUtils.hasText(request.hpAddress()) ||
+            StringUtils.hasText(request.hpPhone()) ||
+            StringUtils.hasText(request.hpEmail())) {
+            throw BusinessException.bad("label.info");
         }
 
         boolean isGuest = (userId == null);
@@ -183,6 +178,14 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toResponse(order, mapItems(order), findShipment(order));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponse trackOrder(String trackingToken) {
+        Order order = orderRepository.findByTrackingToken(trackingToken)
+                .orElseThrow(() -> BusinessException.notFound("label.order"));
+        return orderMapper.toResponse(order, mapItems(order), findShipment(order));
+    }
+
     /**
      * Lấy lịch sử chuyển trạng thái của một đơn hàng của khách.
      */
@@ -190,7 +193,19 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public List<OrderStatusHistoryResponse> getMyOrderHistory(Long orderId, Long userId, String guestToken) {
         Order order = findOwnedOrder(orderId, userId, guestToken);
-        return mapHistory(order);
+        return orderStatusHistoryRepository.findByOrderOrderByCreatedAtAsc(order).stream()
+                .map(orderMapper::toHistoryResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderStatusHistoryResponse> trackOrderHistory(String trackingToken) {
+        Order order = orderRepository.findByTrackingToken(trackingToken)
+                .orElseThrow(() -> BusinessException.notFound("label.order"));
+        return orderStatusHistoryRepository.findByOrderOrderByCreatedAtAsc(order).stream()
+                .map(orderMapper::toHistoryResponse)
+                .toList();
     }
 
     /**
@@ -256,7 +271,7 @@ public class OrderServiceImpl implements OrderService {
             cancelOrder(id, StringUtils.hasText(request.note()) ? request.note() : "Admin hủy đơn");
         } else {
             if (request.status() == OrderStatus.SHIPPING) {
-                throw BusinessException.bad("Trạng thái Đang giao hàng được hệ thống tự động cập nhật khi tạo vận đơn thành công.");
+                throw BusinessException.bad("error.order.shipping_status_readonly");
             }
             if (current.getStatus() == OrderStatus.PENDING && request.status() == OrderStatus.CONFIRMED
                     && !callerRoles.contains("ROLE_ADMIN") && !callerRoles.contains("ROLE_SALE")) {
@@ -577,19 +592,12 @@ public class OrderServiceImpl implements OrderService {
     ) {}
 
     /**
-     * Xác định email của người đặt hàng và xác thực (nếu cần).
-     * Điều kiện kiểm tra:
-     * - Nếu là Guest: 
-     *   + Bắt buộc phải nhập email và mã OTP. Thiếu thì ném lỗi 'label.otp'.
-     *   + Gọi otpService.verifyOtp để kiểm tra OTP trong cache. Nếu sai hoặc hết hạn sẽ ném lỗi.
-     * - Nếu là User (đã đăng nhập): Lấy thẳng email từ Customer profile (tạo mới Customer record nếu chưa có).
+     * Xác định email của người đặt hàng.
+     * Cập nhật mới: Email của Guest hiện tại là tùy chọn (Optional).
+     * Bẫy Bot (Honeypot) đã được chuyển lên xử lý ở khối validation trước đó.
      */
     private String resolveCustomerEmail(Long userId, CreateOrderRequest request, boolean isGuest) {
         if (isGuest) {
-            if (!StringUtils.hasText(request.guestEmail()) || !StringUtils.hasText(request.otpCode())) {
-                throw BusinessException.bad("label.otp");
-            }
-            otpService.verifyOtp(request.guestEmail(), request.otpCode(), OtpPurpose.GUEST_ORDER);
             return request.guestEmail();
         }
         return customerService.getOrCreateByUserId(userId).getUser().getEmail();
@@ -697,6 +705,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCustomer(customer);
         order.setGuestToken(isGuest ? guestToken : null);
         order.setCode(generateOrderCode());
+        order.setTrackingToken(UUID.randomUUID().toString());
         order.setIdempotencyKey(idempotencyKey);
         order.setStatus(OrderStatus.PENDING);
         order.setPaymentStatus(OrderPaymentStatus.UNPAID);
@@ -784,7 +793,7 @@ public class OrderServiceImpl implements OrderService {
 
         eventPublisher.publishEvent(new OrderCreatedEvent(
                 order.getId(), order.getCode(), email, request.recipientName(), 
-                pricing.totalAmount(), isGuest ? guestToken : null));
+                pricing.totalAmount(), order.getTrackingToken()));
     }
 
     /**

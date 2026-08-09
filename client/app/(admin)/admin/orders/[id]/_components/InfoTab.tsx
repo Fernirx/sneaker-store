@@ -158,6 +158,7 @@ export default function InfoTab({
         </h3>
         <Row label="Email khách hàng" value={order.customerEmail ?? 'Khách vãng lai'} />
         {order.guestToken && <Row label="Guest token" value={order.guestToken} mono />}
+        {order.trackingToken && <Row label="Mã tra cứu" value={order.trackingToken} mono />}
         <Row label="Người nhận" value={order.recipientName} />
         <Row label="Điện thoại" value={order.recipientPhone} />
         <Row label="Địa chỉ" value={fullAddress} />

@@ -19,13 +19,12 @@ import java.util.Optional;
 
 public interface OrderService {
 
-    // Guest OTP
-    void sendGuestOtp(String email);
-
     // Customer/guest facing
     OrderResponse createOrder(Long userId, String guestToken, String idempotencyKey, CreateOrderRequest request);
     Page<OrderResponse> getMyOrders(Long userId, String guestToken, Pageable pageable);
     OrderResponse getMyOrderDetail(Long orderId, Long userId, String guestToken);
+    OrderResponse trackOrder(String trackingToken);
+    List<OrderStatusHistoryResponse> trackOrderHistory(String trackingToken);
     List<OrderStatusHistoryResponse> getMyOrderHistory(Long orderId, Long userId, String guestToken);
     void customerCancelOrder(Long orderId, Long userId, String guestToken);
 
