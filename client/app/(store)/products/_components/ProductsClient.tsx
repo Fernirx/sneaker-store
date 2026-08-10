@@ -71,6 +71,7 @@ export default function ProductsClient({
     if (f.onSale)     p.set('onSale', 'true');
     f.brandSlugs.forEach(s => p.append('brandSlugs', s));
     f.categorySlugs.forEach(s => p.append('categorySlugs', s));
+    f.sizes.forEach(s => p.append('sizes', String(s)));
     return p;
   }, []);
 
@@ -84,6 +85,7 @@ export default function ProductsClient({
     if (f.onSale)     p.set('onSale', 'true');
     f.brandSlugs.forEach(s => p.append('brandSlugs', s));
     f.categorySlugs.forEach(s => p.append('categorySlugs', s));
+    f.sizes.forEach(s => p.append('sizes', String(s)));
     const qs = p.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
   }, [router, pathname]);
@@ -152,7 +154,7 @@ export default function ProductsClient({
 
   const isFiltered =
     filters.search || filters.gender || filters.brandSlugs.length ||
-    filters.categorySlugs.length || filters.minPrice || filters.maxPrice ||
+    filters.categorySlugs.length || filters.sizes.length > 0 || filters.minPrice || filters.maxPrice ||
     filters.newArrival || filters.onSale;
 
   const FilterPanel = (
@@ -172,6 +174,29 @@ export default function ProductsClient({
               }`}
             >
               {g.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sizes */}
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">{"Kích cỡ"}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {[35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45].map(s => (
+            <button
+              key={s}
+              onClick={() => setFilters(f => ({
+                ...f,
+                sizes: f.sizes.includes(s) ? f.sizes.filter(x => x !== s) : [...f.sizes, s]
+              }))}
+              className={`w-9 h-9 text-xs font-bold rounded-sm border transition-colors ${
+                filters.sizes.includes(s)
+                  ? 'bg-ink text-white border-ink'
+                  : 'border-line text-muted hover:border-ink hover:text-ink'
+              }`}
+            >
+              {s}
             </button>
           ))}
         </div>

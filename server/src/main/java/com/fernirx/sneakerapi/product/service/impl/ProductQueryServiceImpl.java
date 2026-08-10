@@ -27,7 +27,7 @@ public class ProductQueryServiceImpl implements ProductQueryService {
         ProductFilterRequest full = new ProductFilterRequest(
                 filter.search(), filter.gender(), List.of(brandSlug),
                 filter.minPrice(), filter.maxPrice(), filter.newArrival(), filter.onSale(),
-                null, null
+                null, null, filter.sizes()
         );
         return productService.getProducts(full, pageable);
     }
@@ -41,7 +41,7 @@ public class ProductQueryServiceImpl implements ProductQueryService {
         ProductFilterRequest full = new ProductFilterRequest(
                 filter.search(), filter.gender(), filter.brandSlugs(),
                 filter.minPrice(), filter.maxPrice(), filter.newArrival(), filter.onSale(),
-                List.of(categorySlug), null
+                List.of(categorySlug), null, filter.sizes()
         );
         return productService.getProducts(full, pageable);
     }
@@ -55,7 +55,7 @@ public class ProductQueryServiceImpl implements ProductQueryService {
         ProductFilterRequest full = new ProductFilterRequest(
                 filter.search(), filter.gender(), filter.brandSlugs(),
                 filter.minPrice(), filter.maxPrice(), filter.newArrival(), filter.onSale(),
-                null, List.of(collectionSlug)
+                null, List.of(collectionSlug), filter.sizes()
         );
         return productService.getProducts(full, pageable);
     }

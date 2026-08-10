@@ -12,5 +12,6 @@ public record BySlugProductFilterRequest(
         BigDecimal minPrice,
         BigDecimal maxPrice,
         Boolean newArrival,
-        Boolean onSale
+        Boolean onSale,
+        List<Short> sizes
 ) {}

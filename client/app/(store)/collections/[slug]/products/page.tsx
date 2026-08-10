@@ -19,26 +19,46 @@ type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-function buildQuery(sp: { [key: string]: string | string[] | undefined }) {
+function buildFiltersFromSearch(sp: { [key: string]: string | string[] | undefined }) {
   const str = (v: string | string[] | undefined) => (typeof v === 'string' ? v : '');
+  const arr = (v: string | string[] | undefined): string[] => {
+    if (!v) return [];
+    return Array.isArray(v) ? v : [v];
+  };
+  return {
+    search:        str(sp.search),
+    gender:        str(sp.gender),
+    brandSlugs:    arr(sp.brandSlugs),
+    sizes:         arr(sp.sizes).map(Number).filter(n => !isNaN(n)),
+    minPrice:      str(sp.minPrice),
+    maxPrice:      str(sp.maxPrice),
+    newArrival:    sp.newArrival === 'true',
+    onSale:        sp.onSale === 'true',
+  };
+}
+
+function filtersToQuery(f: any): string {
   const p = new URLSearchParams();
   p.set('page', '0'); p.set('size', '20'); p.set('sort', 'createdAt,desc');
-  const search = str(sp.search); if (search) p.set('search', search);
-  const gender = str(sp.gender); if (gender) p.set('gender', gender);
-  const min = str(sp.minPrice); if (min) p.set('minPrice', min);
-  const max = str(sp.maxPrice); if (max) p.set('maxPrice', max);
-  if (sp.newArrival === 'true') p.set('newArrival', 'true');
-  if (sp.onSale === 'true') p.set('onSale', 'true');
+  if (f.search)     p.set('search', f.search);
+  if (f.gender)     p.set('gender', f.gender);
+  if (f.minPrice)   p.set('minPrice', f.minPrice);
+  if (f.maxPrice)   p.set('maxPrice', f.maxPrice);
+  if (f.newArrival) p.set('newArrival', 'true');
+  if (f.onSale)     p.set('onSale', 'true');
+  f.brandSlugs?.forEach((s: string) => p.append('brandSlugs', s));
+  f.sizes?.forEach((s: number) => p.append('sizes', String(s)));
   return p.toString();
 }
 
 export default async function CollectionProductsPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const sp = await searchParams;
+  const initialFilters = buildFiltersFromSearch(sp);
 
   const [collectionRes, productsRes] = await Promise.allSettled([
     publicAxios.get<{ data: CollectionFull }>(`/collections/${slug}`),
-    publicAxios.get<PageData>(`/collections/${slug}/products?${buildQuery(sp)}`),
+    publicAxios.get<PageData>(`/collections/${slug}/products?${filtersToQuery(initialFilters)}`),
   ]);
 
   if (collectionRes.status === 'rejected') notFound();
@@ -82,6 +102,7 @@ export default async function CollectionProductsPage({ params, searchParams }: P
       <SlugProductsClient
         baseApiUrl={`/api/collections/${slug}/products`}
         initialData={initialData}
+        initialFilters={initialFilters}
       />
     </>
   );

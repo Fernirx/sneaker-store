@@ -15,6 +15,7 @@ function buildFiltersFromSearch(sp: { [key: string]: string | string[] | undefin
     gender:        str(sp.gender),
     brandSlugs:    arr(sp.brandSlugs),
     categorySlugs: arr(sp.categorySlugs),
+    sizes:         arr(sp.sizes).map(Number).filter(n => !isNaN(n)),
     minPrice:      str(sp.minPrice),
     maxPrice:      str(sp.maxPrice),
     newArrival:    sp.newArrival === 'true',
@@ -35,6 +36,7 @@ function filtersToQuery(f: Partial<Filters>): string {
   if (f.onSale)     p.set('onSale', 'true');
   f.brandSlugs?.forEach(s => p.append('brandSlugs', s));
   f.categorySlugs?.forEach(s => p.append('categorySlugs', s));
+  f.sizes?.forEach(s => p.append('sizes', String(s)));
   return p.toString();
 }
 

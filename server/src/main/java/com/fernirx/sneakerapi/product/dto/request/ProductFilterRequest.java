@@ -14,5 +14,6 @@ public record ProductFilterRequest(
         Boolean newArrival,
         Boolean onSale,
         List<String> categorySlugs,
-        List<String> collectionSlugs
+        List<String> collectionSlugs,
+        List<Short> sizes
 ) {}

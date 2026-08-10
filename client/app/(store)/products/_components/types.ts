@@ -98,6 +98,7 @@ export type Filters = {
   gender: string;
   brandSlugs: string[];
   categorySlugs: string[];
+  sizes: number[];
   minPrice: string;
   maxPrice: string;
   newArrival: boolean;
@@ -109,6 +110,7 @@ export const EMPTY_FILTERS: Filters = {
   gender: '',
   brandSlugs: [],
   categorySlugs: [],
+  sizes: [],
   minPrice: '',
   maxPrice: '',
   newArrival: false,

@@ -21,9 +21,10 @@ interface Filters {
   maxPrice: string;
   newArrival: boolean;
   onSale: boolean;
+  sizes: number[];
 }
 
-const EMPTY: Filters = { search: '', gender: '', brandSlugs: [], minPrice: '', maxPrice: '', newArrival: false, onSale: false };
+const EMPTY: Filters = { search: '', gender: '', brandSlugs: [], minPrice: '', maxPrice: '', newArrival: false, onSale: false, sizes: [] };
 
 const GENDERS = [
   { value: 'MEN',    label: 'Nam' },
@@ -80,6 +81,7 @@ export default function SlugProductsClient({
     if (f.maxPrice)   p.set('maxPrice', f.maxPrice);
     if (f.newArrival) p.set('newArrival', 'true');
     if (f.onSale)     p.set('onSale', 'true');
+    f.sizes.forEach(s => p.append('sizes', String(s)));
     return p;
   }, []);
 
@@ -92,6 +94,7 @@ export default function SlugProductsClient({
     if (f.maxPrice)   p.set('maxPrice', f.maxPrice);
     if (f.newArrival) p.set('newArrival', 'true');
     if (f.onSale)     p.set('onSale', 'true');
+    f.sizes.forEach(s => p.append('sizes', String(s)));
     const qs = p.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
   }, [router, pathname]);
@@ -128,7 +131,7 @@ export default function SlugProductsClient({
     searchTimer.current = setTimeout(() => setFilters(f => ({ ...f, search: val })), 350);
   }
 
-  const isFiltered = filters.search || filters.gender || filters.brandSlugs.length || filters.minPrice || filters.maxPrice || filters.newArrival || filters.onSale;
+  const isFiltered = filters.search || filters.gender || filters.brandSlugs.length || filters.minPrice || filters.maxPrice || filters.newArrival || filters.onSale || filters.sizes.length > 0;
 
   const FilterPanel = (
     <div className="space-y-6">
@@ -156,6 +159,29 @@ export default function SlugProductsClient({
           </div>
         </div>
       )}
+
+      {/* Sizes */}
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">{"Kích cỡ"}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {[35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45].map(s => (
+            <button
+              key={s}
+              onClick={() => setFilters(f => ({
+                ...f,
+                sizes: f.sizes.includes(s) ? f.sizes.filter(x => x !== s) : [...f.sizes, s]
+              }))}
+              className={`w-9 h-9 text-xs font-bold rounded-sm border transition-colors ${
+                filters.sizes.includes(s)
+                  ? 'bg-ink text-white border-ink'
+                  : 'border-line text-muted hover:border-ink hover:text-ink'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div>
         <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">{"Giới tính"}</p>
