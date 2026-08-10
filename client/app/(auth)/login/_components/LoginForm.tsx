@@ -236,18 +236,18 @@ export default function LoginForm() {
               </div>
 
               {/* OAuth */}
-              <div className="grid grid-cols-2 gap-2.5 mb-5">
+              <div className="grid grid-cols-1 gap-2.5 mb-5">
                 {[
                   {
                     label: 'Google',
                     provider: 'google',
                     icon: <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 11v3.6h5.1c-.2 1.3-1.6 3.9-5.1 3.9-3 0-5.5-2.5-5.5-5.5S9 7.5 12 7.5c1.7 0 2.9.7 3.6 1.4l2.5-2.4C16.5 4.9 14.5 4 12 4 7.6 4 4 7.6 4 12s3.6 8 8 8c4.6 0 7.7-3.2 7.7-7.8 0-.5 0-.9-.1-1.2H12z"/></svg>,
                   },
-                  {
+                  /* {
                     label: 'Facebook',
                     provider: 'facebook',
                     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg>,
-                  },
+                  }, */
                 ].map(({ label, provider, icon }) => (
                   <button key={label} type="button"
                     onClick={() => { window.location.href = `/api/auth/oauth2?provider=${provider}`; }}
