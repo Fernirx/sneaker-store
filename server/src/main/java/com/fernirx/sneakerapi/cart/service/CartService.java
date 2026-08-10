@@ -13,5 +13,6 @@ public interface CartService {
     CartResponse clearCart(Long userId, String guestToken);
     CartResponse mergeGuestCart(Long userId, String guestToken);
     CartResponse selectItem(Long userId, String guestToken, Long itemId, UpdateCartItemSelectionRequest request);
+    CartResponse buyNow(Long userId, String guestToken, AddCartItemRequest request);
     void clearSelectedItems(Long userId, String guestToken);
 }

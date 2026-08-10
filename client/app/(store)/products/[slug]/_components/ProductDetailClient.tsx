@@ -34,7 +34,7 @@ export default function ProductDetailClient({
   isLoggedIn: boolean;
   currentUserId: number | null;
 }) {
-  const { addItem } = useCart();
+  const { addItem, buyNow } = useCart();
   const { isWishlisted, add: addWishlist, remove: removeWishlist } = useWishlist();
   const router = useRouter();
 
@@ -84,6 +84,20 @@ export default function ProductDetailClient({
       const { general } = parseApiError(err, "Không thể thêm vào giỏ hàng");
       setAddError(general);
     } finally {
+      setAddLoading(false);
+    }
+  }
+
+  async function handleBuyNow() {
+    if (!selectedSize || addLoading) return;
+    setAddError('');
+    setAddLoading(true);
+    try {
+      await buyNow(selectedSize.variantId, qty);
+      router.push('/checkout');
+    } catch (err) {
+      const { general } = parseApiError(err, "Không thể xử lý yêu cầu Mua ngay");
+      setAddError(general);
       setAddLoading(false);
     }
   }
@@ -353,41 +367,53 @@ export default function ProductDetailClient({
 
           {/* CTA & Wishlist */}
           <div className="mt-4">
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-3">
+                <button
+                  onClick={handleBuyNow}
+                  disabled={!selectedSize || addLoading}
+                  className={`flex-1 py-4 font-display font-black text-sm uppercase tracking-wider rounded-sm transition-all ${
+                    selectedSize && !addLoading
+                      ? 'bg-ink text-white hover:bg-accent'
+                      : 'bg-paper text-muted border border-line cursor-not-allowed'
+                  }`}
+                >
+                  {addLoading ? '...' : !selectedSize ? "Chọn size" : "Mua ngay"}
+                </button>
+
+                {/* Wishlist */}
+                <button
+                  onClick={handleToggleWishlist}
+                  disabled={wishlistPending}
+                  className={`inline-flex items-center justify-center w-14 border-[1.5px] rounded-sm transition-colors shrink-0 disabled:opacity-50 ${
+                    wishlistEntry
+                      ? 'border-accent bg-accent text-white hover:bg-accent-700'
+                      : 'border-line bg-white text-ink hover:border-accent hover:text-accent'
+                  }`}
+                  aria-label={wishlistEntry ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill={wishlistEntry ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 21C12 21 4 16 2 10.5C0.5 6.5 3.5 3.5 7 3.5C9 3.5 10.5 4.7 12 6C13.5 4.7 15 3.5 17 3.5C20.5 3.5 23.5 6.5 22 10.5C20 16 12 21 12 21Z"/>
+                  </svg>
+                </button>
+              </div>
+
               <button
                 onClick={handleAddToCart}
                 disabled={!selectedSize || addLoading}
-                className={`flex-1 py-4 font-display font-black text-sm uppercase tracking-wider rounded-sm transition-all ${
+                className={`w-full py-4 font-display font-black text-sm uppercase tracking-wider rounded-sm transition-all border-[1.5px] ${
                   addedToCart
-                    ? 'bg-ok text-white'
+                    ? 'bg-ok text-white border-ok'
                     : selectedSize && !addLoading
-                    ? 'bg-ink text-white hover:bg-accent'
-                    : 'bg-paper text-muted border border-line cursor-not-allowed'
+                    ? 'bg-white text-ink border-ink hover:bg-paper'
+                    : 'bg-paper text-muted border-line cursor-not-allowed'
                 }`}
               >
                 {addedToCart
                   ? `✓ ${"Đã thêm vào giỏ"}`
                   : addLoading
                   ? '...'
-                  : !selectedSize
-                  ? "Chọn size"
                   : "Thêm vào giỏ hàng"}
-              </button>
-
-              {/* Wishlist */}
-              <button
-                onClick={handleToggleWishlist}
-                disabled={wishlistPending}
-                className={`inline-flex items-center justify-center w-11 border-[1.5px] rounded-sm transition-colors shrink-0 disabled:opacity-50 ${
-                  wishlistEntry
-                    ? 'border-accent bg-accent text-white hover:bg-accent-700'
-                    : 'border-line bg-white text-ink hover:border-accent hover:text-accent'
-                }`}
-                aria-label={wishlistEntry ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill={wishlistEntry ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 21C12 21 4 16 2 10.5C0.5 6.5 3.5 3.5 7 3.5C9 3.5 10.5 4.7 12 6C13.5 4.7 15 3.5 17 3.5C20.5 3.5 23.5 6.5 22 10.5C20 16 12 21 12 21Z"/>
-                </svg>
               </button>
             </div>
             {addError && <p className="text-xs text-danger mt-2">{addError}</p>}

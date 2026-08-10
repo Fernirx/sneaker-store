@@ -196,7 +196,7 @@ function CheckoutSkeleton() {
 
 export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: boolean; userEmail?: string }) {
   const router = useRouter();
-  const { cart, loading, clearCart } = useCart();
+  const { cart, loading, refreshCart } = useCart();
 
   // 1 UUID/phiên checkout, gửi lại y hệt ở mọi lần submit (kể cả bấm lại sau lỗi mạng) để BE nhận diện
   // và trả lại đúng đơn cũ thay vì tạo trùng khi double-click/replay request.
@@ -445,7 +445,7 @@ export default function CheckoutClient({ isLoggedIn, userEmail }: { isLoggedIn: 
       );
       const order = orderRes.data;
 
-      await clearCart();
+      await refreshCart();
 
       if (paymentMethod === 'VNPAY') {
         const { data: payRes } = await clientAxios.post('/api/payment', { orderId: order.id }, { headers: guestHeaders() });

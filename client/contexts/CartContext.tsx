@@ -42,10 +42,12 @@ interface CartContextValue {
   cart: CartData | null;
   loading: boolean;
   addItem: (variantId: number, quantity?: number) => Promise<void>;
+  buyNow: (variantId: number, quantity?: number) => Promise<void>;
   updateItem: (itemId: number, quantity: number) => Promise<void>;
   removeItem: (itemId: number) => Promise<void>;
   toggleSelection: (itemId: number, selected: boolean) => Promise<void>;
   clearCart: () => Promise<void>;
+  refreshCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -192,6 +194,15 @@ export function CartProvider({
     applyCart(res.data);
   }, [applyCart]);
 
+  const buyNow = useCallback(async (variantId: number, quantity = 1) => {
+    const { data: res } = await clientAxios.post(
+      '/api/cart/buy-now',
+      { variantId, quantity },
+      { headers: guestHeaders() },
+    );
+    applyCart(res.data);
+  }, [applyCart]);
+
   const updateItem = useCallback(async (itemId: number, quantity: number) => {
     const { data: res } = await clientAxios.patch(
       `/api/cart/items/${itemId}`,
@@ -222,8 +233,13 @@ export function CartProvider({
     applyCart(res.data);
   }, [applyCart]);
 
+  const refreshCart = useCallback(async () => {
+    const { data: res } = await clientAxios.get('/api/cart', { headers: guestHeaders() });
+    applyCart(res.data);
+  }, [applyCart]);
+
   return (
-    <CartContext.Provider value={{ cart, loading, addItem, updateItem, removeItem, toggleSelection, clearCart }}>
+    <CartContext.Provider value={{ cart, loading, addItem, buyNow, updateItem, removeItem, toggleSelection, clearCart, refreshCart }}>
       {children}
       {mounted && adjustments.length > 0 && createPortal(
         <AdjustmentToast

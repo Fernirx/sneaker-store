@@ -154,6 +154,45 @@ public class CartServiceImpl implements CartService {
     }
 
     /**
+     * Mua ngay: Hủy chọn tất cả sản phẩm khác trong giỏ, 
+     * thêm sản phẩm mới (hoặc cộng dồn) và chỉ chọn duy nhất sản phẩm này.
+     */
+    @Override
+    public CartResponse buyNow(Long userId, String guestToken, AddCartItemRequest request) {
+        ProductVariant variant = findActiveVariant(request.variantId());
+        Cart cart = getOrCreateCart(userId, guestToken);
+
+        // Lấy tất cả item hiện tại trong giỏ và bỏ chọn
+        List<CartItem> items = cartItemRepository.findAllWithDetailsBy(cart);
+        items.forEach(item -> item.setSelected(false));
+
+        // Tìm xem sản phẩm Mua Ngay đã có trong giỏ chưa
+        Optional<CartItem> existingItemOpt = items.stream()
+                .filter(i -> i.getVariant().getId().equals(variant.getId()))
+                .findFirst();
+
+        if (existingItemOpt.isPresent()) {
+            CartItem item = existingItemOpt.get();
+            int newQty = item.getQuantity() + request.quantity();
+            validateStock(variant, newQty);
+            item.setQuantity(newQty);
+            item.setSelected(true); // Chỉ chọn món này
+        } else {
+            validateStock(variant, request.quantity());
+            CartItem newItem = new CartItem();
+            newItem.setCart(cart);
+            newItem.setVariant(variant);
+            newItem.setQuantity(request.quantity());
+            newItem.setSelected(true); // Chỉ chọn món này
+            cartItemRepository.save(newItem);
+        }
+        
+        cartItemRepository.saveAll(items);
+
+        return buildCartResponse(cart);
+    }
+
+    /**
      * Đồng bộ (gộp) giỏ hàng vãng lai (Guest) vào giỏ hàng tài khoản (User).
      * Luồng xử lý:
      * 1. Lấy giỏ hàng Guest và giỏ hàng User (nếu chưa có thì tạo mới).

@@ -45,6 +45,16 @@ public class CartController {
         return ResponseEntity.ok(SuccessResponse.of(cartService.addItem(userId, guestToken, request)));
     }
 
+    @PostMapping("/buy-now")
+    @Operation(summary = "Mua ngay (hủy chọn tất cả, chọn 1 sản phẩm này)")
+    public ResponseEntity<SuccessResponse<CartResponse>> buyNow(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(value = "X-Guest-Token", required = false) String guestToken,
+            @Valid @RequestBody AddCartItemRequest request) {
+        Long userId = userId(userDetails);
+        return ResponseEntity.ok(SuccessResponse.of(cartService.buyNow(userId, guestToken, request)));
+    }
+
     @PatchMapping("/items/{itemId}")
     @Operation(summary = "Cập nhật số lượng sản phẩm trong giỏ")
     public ResponseEntity<SuccessResponse<CartResponse>> updateItem(
