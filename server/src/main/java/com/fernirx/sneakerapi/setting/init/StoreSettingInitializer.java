@@ -28,6 +28,9 @@ public class StoreSettingInitializer implements ApplicationRunner {
         entity.setSilverThreshold(BigDecimal.valueOf(5_000_000));
         entity.setGoldThreshold(BigDecimal.valueOf(15_000_000));
         entity.setPlatinumThreshold(BigDecimal.valueOf(30_000_000));
+        entity.setSilverDiscountRate(1);
+        entity.setGoldDiscountRate(2);
+        entity.setPlatinumDiscountRate(3);
         storeSettingRepository.save(entity);
     }
 }
