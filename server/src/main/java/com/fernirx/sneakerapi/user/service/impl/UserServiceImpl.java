@@ -2,6 +2,9 @@ package com.fernirx.sneakerapi.user.service.impl;
 
 import com.fernirx.sneakerapi.common.enums.Role;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
+import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
+import com.fernirx.sneakerapi.customer.service.CustomerService;
+import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import com.fernirx.sneakerapi.user.dto.request.CreateUserRequest;
 import com.fernirx.sneakerapi.user.dto.request.UpdateUserRequest;
 import com.fernirx.sneakerapi.user.dto.request.UserFilterRequest;
@@ -15,10 +18,11 @@ import com.fernirx.sneakerapi.user.repository.UserRepository;
 import com.fernirx.sneakerapi.user.repository.UserRoleRepository;
 import com.fernirx.sneakerapi.user.repository.UserSpec;
 import com.fernirx.sneakerapi.user.service.UserService;
-import com.fernirx.sneakerapi.customer.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,6 +99,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserInternalResponse updateUser(Long id, UpdateUserRequest request) {
         User user = findById(id);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails currentUser) {
+            if (currentUser.getId().equals(id)) {
+                if (request.active() != null && !request.active().equals(user.getActive())) {
+                    throw SecurityCustomException.forbidden();
+                }
+                if (request.roles() != null) {
+                    throw SecurityCustomException.forbidden();
+                }
+            }
+        }
+
         if (request.active() != null) {
             user.setActive(request.active());
         }

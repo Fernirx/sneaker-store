@@ -48,7 +48,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public User findOrCreateOAuth2User(OAuth2UserCommand command) {
         return userRepository.findByEmailIncludingDeleted(command.email())
                 .map(user -> {
-                    if (user.getDeletedAt() != null) {
+                    if (user.getDeletedAt() != null || !user.getActive()) {
                         throw SecurityCustomException.accountUnavailable();
                     }
                     return linkProviderIfAbsent(user, command);
