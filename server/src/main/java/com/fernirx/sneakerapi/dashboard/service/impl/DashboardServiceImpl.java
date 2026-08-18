@@ -33,8 +33,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DashboardServiceImpl implements DashboardService {
-    private static final int REVENUE_CHART_DAYS = 14;
-    private static final int TOP_PRODUCTS_LIMIT = 5;
     private static final int LOW_STOCK_LIMIT = 5;
 
     private final OrderRepository orderRepository;
@@ -49,7 +47,7 @@ public class DashboardServiceImpl implements DashboardService {
      * Các dữ liệu này được query trực tiếp từ database, có thể sẽ nặng nếu dữ liệu lớn.
      */
     @Override
-    public DashboardSummaryResponse getSummary(boolean isAdmin) {
+    public DashboardSummaryResponse getSummary(boolean isAdmin, int topProductsLimit, int revenueDays) {
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
         LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
 
@@ -66,7 +64,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .map(this::toLowStockVariant)
                 .toList();
 
-        List<TopProduct> topProducts = orderItemRepository.findTopSellingProducts(PageRequest.of(0, TOP_PRODUCTS_LIMIT)).stream()
+        List<TopProduct> topProducts = orderItemRepository.findTopSellingProducts(PageRequest.of(0, topProductsLimit)).stream()
                 .map(row -> new TopProduct((String) row[0], (String) row[1], (Long) row[2]))
                 .toList();
 
@@ -81,7 +79,7 @@ public class DashboardServiceImpl implements DashboardService {
             BigDecimal rawMonthRevenue = orderRepository.sumRevenueSince(startOfMonth);
             monthRevenue = rawMonthRevenue != null ? rawMonthRevenue : BigDecimal.ZERO;
 
-            revenueByDay = buildRevenueByDay();
+            revenueByDay = buildRevenueByDay(revenueDays);
         }
 
         return new DashboardSummaryResponse(
@@ -100,17 +98,17 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /**
-     * Lấy doanh thu theo từng ngày trong 14 ngày gần nhất.
-     * Điền đủ 14 ngày liên tiếp (kể cả ngày doanh thu = 0) để biểu đồ đường trên FE 
+     * Lấy doanh thu theo từng ngày trong khoảng thời gian nhất định.
+     * Điền đủ các ngày liên tiếp (kể cả ngày doanh thu = 0) để biểu đồ đường trên FE 
      * không bị lệch trục thời gian.
      */
-    private List<DailyRevenue> buildRevenueByDay() {
-        LocalDateTime chartFrom = LocalDate.now().minusDays(REVENUE_CHART_DAYS - 1L).atStartOfDay();
+    private List<DailyRevenue> buildRevenueByDay(int days) {
+        LocalDateTime chartFrom = LocalDate.now().minusDays(days - 1L).atStartOfDay();
         Map<LocalDate, BigDecimal> revenueByDate = orderRepository.findDailyRevenueSince(chartFrom).stream()
                 .collect(Collectors.toMap(row -> toLocalDate(row[0]), row -> row[1] != null ? new BigDecimal(row[1].toString()) : BigDecimal.ZERO));
 
-        List<DailyRevenue> result = new ArrayList<>(REVENUE_CHART_DAYS);
-        for (int i = REVENUE_CHART_DAYS - 1; i >= 0; i--) {
+        List<DailyRevenue> result = new ArrayList<>(days);
+        for (int i = days - 1; i >= 0; i--) {
             LocalDate day = LocalDate.now().minusDays(i);
             result.add(new DailyRevenue(day, revenueByDate.getOrDefault(day, BigDecimal.ZERO)));
         }

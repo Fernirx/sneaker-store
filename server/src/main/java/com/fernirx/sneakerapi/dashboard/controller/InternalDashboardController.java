@@ -26,9 +26,11 @@ public class InternalDashboardController {
     @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'WAREHOUSE')")
     @Operation(summary = "Tổng quan doanh thu, đơn hàng, tồn kho, sản phẩm bán chạy, khách hàng mới")
     public ResponseEntity<SuccessResponse<DashboardSummaryResponse>> getSummary(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "5") int topLimit,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "14") int revenueDays,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         boolean isAdmin = userDetails.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        return ResponseEntity.ok(SuccessResponse.of(dashboardService.getSummary(isAdmin)));
+        return ResponseEntity.ok(SuccessResponse.of(dashboardService.getSummary(isAdmin, topLimit, revenueDays)));
     }
 }

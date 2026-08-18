@@ -58,6 +58,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -450,7 +451,16 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
             item.setExchangeVariant(resolveExchangeVariant(orderItem, itemRequest.exchangeVariantId()));
         }
 
-        item.setRefundAmount(orderItem.getUnitPrice().multiply(BigDecimal.valueOf(itemRequest.quantity())));
+        BigDecimal itemGross = orderItem.getUnitPrice().multiply(BigDecimal.valueOf(itemRequest.quantity()));
+        BigDecimal totalDiscount = order.getDiscountAmount().add(order.getTierDiscountAmount());
+        BigDecimal proportionalDiscount = BigDecimal.ZERO;
+        
+        if (order.getSubtotal().compareTo(BigDecimal.ZERO) > 0 && totalDiscount.compareTo(BigDecimal.ZERO) > 0) {
+            proportionalDiscount = itemGross.multiply(totalDiscount)
+                    .divide(order.getSubtotal(), 2, RoundingMode.HALF_UP);
+        }
+        
+        item.setRefundAmount(itemGross.subtract(proportionalDiscount));
         return item;
     }
 

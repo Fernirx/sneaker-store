@@ -3,5 +3,5 @@ package com.fernirx.sneakerapi.dashboard.service;
 import com.fernirx.sneakerapi.dashboard.dto.response.DashboardSummaryResponse;
 
 public interface DashboardService {
-    DashboardSummaryResponse getSummary(boolean isAdmin);
+    DashboardSummaryResponse getSummary(boolean isAdmin, int topProductsLimit, int revenueDays);
 }

@@ -44,11 +44,16 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT o.status, COUNT(o) FROM Order o GROUP BY o.status")
     List<Object[]> countGroupByStatus();
 
-    @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.paymentStatus = 'PAID' AND o.createdAt >= :from")
+    @Query(value = "SELECT SUM(o.total_amount - COALESCE(r.total_refund, 0)) " +
+            "FROM orders o " +
+            "LEFT JOIN (SELECT order_id, SUM(refund_amount) AS total_refund FROM return_requests WHERE status = 'COMPLETED' GROUP BY order_id) r ON o.id = r.order_id " +
+            "WHERE o.payment_status = 'PAID' AND o.created_at >= :from", nativeQuery = true)
     BigDecimal sumRevenueSince(@Param("from") LocalDateTime from);
 
-    @Query(value = "SELECT DATE(created_at) AS d, SUM(total_amount) AS revenue " +
-            "FROM orders WHERE payment_status = 'PAID' AND created_at >= :from " +
-            "GROUP BY DATE(created_at) ORDER BY d", nativeQuery = true)
+    @Query(value = "SELECT DATE(o.created_at) AS d, SUM(o.total_amount - COALESCE(r.total_refund, 0)) AS revenue " +
+            "FROM orders o " +
+            "LEFT JOIN (SELECT order_id, SUM(refund_amount) AS total_refund FROM return_requests WHERE status = 'COMPLETED' GROUP BY order_id) r ON o.id = r.order_id " +
+            "WHERE o.payment_status = 'PAID' AND o.created_at >= :from " +
+            "GROUP BY DATE(o.created_at) ORDER BY d", nativeQuery = true)
     List<Object[]> findDailyRevenueSince(@Param("from") LocalDateTime from);
 }

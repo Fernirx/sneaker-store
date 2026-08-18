@@ -24,10 +24,13 @@ function StatTile({ label, value, sub, href }: { label: string; value: string; s
   return href ? <Link href={href} className="block hover:opacity-80 transition-opacity">{content}</Link> : content;
 }
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+function ChartCard({ title, headerRight, children }: { title: string; headerRight?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="bg-paper border border-line rounded-sm p-4">
-      <div className="text-[11px] font-bold uppercase tracking-wider text-muted mb-4">{title}</div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-muted">{title}</div>
+        {headerRight && <div>{headerRight}</div>}
+      </div>
       {children}
     </div>
   );
@@ -57,17 +60,31 @@ function StatusTooltip({ active, payload }: { active?: boolean; payload?: { payl
 export default function DashboardClient({ initialData, roles }: { initialData: DashboardSummary, roles: string[] }) {
   const [data, setData] = useState(initialData);
   const [refreshing, setRefreshing] = useState(false);
+  const [topLimit, setTopLimit] = useState(5);
+  const [revenueDays, setRevenueDays] = useState(14);
 
-  async function refresh() {
+  async function refresh(limit = topLimit, days = revenueDays) {
     setRefreshing(true);
     try {
-      const { data: res } = await clientAxios.get('/api/admin/dashboard');
+      const { data: res } = await clientAxios.get(`/api/admin/dashboard?topLimit=${limit}&revenueDays=${days}`);
       setData(res.data as DashboardSummary);
     } catch {
       // im lặng bỏ qua - dữ liệu cũ vẫn hiển thị, admin có thể bấm làm mới lại
     } finally {
       setRefreshing(false);
     }
+  }
+
+  function handleTopLimitChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const newLimit = parseInt(e.target.value, 10);
+    setTopLimit(newLimit);
+    refresh(newLimit, revenueDays);
+  }
+
+  function handleRevenueDaysChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const newDays = parseInt(e.target.value, 10);
+    setRevenueDays(newDays);
+    refresh(topLimit, newDays);
   }
 
   const statusData = ORDER_STATUS_ORDER.map(status => ({
@@ -113,7 +130,21 @@ export default function DashboardClient({ initialData, roles }: { initialData: D
       {/* Charts */}
       <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-2' : 'lg:grid-cols-1'} gap-4`}>
         {isAdmin && data.revenueByDay && (
-          <ChartCard title="Doanh thu 14 ngày gần nhất">
+          <ChartCard
+            title={`Doanh thu ${revenueDays} ngày gần nhất`}
+            headerRight={
+              <select
+                value={revenueDays}
+                onChange={handleRevenueDaysChange}
+                disabled={refreshing}
+                className="text-[11px] font-bold text-muted bg-transparent border-none focus:ring-0 cursor-pointer hover:text-ink outline-none"
+              >
+                <option value={7}>7 ngày</option>
+                <option value={14}>14 ngày</option>
+                <option value={30}>30 ngày</option>
+              </select>
+            }
+          >
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={data.revenueByDay} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <defs>
@@ -203,7 +234,19 @@ export default function DashboardClient({ initialData, roles }: { initialData: D
         </div>
 
         <div className="bg-paper border border-line rounded-sm p-4">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-muted mb-3">Sản phẩm bán chạy</div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-muted">Sản phẩm bán chạy</div>
+            <select
+              value={topLimit}
+              onChange={handleTopLimitChange}
+              disabled={refreshing}
+              className="text-[11px] font-bold text-muted bg-transparent border-none focus:ring-0 cursor-pointer hover:text-ink outline-none"
+            >
+              <option value={5}>Top 5</option>
+              <option value={10}>Top 10</option>
+              <option value={20}>Top 20</option>
+            </select>
+          </div>
           {data.topProducts.length === 0 ? (
             <p className="text-sm text-muted">Chưa có dữ liệu bán hàng.</p>
           ) : (
