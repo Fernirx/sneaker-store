@@ -41,6 +41,7 @@ public class NotificationEventListener {
         String link = "/admin/orders/" + event.orderId();
         notifyRole(NotificationType.ORDER, Role.ROLE_SALE, title, message, link);
         notifyRole(NotificationType.ORDER, Role.ROLE_WAREHOUSE, title, message, link);
+        notifyRole(NotificationType.ORDER, Role.ROLE_ADMIN, title, message, link);
     }
 
     @Async
@@ -49,6 +50,7 @@ public class NotificationEventListener {
         String title = "Đơn hàng bị hủy #" + event.orderCode();
         String message = "Đơn hàng #" + event.orderCode() + " đã bị hủy. Lý do: " + event.reason();
         String link = "/admin/orders/" + event.orderId();
+        notifyRole(NotificationType.ORDER, Role.ROLE_ADMIN, title, message, link);
         notifyRole(NotificationType.ORDER, Role.ROLE_SALE, title, message, link);
         notifyRole(NotificationType.ORDER, Role.ROLE_WAREHOUSE, title, message, link);
     }
