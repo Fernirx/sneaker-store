@@ -90,7 +90,7 @@ export default function BannersClient({
       <div className="flex gap-3 flex-wrap">
         <input
           type="text"
-          placeholder="Tìm theo tiêu đề..."
+          placeholder="Tìm theo tiêu đề"
           value={pendingSearch}
           onChange={e => handleSearchChange(e.target.value)}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm w-64 focus:outline-none focus:border-ink"

@@ -78,7 +78,7 @@ export default function ReturnsClient({ initialData }: { initialData: PageData }
       <div className="flex gap-3 flex-wrap items-center">
         <input
           type="text"
-          placeholder="Tìm theo mã yêu cầu/đơn hàng..."
+          placeholder="Tìm theo mã yêu cầu, mã đơn"
           value={pendingSearch}
           onChange={e => handleSearchChange(e.target.value)}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm w-60 focus:outline-none focus:border-ink"

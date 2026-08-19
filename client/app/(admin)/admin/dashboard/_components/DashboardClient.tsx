@@ -100,14 +100,14 @@ export default function DashboardClient({ initialData, roles }: { initialData: D
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display font-black text-2xl uppercase tracking-tight text-ink">Tổng quan</h1>
-        <button
-          type="button"
-          onClick={refresh}
-          disabled={refreshing}
-          className="text-[11px] font-bold uppercase tracking-wider text-muted hover:text-ink transition-colors disabled:opacity-50"
-        >
-          {refreshing ? 'Đang làm mới...' : 'Làm mới'}
-        </button>
+        {/*<button*/}
+        {/*  type="button"*/}
+        {/*  onClick={refresh}*/}
+        {/*  disabled={refreshing}*/}
+        {/*  className="text-[11px] font-bold uppercase tracking-wider text-muted hover:text-ink transition-colors disabled:opacity-50"*/}
+        {/*>*/}
+        {/*  {refreshing ? 'Đang làm mới...' : 'Làm mới'}*/}
+        {/*</button>*/}
       </div>
 
       {/* Stat tiles */}

@@ -84,7 +84,7 @@ export default function CouponsClient({
       <div className="flex gap-3 flex-wrap">
         <input
           type="text"
-          placeholder="Tìm theo mã..."
+          placeholder="Tìm theo mã"
           value={pendingSearch}
           onChange={e => handleSearchChange(e.target.value)}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm w-52 focus:outline-none focus:border-ink"

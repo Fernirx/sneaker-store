@@ -87,7 +87,7 @@ export default function CollectionsClient({
       <div className="flex gap-3 flex-wrap">
         <input
           type="text"
-          placeholder="Tìm theo tên..."
+          placeholder="Tìm theo tên, slug"
           value={pendingSearch}
           onChange={e => handleSearchChange(e.target.value.replace(/^\s+/, ''))}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm w-64 focus:outline-none focus:border-ink"

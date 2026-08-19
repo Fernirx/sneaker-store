@@ -95,7 +95,7 @@ export default function PurchasesClient({
       <div className="flex gap-3 flex-wrap items-center">
         <input
           type="text"
-          placeholder="Tìm theo mã phiếu / số HĐ..."
+          placeholder="Tìm theo mã phiếu, số hóa đơn"
           value={pendingSearch}
           onChange={e => handleSearchChange(e.target.value)}
           className="border border-line bg-white rounded-sm px-3 py-2 text-sm w-56 focus:outline-none focus:border-ink"
