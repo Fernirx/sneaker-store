@@ -1,0 +1,10 @@
+ALTER TABLE `return_requests` 
+MODIFY COLUMN `status` ENUM(
+    'PENDING', 
+    'APPROVED', 
+    'RECEIVED', 
+    'REFUND_PENDING',
+    'COMPLETED', 
+    'REJECTED', 
+    'REJECTED_AFTER_INSPECTION'
+) NOT NULL DEFAULT 'PENDING';

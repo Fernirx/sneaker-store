@@ -6,6 +6,13 @@ let refreshing: Promise<void> | null = null;
 
 clientAxios.interceptors.response.use(undefined, async err => {
   const original = err.config;
+
+  if (err.response?.status === 403 && err.response?.data?.code === 'ACCOUNT_UNAVAILABLE') {
+    await axios.post('/api/auth/logout').catch(() => {});
+    window.location.href = '/login?error=account_unavailable';
+    throw err;
+  }
+
   if (err.response?.status !== 401 || original._retry || /^\/api\/auth\//.test(original.url ?? '')) {
     throw err;
   }

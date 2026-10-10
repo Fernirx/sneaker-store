@@ -13,5 +13,7 @@ public record ProductFilterRequest(
         BigDecimal maxPrice,
         Boolean newArrival,
         Boolean onSale,
-        List<String> categorySlugs
+        List<String> categorySlugs,
+        List<String> collectionSlugs,
+        List<Short> sizes
 ) {}

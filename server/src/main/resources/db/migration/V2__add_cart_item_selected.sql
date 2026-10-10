@@ -1,0 +1,2 @@
+ALTER TABLE cart_items
+    ADD COLUMN selected TINYINT(1) NOT NULL DEFAULT 1;

@@ -4,6 +4,7 @@ import com.fernirx.sneakerapi.product.entity.ProductImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,4 +24,8 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
     @Modifying
     @Query("UPDATE ProductImage pi SET pi.primaryImage = false WHERE pi.product.id = :productId AND pi.colorway = :colorway")
     void clearPrimaryByProductAndColorway(Long productId, String colorway);
+
+    @Modifying
+    @Query("UPDATE ProductImage pi SET pi.colorway = :newColorway, pi.colorHex = :newColorHex WHERE pi.product.id = :productId AND pi.colorway = :oldColorway")
+    int updateColorwayByProductAndColorway(@Param("productId") Long productId, @Param("oldColorway") String oldColorway, @Param("newColorway") String newColorway, @Param("newColorHex") String newColorHex);
 }

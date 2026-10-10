@@ -60,8 +60,5 @@ public class Category extends BaseAuditEntity {
     private Set<Category> categories = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "category")
-    private Set<CategoryTranslation> categoryTranslations = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "category")
     private Set<ProductCategory> productCategories = new LinkedHashSet<>();
 }

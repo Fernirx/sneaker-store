@@ -23,6 +23,7 @@
         <icu4j.version>78.3</icu4j.version>
         <slugify.version>4.0.0</slugify.version>
         <io.jsonwebtoken.version>0.13.0</io.jsonwebtoken.version>
+        <owasp-html-sanitizer.version>20260313.1</owasp-html-sanitizer.version>
     </properties>
 
     <dependencies>
@@ -122,6 +123,12 @@
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
             <version>${io.jsonwebtoken.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+            <version>${owasp-html-sanitizer.version}</version>
         </dependency>
 
         <dependency>

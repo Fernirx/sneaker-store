@@ -1,5 +1,6 @@
 package com.fernirx.sneakerapi.user.dto.request;
 
+import com.fernirx.sneakerapi.common.annotation.ValidName;
 import com.fernirx.sneakerapi.common.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -14,11 +15,13 @@ public record CreateUserRequest(
         String email,
 
         @NotBlank(message = "{validation.field.not_blank}")
+        @com.fernirx.sneakerapi.common.annotation.StrongPassword
         @Size(max = 255, message = "{validation.size.max}")
         String password,
 
         @NotBlank(message = "{validation.field.not_blank}")
         @Size(max = 100, message = "{validation.size.max}")
+        @ValidName
         String firstName,
 
         Set<Role> roles

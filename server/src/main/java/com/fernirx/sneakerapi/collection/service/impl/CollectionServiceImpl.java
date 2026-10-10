@@ -2,36 +2,40 @@ package com.fernirx.sneakerapi.collection.service.impl;
 
 import com.fernirx.sneakerapi.collection.dto.request.CollectionFilterRequest;
 import com.fernirx.sneakerapi.collection.dto.request.CreateCollectionRequest;
-import com.fernirx.sneakerapi.collection.dto.request.TranslationRequest;
 import com.fernirx.sneakerapi.collection.dto.request.UpdateCollectionRequest;
 import com.fernirx.sneakerapi.collection.dto.response.CollectionInternalResponse;
 import com.fernirx.sneakerapi.collection.dto.response.CollectionResponse;
 import com.fernirx.sneakerapi.collection.entity.Collection;
-import com.fernirx.sneakerapi.collection.entity.CollectionTranslation;
 import com.fernirx.sneakerapi.collection.mapper.CollectionMapper;
 import com.fernirx.sneakerapi.collection.repository.CollectionRepository;
 import com.fernirx.sneakerapi.collection.repository.CollectionSpec;
-import com.fernirx.sneakerapi.collection.repository.CollectionTranslationRepository;
 import com.fernirx.sneakerapi.collection.service.CollectionService;
+import com.fernirx.sneakerapi.product.service.ProductCollectionService;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
+import org.owasp.html.PolicyFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.time.LocalDate;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class CollectionServiceImpl implements CollectionService {
     private final CollectionRepository collectionRepository;
-    private final CollectionTranslationRepository collectionTranslationRepository;
     private final CollectionMapper collectionMapper;
+    private final ProductCollectionService productCollectionService;
     private final Slugify slugify;
+    private final PolicyFactory richTextHtmlPolicy;
 
+    /**
+     * Lấy danh sách Collection hiển thị công khai (dành cho Front-end).
+     * Tự động ép điều kiện luôn chỉ lấy các Collection đang kích hoạt (active = true).
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<CollectionResponse> getCollections(CollectionFilterRequest filter, Pageable pageable) {
@@ -40,6 +44,10 @@ public class CollectionServiceImpl implements CollectionService {
                 .map(collectionMapper::toResponse);
     }
 
+    /**
+     * Lấy chi tiết Collection theo đường dẫn thân thiện (slug).
+     * Chỉ trả về khi Collection có trạng thái hoạt động (active = true).
+     */
     @Override
     @Transactional(readOnly = true)
     public CollectionResponse getBySlug(String slug) {
@@ -49,6 +57,10 @@ public class CollectionServiceImpl implements CollectionService {
         return collectionMapper.toResponse(collection);
     }
 
+    /**
+     * Lấy danh sách Collection dành cho trang quản trị (CMS).
+     * Bỏ qua điều kiện active, hỗ trợ tìm kiếm linh hoạt.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<CollectionInternalResponse> getInternalCollections(CollectionFilterRequest filter, Pageable pageable) {
@@ -56,52 +68,85 @@ public class CollectionServiceImpl implements CollectionService {
                 .map(collectionMapper::toInternalResponse);
     }
 
+    /**
+     * Lấy chi tiết Collection theo ID (hệ thống quản trị).
+     */
     @Override
     @Transactional(readOnly = true)
     public CollectionInternalResponse getInternalById(Long id) {
         return collectionMapper.toInternalResponse(findById(id));
     }
 
+    /**
+     * Tạo mới một Collection.
+     * Luồng xử lý:
+     * 1. Kiểm tra tên không trùng lặp.
+     * 2. Validate thời gian: Ngày kết thúc không được nhỏ hơn ngày bắt đầu.
+     * 3. Tự động sinh slug duy nhất từ tên.
+     * 4. Sanitize mô tả (chống XSS) và lưu xuống DB.
+     */
     @Override
     public CollectionInternalResponse createCollection(CreateCollectionRequest request) {
         if (collectionRepository.existsByNameIgnoreCase(request.name())) {
             throw BusinessException.alreadyExists("label.collection");
         }
+        
         String slug = generateUniqueSlug(request.name());
-
         Collection collection = new Collection();
         collection.setName(request.name());
         collection.setSlug(slug);
-        collection.setDescription(request.description());
+
+        String cleanDesc = request.description() != null
+                ? richTextHtmlPolicy.sanitize(request.description())
+                : null;
+        collection.setDescription(cleanDesc);
+
         collection.setImagePublicId(request.imagePublicId());
         collection.setLaunchDate(request.launchDate());
         collection.setEndDate(request.endDate());
         collection.setActive(true);
-        Collection saved = collectionRepository.save(collection);
 
-        if (request.translations() != null) {
-            saveTranslations(saved, request.translations());
-        }
-        return collectionMapper.toInternalResponse(collectionRepository.findById(saved.getId()).orElseThrow());
+        Collection saved = collectionRepository.save(collection);
+        return collectionMapper.toInternalResponse(
+            collectionRepository.findById(saved.getId()).orElseThrow()
+        );
     }
 
+    /**
+     * Cập nhật thông tin Collection.
+     * Luồng xử lý:
+     * 1. Kiểm tra không đổi tên trùng với Collection khác.
+     * 2. Validate thời gian: Ngày kết thúc không được nhỏ hơn ngày bắt đầu.
+     * 3. Dùng MapStruct đè thông tin mới.
+     * 4. Sanitize lại nội dung mô tả (nếu có).
+     */
     @Override
     public CollectionInternalResponse updateCollection(Long id, UpdateCollectionRequest request) {
         Collection collection = findById(id);
+        
         if (request.name() != null && !request.name().equalsIgnoreCase(collection.getName())) {
             if (collectionRepository.existsByNameIgnoreCase(request.name())) {
                 throw BusinessException.alreadyExists("label.collection");
             }
         }
+        
+        // validation now handled by @ValidCollectionDates on the DTO
+        
         collectionMapper.updateCollection(request, collection);
+        String cleanDesc = request.description() != null
+                ? richTextHtmlPolicy.sanitize(request.description())
+                : null;
+        collection.setDescription(cleanDesc);
+        
         collectionRepository.save(collection);
-        if (request.translations() != null) {
-            collectionTranslationRepository.deleteByCollectionId(id);
-            saveTranslations(collection, request.translations());
-        }
-        return collectionMapper.toInternalResponse(collectionRepository.findById(id).orElseThrow());
+        return collectionMapper.toInternalResponse(
+            collectionRepository.findById(id).orElseThrow()
+        );
     }
 
+    /**
+     * Cập nhật riêng đường dẫn thân thiện (slug) cho Collection.
+     */
     @Override
     public CollectionInternalResponse updateCollectionSlug(Long id, String slug) {
         Collection collection = findById(id);
@@ -112,29 +157,29 @@ public class CollectionServiceImpl implements CollectionService {
         return collectionMapper.toInternalResponse(collectionRepository.save(collection));
     }
 
+    /**
+     * Xóa Collection.
+     * Luồng xử lý:
+     * 1. Bắt buộc Collection phải trống (không chứa sản phẩm).
+     * 2. Thực thi xóa cứng.
+     */
     @Override
-    public void deleteCollection(Long id) {
-        collectionRepository.delete(findById(id));
-    }
-
-    private void saveTranslations(Collection collection, List<TranslationRequest> translations) {
-        long distinctCount = translations.stream()
-                .map(TranslationRequest::locale)
-                .distinct()
-                .count();
-        if (distinctCount < translations.size()) {
-            throw BusinessException.bad("label.locale");
+    public void delete(Long id) {
+        Collection collection = findById(id);
+        if (!collection.getProductCollections().isEmpty()) {
+            throw BusinessException.inUse("label.collection");
         }
-        translations.forEach(t -> {
-            CollectionTranslation translation = new CollectionTranslation();
-            translation.setCollection(collection);
-            translation.setLocale(t.locale());
-            translation.setName(t.name());
-            translation.setDescription(t.description());
-            collectionTranslationRepository.save(translation);
-        });
+        collectionRepository.delete(collection);
     }
 
+    // ---- Private helpers ----
+
+
+
+    /**
+     * Tự động sinh ra chuỗi slug URL-safe từ tên. 
+     * Đảm bảo không trùng lặp bằng cách thêm hậu tố số.
+     */
     private String generateUniqueSlug(String name) {
         String base = slugify.slugify(name);
         if (!collectionRepository.existsBySlug(base)) {
@@ -148,6 +193,9 @@ public class CollectionServiceImpl implements CollectionService {
         return candidate;
     }
 
+    /**
+     * Lấy Collection theo ID, văng lỗi 404 nếu không tìm thấy.
+     */
     private Collection findById(Long id) {
         return collectionRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.collection"));

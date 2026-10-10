@@ -35,12 +35,20 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final UserRegistrationMapper userRegistrationMapper;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Xử lý đăng nhập qua mạng xã hội (OAuth2).
+     * Logic bảo vệ:
+     * 1. Tìm user bằng Email (kể cả account đã xóa mềm).
+     * 2. Nếu account đã xóa mềm -> Chặn đăng nhập (Account Unavailable). Tránh lỗ hổng user bị ban mượn Google để vượt rào.
+     * 3. Nếu account tồn tại bình thường -> Liên kết (link) Provider nếu chưa có.
+     * 4. Nếu chưa tồn tại -> Tạo mới (Auto-register).
+     */
     @Override
     @Transactional
     public User findOrCreateOAuth2User(OAuth2UserCommand command) {
         return userRepository.findByEmailIncludingDeleted(command.email())
                 .map(user -> {
-                    if (user.getDeletedAt() != null) {
+                    if (user.getDeletedAt() != null || !user.getActive()) {
                         throw SecurityCustomException.accountUnavailable();
                     }
                     return linkProviderIfAbsent(user, command);
@@ -48,6 +56,10 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .orElseGet(() -> createOAuth2User(command));
     }
 
+    /**
+     * Đăng ký tài khoản truyền thống (Email/Password).
+     * Kiểm tra tương tự như OAuth2: Chặn đăng ký đè lên account đã xóa mềm hoặc account đang hoạt động.
+     */
     @Override
     public User createUserWithPassword(RegisterCommand command) {
         Optional<User> existingUserOpt = userRepository.findByEmailIncludingDeleted(command.email());
@@ -68,11 +80,14 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         UserRole role = new UserRole();
         role.setUser(user);
-        role.setRole(Role.ROLE_USER);
+        role.setRole(Role.ROLE_CUSTOMER);
         userRoleRepository.save(role);
         return user;
     }
 
+    /**
+     * Kích hoạt tài khoản (Sau khi bấm link trong Email).
+     */
     @Override
     @Transactional
     public void verifyEmail(String email) {
@@ -82,6 +97,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         userRepository.save(user);
     }
 
+    /**
+     * Quên mật khẩu (Reset password).
+     */
     @Override
     @Transactional
     public void updatePassword(String email, String newPassword) {
@@ -91,6 +109,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         userRepository.save(user);
     }
 
+    /**
+     * Helper liên kết tài khoản mạng xã hội vào tài khoản đã có sẵn.
+     */
     private User linkProviderIfAbsent(User user, OAuth2UserCommand command) {
         if (!userOauthRepository.existsByProviderAndProviderId(command.provider(), command.providerId())) {
             UserOauth oauth = userRegistrationMapper.toUserOauth(command);
@@ -101,6 +122,10 @@ public class UserAccountServiceImpl implements UserAccountService {
         return user;
     }
 
+    /**
+     * Helper tạo tài khoản mới từ dữ liệu của Google/Facebook.
+     * Auto set VerifiedAt = Now (Vì Google/FB đã xác thực email giùm rồi).
+     */
     private User createOAuth2User(OAuth2UserCommand command) {
         User user = userRegistrationMapper.toUser(command);
         user.setVerifiedAt(LocalDateTime.now());
@@ -112,7 +137,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         UserRole role = new UserRole();
         role.setUser(user);
-        role.setRole(Role.ROLE_USER);
+        role.setRole(Role.ROLE_CUSTOMER);
         userRoleRepository.save(role);
         user.getUserRoles().add(role);
 

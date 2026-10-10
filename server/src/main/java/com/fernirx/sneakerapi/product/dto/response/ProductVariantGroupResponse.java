@@ -17,8 +17,14 @@ public record ProductVariantGroupResponse(
             ShoeWidth shoeWidth,
             String sku,
             BigDecimal price,
+            BigDecimal originalPrice,
+            BigDecimal costPrice,
             Integer stockQuantity,
             Integer minStockLevel,
+            Integer weight,
+            Integer length,
+            Integer width,
+            Integer height,
             Integer displayOrder,
             Boolean active
     ) {}

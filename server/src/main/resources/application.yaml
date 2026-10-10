@@ -16,6 +16,14 @@ spring:
     enabled: true
     clean-disabled: true
 
+  mail:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   security:
     oauth2:
       client:
@@ -37,6 +45,10 @@ spring:
       charset: UTF-8
       enabled: true
       force: true
+
+  mvc:
+    locale: vi
+    locale-resolver: fixed
 
 server:
   port: ${SERVER_PORT:8080}
@@ -67,3 +79,16 @@ application:
         expiration: ${JWT_REFRESH_EXPIRATION:P7D}
       reset-password:
         expiration: ${JWT_RESET_PASSWORD_EXPIRATION:PT15M}
+
+vnpay:
+  payment-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  expire-minutes: ${VNPAY_EXPIRE_MINUTES:10}
+
+order:
+  expire-minutes: ${ORDER_EXPIRE_MINUTES:10}
+  max-payment-attempts: ${ORDER_MAX_PAYMENT_ATTEMPTS:4}
+
+ghn:
+  url: ${GHN_URL:https://dev-online-gateway.ghn.vn/shiip/public-api}
+  token: ${GHN_TOKEN:568912b0-e502-11ef-b2e4-6ec7c647cc27}
+  shop-id: ${GHN_SHOP_ID:200925}

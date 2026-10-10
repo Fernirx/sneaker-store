@@ -11,6 +11,10 @@ import org.mapstruct.*;
         componentModel = MappingConstants.ComponentModel.SPRING
 )
 public interface CustomerMapper {
+    @Mapping(target = "currentTierThreshold", ignore = true)
+    @Mapping(target = "nextTierThreshold", ignore = true)
+    @Mapping(target = "currentTierDiscountRate", ignore = true)
+    @Mapping(target = "nextTierDiscountRate", ignore = true)
     CustomerResponse toResponse(Customer customer);
 
     @Mapping(target = "email", source = "user.email")
@@ -24,7 +28,12 @@ public interface CustomerMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "totalSpent", ignore = true)
     @Mapping(target = "addresses", ignore = true)
+    @Mapping(target = "cart", ignore = true)
+    @Mapping(target = "orders", ignore = true)
+    @Mapping(target = "wishlists", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "pointTransactions", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     void updateCustomer(UpdateCustomerRequest request, @MappingTarget Customer customer);
 }

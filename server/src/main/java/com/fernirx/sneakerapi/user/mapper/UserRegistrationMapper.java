@@ -24,6 +24,10 @@ public interface UserRegistrationMapper {
     @Mapping(target = "userOauths", ignore = true)
     @Mapping(target = "userProfile", ignore = true)
     @Mapping(target = "userRoles", ignore = true)
+    @Mapping(target = "customer", ignore = true)
+    @Mapping(target = "inventoryTransactions", ignore = true)
+    @Mapping(target = "orderStatusHistories", ignore = true)
+    @Mapping(target = "orders", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     User toUser(OAuth2UserCommand command);
@@ -50,6 +54,10 @@ public interface UserRegistrationMapper {
     @Mapping(target = "userOauths", ignore = true)
     @Mapping(target = "userProfile", ignore = true)
     @Mapping(target = "userRoles", ignore = true)
+    @Mapping(target = "customer", ignore = true)
+    @Mapping(target = "inventoryTransactions", ignore = true)
+    @Mapping(target = "orderStatusHistories", ignore = true)
+    @Mapping(target = "orders", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     User toUser(RegisterCommand command);

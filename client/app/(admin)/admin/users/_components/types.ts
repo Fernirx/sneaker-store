@@ -1,0 +1,48 @@
+export interface UserRow {
+  id: number;
+  email: string;
+  active: boolean;
+  emailVerified: boolean;
+  roles: string[];
+  createdAt: string;
+  deletedAt: string;
+}
+
+export interface PageMeta {
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+export interface PageData {
+  data: UserRow[];
+  meta: PageMeta;
+}
+
+export const ALL_ROLES = [
+  'ROLE_CUSTOMER',
+  'ROLE_ADMIN',
+  'ROLE_SALE',
+  'ROLE_WAREHOUSE',
+] as const;
+
+export function formatRole(role: string) {
+  return role.replace('ROLE_', '');
+}
+
+export function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+export function roleBadgeClass(role: string) {
+  if (role === 'ROLE_ADMIN') return 'bg-danger-bg text-danger';
+  if (role === 'ROLE_SALE') return 'bg-ok-bg text-ok';
+  if (role === 'ROLE_CUSTOMER') return 'bg-line-2 text-muted';
+  return 'bg-warn-bg text-warn';
+}

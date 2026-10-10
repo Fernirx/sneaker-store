@@ -2,6 +2,9 @@ package com.fernirx.sneakerapi.user.service.impl;
 
 import com.fernirx.sneakerapi.common.enums.Role;
 import com.fernirx.sneakerapi.common.exception.BusinessException;
+import com.fernirx.sneakerapi.common.exception.SecurityCustomException;
+import com.fernirx.sneakerapi.customer.service.CustomerService;
+import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import com.fernirx.sneakerapi.user.dto.request.CreateUserRequest;
 import com.fernirx.sneakerapi.user.dto.request.UpdateUserRequest;
 import com.fernirx.sneakerapi.user.dto.request.UserFilterRequest;
@@ -18,6 +21,8 @@ import com.fernirx.sneakerapi.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,9 +36,13 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserRoleRepository userRoleRepository;
+    private final CustomerService customerService;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Lấy danh sách tài khoản (dành cho CMS).
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<UserInternalResponse> getUsers(UserFilterRequest filter, Pageable pageable) {
@@ -41,12 +50,18 @@ public class UserServiceImpl implements UserService {
                 .map(userMapper::toInternalResponse);
     }
 
+    /**
+     * Lấy chi tiết tài khoản.
+     */
     @Override
     @Transactional(readOnly = true)
     public UserInternalResponse getUserById(Long id) {
         return userMapper.toInternalResponse(findById(id));
     }
 
+    /**
+     * Admin tạo tài khoản (ví dụ tạo cho Staff).
+     */
     @Override
     public UserInternalResponse createUser(CreateUserRequest request) {
         if (userRepository.findByEmailIncludingDeleted(request.email()).isPresent()) {
@@ -66,7 +81,7 @@ public class UserServiceImpl implements UserService {
 
         Set<Role> roles = (request.roles() != null && !request.roles().isEmpty())
                 ? request.roles()
-                : Set.of(Role.ROLE_USER);
+                : Set.of(Role.ROLE_CUSTOMER);
         roles.forEach(role -> {
             UserRole ur = new UserRole();
             ur.setUser(user);
@@ -77,9 +92,26 @@ public class UserServiceImpl implements UserService {
         return userMapper.toInternalResponse(userRepository.findById(user.getId()).orElseThrow());
     }
 
+    /**
+     * Admin sửa quyền hoặc trạng thái của tài khoản.
+     * Xóa sạch role cũ (flush) và cấp lại role mới một cách an toàn.
+     */
     @Override
     public UserInternalResponse updateUser(Long id, UpdateUserRequest request) {
         User user = findById(id);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails currentUser) {
+            if (currentUser.getId().equals(id)) {
+                if (request.active() != null && !request.active().equals(user.getActive())) {
+                    throw SecurityCustomException.forbidden();
+                }
+                if (request.roles() != null) {
+                    throw SecurityCustomException.forbidden();
+                }
+            }
+        }
+
         if (request.active() != null) {
             user.setActive(request.active());
         }
@@ -97,11 +129,30 @@ public class UserServiceImpl implements UserService {
         return userMapper.toInternalResponse(userRepository.findById(id).orElseThrow());
     }
 
+    /**
+     * Admin xóa mềm tài khoản (Soft Delete - Cấu hình ở Entity).
+     */
     @Override
     public void deleteUser(Long id) {
         userRepository.delete(findById(id));
     }
 
+    @Override
+    public void restoreUser(Long id) {
+        userRepository.restoreUserNative(id);
+        customerService.restoreCustomer(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserInternalResponse> getDeletedUsers(Pageable pageable) {
+        return userRepository.findAllDeleted(pageable)
+                .map(userMapper::toInternalResponse);
+    }
+
+    /**
+     * Helper tìm user.
+     */
     private User findById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> BusinessException.notFound("label.user"));

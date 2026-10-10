@@ -5,6 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record AssignCategoriesRequest(
-        @NotNull
+        @NotNull(message = "{validation.field.not_blank}")
         List<Long> categoryIds
 ) {}

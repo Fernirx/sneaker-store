@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -25,6 +27,26 @@ public class ProductImageServiceImpl implements ProductImageService {
     private final ProductRepository productRepository;
     private final ProductAssembler productAssembler;
 
+    /**
+     * Lấy Map ảnh đại diện (Primary Image) cho một danh sách Product IDs.
+     * Tối ưu truy vấn N+1 khi hiển thị danh sách sản phẩm.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, String> getPrimaryImageMap(List<Long> productIds) {
+        return productImageRepository
+                .findByProductIdInAndPrimaryImageTrueOrderByProductIdAscDisplayOrderAsc(productIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        img -> img.getProduct().getId() + ":" + img.getColorway(),
+                        ProductImage::getImagePublicId,
+                        (a, b) -> a
+                ));
+    }
+
+    /**
+     * Lấy danh sách ảnh của một sản phẩm, group theo màu sắc (Colorway).
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ProductImageGroupResponse> getImages(Long productId) {
@@ -34,6 +56,12 @@ public class ProductImageServiceImpl implements ProductImageService {
         return productAssembler.toImageGroups(images);
     }
 
+    /**
+     * Thêm ảnh mới cho một màu sắc (Colorway) của sản phẩm.
+     * Quy tắc bảo vệ: 
+     * - Nếu ảnh được đánh dấu là Primary (ảnh đại diện), hệ thống tự động gỡ cờ Primary 
+     *   của các ảnh cũ cùng màu để đảm bảo mỗi màu chỉ có 1 ảnh đại diện duy nhất.
+     */
     @Override
     public ProductImageGroupResponse.ImageResponse addImage(Long productId, AddImageRequest request) {
         Product product = findProduct(productId);
@@ -60,6 +88,10 @@ public class ProductImageServiceImpl implements ProductImageService {
         );
     }
 
+    /**
+     * Cập nhật thông tin ảnh (thay đổi trạng thái Primary hoặc thứ tự hiển thị).
+     * Tương tự addImage, nếu đổi thành Primary thì tự động gỡ Primary của các ảnh khác cùng màu.
+     */
     @Override
     public ProductImageGroupResponse.ImageResponse updateImage(Long productId, Long imageId, UpdateImageRequest request) {
         findProduct(productId);
@@ -85,6 +117,9 @@ public class ProductImageServiceImpl implements ProductImageService {
         );
     }
 
+    /**
+     * Xóa ảnh khỏi sản phẩm.
+     */
     @Override
     public void deleteImage(Long productId, Long imageId) {
         findProduct(productId);
@@ -92,11 +127,17 @@ public class ProductImageServiceImpl implements ProductImageService {
         productImageRepository.delete(image);
     }
 
+    /**
+     * Helper tìm sản phẩm theo ID.
+     */
     private Product findProduct(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> BusinessException.notFound("label.product"));
     }
 
+    /**
+     * Helper tìm ảnh theo ID và phải thuộc về Product tương ứng.
+     */
     private ProductImage findImage(Long productId, Long imageId) {
         return productImageRepository.findByIdAndProductId(imageId, productId)
                 .orElseThrow(() -> BusinessException.notFound("label.product.image"));

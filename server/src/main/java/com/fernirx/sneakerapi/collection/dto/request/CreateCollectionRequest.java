@@ -5,13 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
-import java.util.List;
 
+import com.fernirx.sneakerapi.common.annotation.ValidDateRange;
+
+@ValidDateRange(startField = "launchDate", endField = "endDate", message = "{validation.collection.date_invalid}")
 public record CreateCollectionRequest(
-        @NotBlank @Size(max = 100) String name,
+        @NotBlank(message = "{validation.field.not_blank}") @Size(max = 100, message = "{validation.size.max}") String name,
         @NullableNotBlank String description,
-        @NullableNotBlank @Size(max = 255) String imagePublicId,
+        @NullableNotBlank @Size(max = 255, message = "{validation.size.max}") String imagePublicId,
         LocalDate launchDate,
-        LocalDate endDate,
-        List<TranslationRequest> translations
+        LocalDate endDate
 ) {}

@@ -73,6 +73,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             String email = jwtProvider.extractEmail(token);
             CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);
+
+            if (!userDetails.isAccountNonLocked()) {
+                throw SecurityCustomException.accountUnavailable();
+            }
+
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userDetails,
                     null,

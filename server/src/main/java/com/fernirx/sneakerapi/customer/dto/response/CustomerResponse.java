@@ -7,5 +7,9 @@ import java.math.BigDecimal;
 public record CustomerResponse(
         MembershipTier membershipTier,
         Long loyaltyPoints,
-        BigDecimal totalSpent
+        BigDecimal totalSpent,
+        BigDecimal currentTierThreshold,
+        BigDecimal nextTierThreshold,
+        Integer currentTierDiscountRate,
+        Integer nextTierDiscountRate
 ) {}

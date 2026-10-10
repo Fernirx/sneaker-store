@@ -41,18 +41,31 @@ public class Address extends BaseAuditEntity {
     private String street;
 
     @Size(max = 100)
-    @Column(name = "ward", length = 100)
+    @NotNull
+    @Column(name = "ward", nullable = false, length = 100)
     private String ward;
+
+    @NotNull
+    @Column(name = "ward_code", nullable = false)
+    private Integer wardCode;
 
     @Size(max = 100)
     @NotNull
     @Column(name = "district", nullable = false, length = 100)
     private String district;
 
+    @NotNull
+    @Column(name = "district_code", nullable = false)
+    private Integer districtCode;
+
     @Size(max = 100)
     @NotNull
     @Column(name = "province", nullable = false, length = 100)
     private String province;
+
+    @NotNull
+    @Column(name = "province_code", nullable = false)
+    private Integer provinceCode;
 
     @Size(max = 20)
     @Column(name = "postal_code", length = 20)

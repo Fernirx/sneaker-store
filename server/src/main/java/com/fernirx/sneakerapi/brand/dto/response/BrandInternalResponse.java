@@ -12,5 +12,6 @@ public record BrandInternalResponse(
         String description,
         String logoPublicId,
         boolean active,
+        int productCount,
         LocalDateTime createdAt
 ) {}

@@ -2,14 +2,15 @@
 
 import { useRef, useState } from 'react';
 import clientAxios from '@/lib/axios/clientAxios';
-import { brandUrl, categoryUrl, collectionUrl, productUrl } from '@/lib/cloudinaryUrl';
+import { brandUrl, categoryUrl, collectionUrl, productUrl, bannerUrl } from '@/lib/cloudinaryUrl';
 
-type Folder = 'brands' | 'categories' | 'collections' | 'products';
+type Folder = 'brands' | 'categories' | 'collections' | 'products' | 'banners';
 
 function previewUrl(folder: Folder, publicId: string) {
   if (folder === 'brands') return brandUrl(publicId, 120, 60);
   if (folder === 'categories') return categoryUrl(publicId, 80, 80);
   if (folder === 'products') return productUrl(publicId, 120, 120);
+  if (folder === 'banners') return bannerUrl(publicId, 320, 100);
   return collectionUrl(publicId, 160, 100);
 }
 
@@ -65,7 +66,7 @@ export default function ImageUpload({
           {uploading ? 'Đang tải...' : value ? 'Đổi ảnh' : 'Chọn ảnh'}
         </button>
         {value && (
-          <span className="font-mono text-[10px] text-muted truncate max-w-[180px]">{value}</span>
+          <span className="font-body text-[10px] text-muted truncate max-w-[180px]">{value}</span>
         )}
       </div>
       {error && <p className="text-danger text-xs">{error}</p>}

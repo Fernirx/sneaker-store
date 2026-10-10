@@ -1,5 +1,8 @@
 package com.fernirx.sneakerapi.product.entity;
 
+import com.fernirx.sneakerapi.cart.entity.CartItem;
+import com.fernirx.sneakerapi.inventory.entity.InventoryTransaction;
+import com.fernirx.sneakerapi.order.entity.OrderItem;
 import com.fernirx.sneakerapi.product.enums.ShoeWidth;
 import com.fernirx.sneakerapi.common.entity.BaseAuditEntity;
 import jakarta.persistence.*;
@@ -12,6 +15,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -63,6 +68,12 @@ public class ProductVariant extends BaseAuditEntity {
     @Column(name = "price", precision = 15, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "original_price", precision = 15, scale = 2)
+    private BigDecimal originalPrice;
+
+    @Column(name = "cost_price", precision = 15, scale = 2)
+    private BigDecimal costPrice;
+
     @Size(max = 100)
     @NotNull
     @Column(name = "sku", nullable = false, length = 100)
@@ -79,6 +90,26 @@ public class ProductVariant extends BaseAuditEntity {
     private Integer minStockLevel;
 
     @NotNull
+    @ColumnDefault("800")
+    @Column(name = "weight", nullable = false)
+    private Integer weight = 800;
+
+    @NotNull
+    @ColumnDefault("33")
+    @Column(name = "length", nullable = false)
+    private Integer length = 33;
+
+    @NotNull
+    @ColumnDefault("22")
+    @Column(name = "width", nullable = false)
+    private Integer width = 22;
+
+    @NotNull
+    @ColumnDefault("12")
+    @Column(name = "height", nullable = false)
+    private Integer height = 12;
+
+    @NotNull
     @ColumnDefault("0")
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder;
@@ -87,4 +118,13 @@ public class ProductVariant extends BaseAuditEntity {
     @ColumnDefault("1")
     @Column(name = "active", nullable = false)
     private Boolean active;
+
+    @OneToMany(mappedBy = "variant")
+    private Set<CartItem> cartItems = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "variant")
+    private Set<InventoryTransaction> inventoryTransactions = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "variant")
+    private Set<OrderItem> orderItems = new LinkedHashSet<>();
 }

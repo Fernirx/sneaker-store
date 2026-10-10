@@ -1,15 +1,18 @@
 package com.fernirx.sneakerapi.customer.dto.request;
 
 import com.fernirx.sneakerapi.common.annotation.NullableNotBlank;
+import com.fernirx.sneakerapi.common.annotation.ValidName;
+import com.fernirx.sneakerapi.common.annotation.ValidPhone;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 
 public record UpdateAddressRequest(
         @NullableNotBlank
         @Size(max = 200, message = "{validation.size.max}")
+        @ValidName(allowNull = true)
         String name,
 
-        @NullableNotBlank
-        @Size(max = 20, message = "{validation.size.max}")
+        @ValidPhone(allowNull = true)
         String phone,
 
         @NullableNotBlank
@@ -20,15 +23,23 @@ public record UpdateAddressRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String ward,
 
+        @Min(1)
+        Integer wardCode,
+
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         String district,
+
+        @Min(1)
+        Integer districtCode,
 
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
         String province,
 
-        @NullableNotBlank
+        @Min(1)
+        Integer provinceCode,
+
         @Size(max = 20, message = "{validation.size.max}")
         String postalCode,
 

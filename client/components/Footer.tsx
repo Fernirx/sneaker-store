@@ -1,5 +1,4 @@
-import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/routing';
+import Link from 'next/link';
 
 const SOCIALS = [
   {
@@ -20,32 +19,28 @@ const SOCIALS = [
 ];
 
 export default async function Footer() {
-  const t = await getTranslations('footer');
-
   const LINKS = [
     {
-      title: t('colBrand'),
+      title: "Về STRIDE",
       items: [
-        { label: t('about'), href: '/about' },
-        { label: t('careers'), href: '/careers' },
-        { label: t('news'), href: '/news' },
+        { label: "Giới thiệu", href: '/about' },
+        { label: "Liên hệ", href: '/about#contact' },
       ],
     },
     {
-      title: t('colSupport'),
+      title: "Hỗ trợ",
       items: [
-        { label: t('buyingGuide'), href: '/help/buying' },
-        { label: t('returns'), href: '/help/returns' },
-        { label: t('tracking'), href: '/help/tracking' },
-        { label: t('contact'), href: '/contact' },
+        { label: "Hướng dẫn mua hàng", href: '/help#buying' },
+        { label: "Đổi trả & Bảo hành", href: '/help#returns' },
+        { label: "Tra cứu đơn hàng", href: '/tracking' },
       ],
     },
     {
-      title: t('colLegal'),
+      title: "Chính sách",
       items: [
-        { label: t('terms'), href: '/legal/terms' },
-        { label: t('privacy'), href: '/legal/privacy' },
-        { label: t('cookies'), href: '/legal/cookies' },
+        { label: "Điều khoản dịch vụ", href: '/legal#terms' },
+        { label: "Bảo mật thông tin", href: '/legal#privacy' },
+        { label: "Chính sách Cookie", href: '/legal#cookies' },
       ],
     },
   ];
@@ -54,54 +49,54 @@ export default async function Footer() {
     <footer className="bg-ink text-white">
       <div className="max-w-7xl mx-auto px-6 pt-14 pb-8">
 
-        {/* Top */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pb-12 border-b border-white/10">
+          {/* Top */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pb-12 border-b border-white/10">
 
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1 space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-accent rounded-xs rotate-45 shrink-0" />
-              <span className="font-display font-black text-xl uppercase tracking-tight">STRIDE</span>
+            {/* Brand */}
+            <div className="col-span-2 md:col-span-1 space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-accent rounded-xs rotate-45 shrink-0"/>
+                <span className="font-display font-black text-xl uppercase tracking-tight">STRIDE</span>
+              </div>
+              <p className="text-white/50 text-sm leading-relaxed max-w-xs">
+                {"Tiên phong trong văn hóa sneaker đường phố. Khám phá những đôi giày độc quyền và giới hạn."}
+              </p>
+              <div className="flex items-center gap-3">
+                {SOCIALS.map(s => (
+                    <a key={s.label} href={s.href} aria-label={s.label}
+                       className="text-white/40 hover:text-white transition-colors">
+                      {s.icon}
+                    </a>
+                ))}
+              </div>
             </div>
-            <p className="text-white/50 text-sm leading-relaxed max-w-xs">
-              {t('tagline')}
-            </p>
-            <div className="flex items-center gap-3">
-              {SOCIALS.map(s => (
-                <a key={s.label} href={s.href} aria-label={s.label}
-                  className="text-white/40 hover:text-white transition-colors">
-                  {s.icon}
-                </a>
-              ))}
-            </div>
+
+            {/* Link columns */}
+            {LINKS.map(({title, items}) => (
+                <div key={title}>
+                  <p className="font-body text-[10px] font-semibold tracking-[0.14em] uppercase text-white/40 mb-4">
+                    {title}
+                  </p>
+                  <ul className="space-y-2.5">
+                    {items.map(item => (
+                        <li key={item.href}>
+                          <Link href={item.href}
+                                className="text-sm text-white/60 hover:text-white transition-colors">
+                            {item.label}
+                          </Link>
+                        </li>
+                    ))}
+                  </ul>
+                </div>
+            ))}
           </div>
 
-          {/* Link columns */}
-          {LINKS.map(({ title, items }) => (
-            <div key={title}>
-              <p className="font-mono text-[10px] font-semibold tracking-[0.14em] uppercase text-white/40 mb-4">
-                {title}
-              </p>
-              <ul className="space-y-2.5">
-                {items.map(item => (
-                  <li key={item.href}>
-                    <Link href={item.href}
-                      className="text-sm text-white/60 hover:text-white transition-colors">
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Bottom */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 text-white/30 text-xs">
+            <span>© {new Date().getFullYear()} STRIDE. All rights reserved.</span>
+            <span className="font-body tracking-wider">MADE IN VIETNAM</span>
+          </div>
         </div>
-
-        {/* Bottom */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 text-white/30 text-xs">
-          <span>© {new Date().getFullYear()} STRIDE. All rights reserved.</span>
-          <span className="font-mono tracking-wider">MADE IN VIETNAM</span>
-        </div>
-      </div>
-    </footer>
+      </footer>
   );
 }

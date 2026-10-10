@@ -5,8 +5,11 @@ import com.fernirx.sneakerapi.product.dto.request.UpdateImageRequest;
 import com.fernirx.sneakerapi.product.dto.response.ProductImageGroupResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ProductImageService {
+
+    Map<String, String> getPrimaryImageMap(List<Long> productIds);
 
     List<ProductImageGroupResponse> getImages(Long productId);
 

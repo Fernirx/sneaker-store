@@ -1,7 +1,9 @@
 package com.fernirx.sneakerapi.customer.entity;
 
+import com.fernirx.sneakerapi.cart.entity.Cart;
 import com.fernirx.sneakerapi.common.entity.BaseAuditEntity;
 import com.fernirx.sneakerapi.customer.enums.MembershipTier;
+import com.fernirx.sneakerapi.order.entity.Order;
 import com.fernirx.sneakerapi.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -10,8 +12,11 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -20,12 +25,17 @@ import java.util.Set;
 @Entity
 @Table(name = "customers", uniqueConstraints = {@UniqueConstraint(name = "user_id_UNIQUE",
         columnNames = {"user_id"})})
+@SQLDelete(sql = "UPDATE customers SET deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class Customer extends BaseAuditEntity {
     @NotNull
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @ColumnDefault("'0'")
     @Column(name = "loyalty_points", columnDefinition = "int UNSIGNED not null")
@@ -44,4 +54,15 @@ public class Customer extends BaseAuditEntity {
 
     @OneToMany(mappedBy = "customer")
     private Set<Address> addresses = new LinkedHashSet<>();
+    @OneToOne(mappedBy = "customer")
+    private Cart cart;
+
+    @OneToMany(mappedBy = "customer")
+    private Set<Order> orders = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "customer")
+    private Set<Wishlist> wishlists = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "customer")
+    private Set<PointTransaction> pointTransactions = new LinkedHashSet<>();
 }

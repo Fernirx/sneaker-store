@@ -10,4 +10,6 @@ public interface ProductQueryService {
     Page<ProductResponse> getProductsByBrandSlug(String brandSlug, BySlugProductFilterRequest filter, Pageable pageable);
 
     Page<ProductResponse> getProductsByCategorySlug(String categorySlug, BySlugProductFilterRequest filter, Pageable pageable);
+
+    Page<ProductResponse> getProductsByCollectionSlug(String collectionSlug, BySlugProductFilterRequest filter, Pageable pageable);
 }

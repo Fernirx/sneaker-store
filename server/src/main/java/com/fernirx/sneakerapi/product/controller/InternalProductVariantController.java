@@ -6,15 +6,20 @@ import com.fernirx.sneakerapi.product.dto.request.CreateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.request.UpdateVariantRequest;
 import com.fernirx.sneakerapi.product.dto.response.ProductVariantGroupResponse;
 import com.fernirx.sneakerapi.product.service.ProductVariantService;
+import com.fernirx.sneakerapi.security.model.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/internal/products/{productId}/variants")
@@ -25,11 +30,15 @@ public class InternalProductVariantController {
     private final ProductVariantService productVariantService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'WAREHOUSE')")
     @Operation(summary = "Danh sách variant theo màu")
     public ResponseEntity<SuccessResponse<List<ProductVariantGroupResponse>>> getVariants(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long productId) {
-        return ResponseEntity.ok(SuccessResponse.of(productVariantService.getVariants(productId)));
+        Collection<String> callerRoles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+        return ResponseEntity.ok(SuccessResponse.of(productVariantService.getVariantsForStaff(productId, callerRoles)));
     }
 
     @PostMapping
@@ -56,6 +65,18 @@ public class InternalProductVariantController {
         return ResponseEntity.ok(SuccessResponse.of(
                 MessageUtil.getMessage("success.resource.updated", MessageUtil.getMessage("label.product.variant")),
                 response
+        ));
+    }
+
+    @PutMapping("/colorway-group")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Đổi tên nhóm màu (cho cả variant và ảnh)")
+    public ResponseEntity<SuccessResponse<Void>> updateColorwayGroup(
+            @PathVariable Long productId,
+            @Valid @RequestBody com.fernirx.sneakerapi.product.dto.request.UpdateColorwayGroupRequest request) {
+        productVariantService.updateColorwayGroup(productId, request);
+        return ResponseEntity.ok(SuccessResponse.of(
+                MessageUtil.getMessage("success.resource.updated", "Colorway Group")
         ));
     }
 

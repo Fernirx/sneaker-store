@@ -21,7 +21,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   props: { params: Promise<{ id: string }> },
 ) {
   const { id } = await props.params;

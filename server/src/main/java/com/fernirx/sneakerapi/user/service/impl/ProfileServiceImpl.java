@@ -24,6 +24,9 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileMapper profileMapper;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Khách hàng lấy thông tin cá nhân của mình.
+     */
     @Override
     @Transactional(readOnly = true)
     public ProfileResponse getMe(Long userId) {
@@ -32,6 +35,9 @@ public class ProfileServiceImpl implements ProfileService {
         return profileMapper.toProfileResponse(user);
     }
 
+    /**
+     * Khách hàng cập nhật hồ sơ cá nhân.
+     */
     @Override
     @Transactional
     public ProfileResponse updateProfile(Long userId, UpdateProfileRequest request) {
@@ -45,6 +51,10 @@ public class ProfileServiceImpl implements ProfileService {
         return profileMapper.toProfileResponse(user);
     }
 
+    /**
+     * Khách hàng đổi mật khẩu.
+     * Xác thực mật khẩu cũ (currentPassword) trước khi đổi.
+     */
     @Override
     @Transactional
     public void changePassword(Long userId, ChangePasswordRequest request) {
@@ -58,6 +68,10 @@ public class ProfileServiceImpl implements ProfileService {
         userRepository.save(user);
     }
 
+    /**
+     * Khách hàng (Đăng nhập qua Google/FB) đặt mật khẩu lần đầu để có thể dùng đăng nhập truyền thống.
+     * Chặn không cho gọi hàm này nếu user đã có password rồi.
+     */
     @Override
     @Transactional
     public void setPassword(Long userId, SetPasswordRequest request) {

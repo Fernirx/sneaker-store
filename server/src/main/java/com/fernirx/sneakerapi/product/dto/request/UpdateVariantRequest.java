@@ -15,13 +15,19 @@ public record UpdateVariantRequest(
         @Size(max = 100, message = "{validation.size.max}")
         String colorway,
 
+        @NullableNotBlank
         @Size(max = 50, message = "{validation.size.max}")
         String colorwayCode,
 
+        @NullableNotBlank
         @Size(max = 7, message = "{validation.size.max}")
         String colorHex,
 
         BigDecimal price,
+
+        BigDecimal originalPrice,
+
+        BigDecimal costPrice,
 
         @NullableNotBlank
         @Size(max = 100, message = "{validation.size.max}")
@@ -30,6 +36,14 @@ public record UpdateVariantRequest(
         Integer stockQuantity,
 
         Integer minStockLevel,
+
+        Integer weight,
+
+        Integer length,
+
+        Integer width,
+
+        Integer height,
 
         Integer displayOrder,
 

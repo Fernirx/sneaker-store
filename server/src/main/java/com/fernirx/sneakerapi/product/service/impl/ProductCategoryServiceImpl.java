@@ -25,6 +25,9 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
+    /**
+     * Lấy danh sách các danh mục (Category) mà sản phẩm này đang thuộc về.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<CategoryBriefResponse> getCategories(Long productId) {
@@ -39,6 +42,10 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
                 .toList();
     }
 
+    /**
+     * Gán danh sách danh mục cho sản phẩm.
+     * Xóa toàn bộ liên kết cũ và tạo liên kết mới để đảm bảo tính toàn vẹn (Full Replace).
+     */
     @Override
     public List<CategoryBriefResponse> assignCategories(Long productId, AssignCategoriesRequest request) {
         Product product = findProduct(productId);
@@ -65,6 +72,9 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
                 .toList();
     }
 
+    /**
+     * Helper tìm sản phẩm theo ID.
+     */
     private Product findProduct(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> BusinessException.notFound("label.product"));

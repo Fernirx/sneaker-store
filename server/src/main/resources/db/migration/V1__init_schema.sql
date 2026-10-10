@@ -94,9 +94,12 @@ CREATE TABLE IF NOT EXISTS `addresses` (
   `name`        VARCHAR(200)     NOT NULL,
   `phone`       VARCHAR(20)      NOT NULL,
   `street`      VARCHAR(255)     NOT NULL,
-  `ward`        VARCHAR(100)     NULL DEFAULT NULL,
+  `ward`        VARCHAR(100)     NOT NULL,
+  `ward_code`   INT              NOT NULL,
   `district`    VARCHAR(100)     NOT NULL,
+  `district_code` INT            NOT NULL,
   `province`    VARCHAR(100)     NOT NULL,
+  `province_code` INT            NOT NULL,
   `postal_code` VARCHAR(20)      NULL DEFAULT NULL,
   `default_address` BOOLEAN       NOT NULL DEFAULT FALSE,
   `created_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -173,40 +176,6 @@ CREATE TABLE IF NOT EXISTS `collections` (
   COMMENT = 'Bộ sưu tập sneaker';
 
 
-CREATE TABLE IF NOT EXISTS `category_translations` (
-  `id`          BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `category_id` BIGINT UNSIGNED  NOT NULL,
-  `locale`      VARCHAR(10)      NOT NULL,
-  `name`        VARCHAR(100)     NOT NULL,
-  `description` TEXT             NULL DEFAULT NULL,
-  `created_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `category_locale_UNIQUE` (`category_id`, `locale`),
-  CONSTRAINT `fk_cat_translations_category`
-    FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`)
-    ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
-  COMMENT = 'Bản dịch danh mục theo ngôn ngữ';
-
-
-CREATE TABLE IF NOT EXISTS `collection_translations` (
-  `id`            BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `collection_id` BIGINT UNSIGNED  NOT NULL,
-  `locale`        VARCHAR(10)      NOT NULL,
-  `name`          VARCHAR(100)     NOT NULL,
-  `description`   TEXT             NULL DEFAULT NULL,
-  `created_at`    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `collection_locale_UNIQUE` (`collection_id`, `locale`),
-  CONSTRAINT `fk_col_translations_collection`
-    FOREIGN KEY (`collection_id`) REFERENCES `collections`(`id`)
-    ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
-  COMMENT = 'Bản dịch bộ sưu tập theo ngôn ngữ';
-
-
 -- =====================================================
 -- MODULE: product
 -- =====================================================
@@ -215,7 +184,6 @@ CREATE TABLE IF NOT EXISTS `products` (
   `id`             BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `brand_id`       BIGINT UNSIGNED  NOT NULL,
   `code`           VARCHAR(50)      NOT NULL,
-  `style_code`     VARCHAR(50)      NULL DEFAULT NULL,
   `name`           VARCHAR(255)     NOT NULL,
   `slug`           VARCHAR(255)     NOT NULL,
   `description`    TEXT             NULL DEFAULT NULL,
@@ -224,9 +192,8 @@ CREATE TABLE IF NOT EXISTS `products` (
   `sole_type`      VARCHAR(100)     NULL DEFAULT NULL,
   `closure_type`   ENUM('LACE', 'SLIP_ON', 'VELCRO', 'ZIPPER') NULL DEFAULT NULL,
   `shaft_style`    ENUM('LOW', 'MID', 'HIGH') NULL DEFAULT NULL,
-  `base_price`     DECIMAL(15,2)    NOT NULL,
-  `original_price` DECIMAL(15,2)    NULL DEFAULT NULL,
-  `cost_price`     DECIMAL(15,2)    NULL DEFAULT NULL,
+  `min_price`      DECIMAL(15,2)    NULL DEFAULT NULL,
+  `max_price`      DECIMAL(15,2)    NULL DEFAULT NULL,
   `new_arrival`    BOOLEAN          NOT NULL DEFAULT FALSE,
   `on_sale`        BOOLEAN          NOT NULL DEFAULT FALSE,
   `active`         BOOLEAN          NOT NULL DEFAULT TRUE,
@@ -237,7 +204,6 @@ CREATE TABLE IF NOT EXISTS `products` (
   PRIMARY KEY (`id`),
   UNIQUE INDEX `code_UNIQUE` (`code`),
   UNIQUE INDEX `slug_UNIQUE` (`slug`),
-  INDEX `idx_products_style_code` (`style_code`),
   INDEX `idx_products_brand_active` (`brand_id`, `active`),
   INDEX `idx_products_gender` (`gender`),
   INDEX `idx_products_badges` (`new_arrival`, `on_sale`),
@@ -257,9 +223,15 @@ CREATE TABLE IF NOT EXISTS `product_variants` (
   `colorway_code`   VARCHAR(50)      NULL DEFAULT NULL,
   `color_hex`       VARCHAR(7)       NULL DEFAULT NULL,
   `price`           DECIMAL(15,2)    NULL DEFAULT NULL,
+  `original_price`  DECIMAL(15,2)    NULL DEFAULT NULL,
+  `cost_price`      DECIMAL(15,2)    NULL DEFAULT NULL,
   `sku`             VARCHAR(100)     NOT NULL,
   `stock_quantity`  INT              NOT NULL DEFAULT 0,
   `min_stock_level` INT              NOT NULL DEFAULT 5,
+  `weight`          INT              NOT NULL DEFAULT 800,
+  `length`          INT              NOT NULL DEFAULT 33,
+  `width`           INT              NOT NULL DEFAULT 22,
+  `height`          INT              NOT NULL DEFAULT 12,
   `display_order`   INT              NOT NULL DEFAULT 0,
   `active`          BOOLEAN          NOT NULL DEFAULT TRUE,
   `created_at`      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -370,8 +342,8 @@ CREATE TABLE IF NOT EXISTS `purchases` (
   `tax_amount`          DECIMAL(15,2)    NOT NULL DEFAULT 0,
   `shipping_cost`       DECIMAL(15,2)    NOT NULL DEFAULT 0,
   `total_cost`          DECIMAL(15,2)    NOT NULL,
-  `payment_status`      ENUM('PENDING', 'PAID') NOT NULL DEFAULT 'PENDING',
-  `status`              ENUM('DRAFT', 'CONFIRMED', 'RECEIVED', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'DRAFT',
+  `payment_status`      ENUM('UNPAID', 'PAID') NOT NULL DEFAULT 'UNPAID',
+  `status`              ENUM('DRAFT', 'CONFIRMED', 'RECEIVED', 'CANCELLED') NOT NULL DEFAULT 'DRAFT',
   `notes`               TEXT             NULL DEFAULT NULL,
   `confirmed_at`        DATETIME         NULL DEFAULT NULL,
   `received_at`         DATETIME         NULL DEFAULT NULL,
@@ -403,16 +375,13 @@ CREATE TABLE IF NOT EXISTS `purchase_items` (
   `quantity_received` INT UNSIGNED     NOT NULL DEFAULT 0,
   `unit_cost`         DECIMAL(15,2)    NOT NULL,
   `line_total`        DECIMAL(15,2)    NOT NULL,
-  `quality_status`    ENUM('PENDING', 'OK', 'DEFECTIVE', 'PARTIALLY_DEFECTIVE', 'RETURNED') NOT NULL DEFAULT 'PENDING',
   `defective_qty`     INT UNSIGNED     NOT NULL DEFAULT 0,
-  `received_date`     DATETIME         NULL DEFAULT NULL,
   `notes`             TEXT             NULL DEFAULT NULL,
   `created_at`        DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`        DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   INDEX `idx_purchase_items_purchase` (`purchase_id`),
   INDEX `idx_purchase_items_variant` (`variant_id`),
-  INDEX `idx_purchase_items_quality_status` (`quality_status`),
   CONSTRAINT `fk_purchase_items_purchase`
     FOREIGN KEY (`purchase_id`) REFERENCES `purchases`(`id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
@@ -456,9 +425,8 @@ CREATE TABLE IF NOT EXISTS `stock_adjustments` (
   `approved_by`  BIGINT UNSIGNED  NULL DEFAULT NULL,
   `code`         VARCHAR(50)      NOT NULL,
   `type`         ENUM('EXPORT', 'STOCKTAKE') NOT NULL,
-  `status`       ENUM('DRAFT', 'CONFIRMED', 'CANCELLED') NOT NULL DEFAULT 'DRAFT',
-  `reason`       VARCHAR(255)     NOT NULL,
-  `notes`        TEXT             NULL DEFAULT NULL,
+  `status`       ENUM('DRAFT', 'APPROVED', 'CONFIRMED', 'CANCELLED') NOT NULL DEFAULT 'DRAFT',
+  `reason`       TEXT             NOT NULL,
   `approved_at`  DATETIME         NULL DEFAULT NULL,
   `confirmed_at` DATETIME         NULL DEFAULT NULL,
   `created_at`   DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -543,15 +511,15 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `customer_id`      BIGINT UNSIGNED  NULL DEFAULT NULL,
   `guest_token`      VARCHAR(64)      NULL DEFAULT NULL,
   `code`             VARCHAR(50)      NOT NULL,
-  `status`           ENUM('PENDING','CONFIRMED','PROCESSING','SHIPPING','DELIVERED','CANCELLED','REFUNDED') NOT NULL DEFAULT 'PENDING',
-  `payment_status`   ENUM('UNPAID','PAID','FAILED','REFUNDED','CANCELLED','EXPIRED') NOT NULL DEFAULT 'UNPAID',
+  `status`           ENUM('PENDING','CONFIRMED','SHIPPING','DELIVERED','CANCELLED') NOT NULL DEFAULT 'PENDING',
+  `payment_status`   ENUM('UNPAID','PAID') NOT NULL DEFAULT 'UNPAID',
   `payment_method`   ENUM('VNPAY','COD') NOT NULL,
   `recipient_name`   VARCHAR(200)     NOT NULL,
   `recipient_phone`  VARCHAR(20)      NOT NULL,
   `shipping_street`  VARCHAR(255)     NOT NULL,
-  `shipping_ward`    VARCHAR(100)     NULL DEFAULT NULL,
-  `shipping_district` VARCHAR(100)    NOT NULL,
-  `shipping_province` VARCHAR(100)    NOT NULL,
+  `shipping_ward`         VARCHAR(100)     NOT NULL,
+  `shipping_district`     VARCHAR(100)     NOT NULL,
+  `shipping_province`     VARCHAR(100)     NOT NULL,
   `subtotal`         DECIMAL(15,2)    NOT NULL,
   `shipping_fee`     DECIMAL(15,2)    NOT NULL DEFAULT 0,
   `discount_amount`  DECIMAL(15,2)    NOT NULL DEFAULT 0,
@@ -610,8 +578,8 @@ CREATE TABLE IF NOT EXISTS `order_status_history` (
   `id`         BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `order_id`   BIGINT UNSIGNED  NOT NULL,
   `changed_by` BIGINT UNSIGNED  NULL DEFAULT NULL,
-  `old_status` ENUM('PENDING','CONFIRMED','PROCESSING','SHIPPING','DELIVERED','CANCELLED','REFUNDED') NULL DEFAULT NULL,
-  `new_status` ENUM('PENDING','CONFIRMED','PROCESSING','SHIPPING','DELIVERED','CANCELLED','REFUNDED') NOT NULL,
+  `old_status` ENUM('PENDING','CONFIRMED','SHIPPING','DELIVERED','CANCELLED') NULL DEFAULT NULL,
+  `new_status` ENUM('PENDING','CONFIRMED','SHIPPING','DELIVERED','CANCELLED') NOT NULL,
   `note`       TEXT             NULL DEFAULT NULL,
   `created_at` DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -631,7 +599,7 @@ CREATE TABLE IF NOT EXISTS `payments` (
   `id`               BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `order_id`         BIGINT UNSIGNED  NOT NULL,
   `amount`          DECIMAL(15,2)    NOT NULL,
-  `status`          ENUM('SUCCESS','FAILED','EXPIRED') NOT NULL,
+  `status`          ENUM('SUCCESS','FAILED') NOT NULL,
   `transaction_id`  VARCHAR(255)     NULL DEFAULT NULL,
   `response_code`   VARCHAR(10)      NULL DEFAULT NULL,
   `created_at`      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -814,16 +782,16 @@ CREATE TABLE IF NOT EXISTS `product_comments` (
 
 CREATE TABLE IF NOT EXISTS `wishlists` (
   `id`          BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `user_id`     BIGINT UNSIGNED  NOT NULL,
+  `customer_id` BIGINT UNSIGNED  NOT NULL,
   `product_id`  BIGINT UNSIGNED  NOT NULL,
   `variant_id`  BIGINT UNSIGNED  NULL DEFAULT NULL,
   `created_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `user_product_UNIQUE` (`user_id`, `product_id`, `variant_id`),
-  INDEX `idx_wishlists_user` (`user_id`),
+  UNIQUE INDEX `customer_product_UNIQUE` (`customer_id`, `product_id`, `variant_id`),
+  INDEX `idx_wishlists_customer` (`customer_id`),
   INDEX `idx_wishlists_variant` (`variant_id`),
-  CONSTRAINT `fk_wishlists_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+  CONSTRAINT `fk_wishlists_customer`
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_wishlists_product`
     FOREIGN KEY (`product_id`) REFERENCES `products`(`id`)
@@ -883,66 +851,38 @@ CREATE TABLE IF NOT EXISTS `notification_recipients` (
   COMMENT = 'Trạng thái đọc thông báo của người nhận';
 
 
--- =====================================================
--- MODULE: chat
--- =====================================================
-
-CREATE TABLE IF NOT EXISTS `conversations` (
-  `id`          BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `user_id`     BIGINT UNSIGNED  NULL DEFAULT NULL,
-  `guest_token` VARCHAR(64)      NULL DEFAULT NULL,
-  `sale_id`     BIGINT UNSIGNED  NULL DEFAULT NULL,
-  `status`      ENUM('OPEN','CLOSED') NOT NULL DEFAULT 'OPEN',
-  `created_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+CREATE TABLE IF NOT EXISTS `point_transactions` (
+  `id`           BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `customer_id`  BIGINT UNSIGNED  NOT NULL,
+  `amount`       BIGINT           NOT NULL,
+  `type`         ENUM('EARN', 'REDEEM', 'REVOKE') NOT NULL,
+  `reference_id` BIGINT UNSIGNED  NULL COMMENT 'ID của order liên quan',
+  `note`         TEXT             NULL,
+  `created_at`   DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`   DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  INDEX `idx_conversations_user` (`user_id`),
-  INDEX `idx_conversations_guest` (`guest_token`),
-  INDEX `idx_conversations_sale` (`sale_id`),
-  INDEX `idx_conversations_status` (`status`),
-  CONSTRAINT `fk_conversations_user`
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
-    ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `fk_conversations_sale`
-    FOREIGN KEY (`sale_id`) REFERENCES `users`(`id`)
-    ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
-  COMMENT = 'Cuộc hội thoại giữa khách và sale';
-
-
-CREATE TABLE IF NOT EXISTS `messages` (
-  `id`              BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `conversation_id` BIGINT UNSIGNED  NOT NULL,
-  `sender_id`       BIGINT UNSIGNED  NULL DEFAULT NULL,
-  `guest_token`     VARCHAR(64)      NULL DEFAULT NULL,
-  `sender_type`     ENUM('USER','GUEST','SALE') NOT NULL,
-  `type`            ENUM('TEXT','IMAGE') NOT NULL DEFAULT 'TEXT',
-  `content`         TEXT             NULL DEFAULT NULL,
-  `seen_at`         DATETIME         NULL DEFAULT NULL,
-  `created_at`      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  INDEX `idx_messages_conversation` (`conversation_id`, `created_at`),
-  INDEX `idx_messages_sender` (`sender_id`),
-  CONSTRAINT `fk_messages_conversation`
-    FOREIGN KEY (`conversation_id`) REFERENCES `conversations`(`id`)
-    ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_messages_sender`
-    FOREIGN KEY (`sender_id`) REFERENCES `users`(`id`)
-    ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
-  COMMENT = 'Tin nhắn trong cuộc hội thoại';
-
-
-CREATE TABLE IF NOT EXISTS `message_attachments` (
-  `id`               BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `message_id`       BIGINT UNSIGNED  NOT NULL,
-  `image_public_id`  VARCHAR(255)     NOT NULL,
-  `created_at`       DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `image_public_id_UNIQUE` (`image_public_id`),
-  INDEX `idx_attachments_message` (`message_id`),
-  CONSTRAINT `fk_attachments_message`
-    FOREIGN KEY (`message_id`) REFERENCES `messages`(`id`)
+  INDEX `idx_point_transactions_customer` (`customer_id`),
+  INDEX `idx_point_transactions_reference` (`reference_id`),
+  CONSTRAINT `fk_point_transactions_customer`
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
-  COMMENT = 'Ảnh đính kèm trong tin nhắn';
+  COMMENT = 'Lịch sử giao dịch điểm tích lũy của khách hàng';
+
+
+-- =====================================================
+-- MODULE: setting
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS `store_settings` (
+  `id`                   BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `points_per_amount`    DECIMAL(15,2)    NOT NULL,
+  `free_ship_threshold`  DECIMAL(15,2)    NOT NULL,
+  `silver_threshold`     DECIMAL(15,2)    NOT NULL,
+  `gold_threshold`       DECIMAL(15,2)    NOT NULL,
+  `platinum_threshold`   DECIMAL(15,2)    NOT NULL,
+  `created_at`           DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`           DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_520_ci
+  COMMENT = 'Chính sách giá/ưu đãi của cửa hàng - điểm tích lũy, free-ship, hạng thành viên, luôn đúng 1 dòng (id=1)';

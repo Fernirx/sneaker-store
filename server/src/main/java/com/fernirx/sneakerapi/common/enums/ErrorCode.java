@@ -25,10 +25,25 @@ public enum ErrorCode {
     NOT_FOUND("NOT_FOUND", "error.bus.not_found", HttpStatus.NOT_FOUND),
     ALREADY_EXISTS("ALREADY_EXISTS", "error.bus.already_exists", HttpStatus.CONFLICT),
     IN_USE("IN_USE", "error.bus.in_use", HttpStatus.CONFLICT),
+    IN_USE_REASONS("IN_USE_REASONS", "error.bus.in_use_reasons", HttpStatus.CONFLICT),
 
     /* ================== RATE LIMIT & SPAM ================== */
     LIMIT_EXCEEDED("LIMIT_EXCEEDED", "error.bus.limit_exceeded", HttpStatus.TOO_MANY_REQUESTS),
-    COOLDOWN_ACTIVE("COOLDOWN_ACTIVE", "error.bus.cooldown", HttpStatus.TOO_MANY_REQUESTS);
+    COOLDOWN_ACTIVE("COOLDOWN_ACTIVE", "error.bus.cooldown", HttpStatus.TOO_MANY_REQUESTS),
+
+    /* ================== COUPON ================== */
+    COUPON_EXHAUSTED("COUPON_EXHAUSTED", "error.coupon.exhausted", HttpStatus.BAD_REQUEST),
+    COUPON_MIN_AMOUNT("COUPON_MIN_AMOUNT", "error.coupon.min_amount", HttpStatus.BAD_REQUEST),
+    COUPON_USAGE_LIMIT("COUPON_USAGE_LIMIT", "error.coupon.usage_limit", HttpStatus.BAD_REQUEST),
+
+    /* ================== REVIEW ================== */
+    REVIEW_NOT_ELIGIBLE("REVIEW_NOT_ELIGIBLE", "error.review.not_eligible", HttpStatus.FORBIDDEN),
+
+    /* ================== RETURN ================== */
+    RETURN_NOT_ELIGIBLE("RETURN_NOT_ELIGIBLE", "error.return.not_eligible", HttpStatus.FORBIDDEN),
+    RETURN_INVALID_STATUS("RETURN_INVALID_STATUS", "error.return.invalid_status", HttpStatus.BAD_REQUEST),
+    RETURN_QUANTITY_EXCEEDED("RETURN_QUANTITY_EXCEEDED", "error.return.quantity_exceeded", HttpStatus.BAD_REQUEST),
+    RETURN_VARIANT_INVALID("RETURN_VARIANT_INVALID", "error.return.variant_invalid", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String messageKey;

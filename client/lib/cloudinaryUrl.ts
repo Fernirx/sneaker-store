@@ -23,3 +23,19 @@ export function collectionUrl(publicId: string, w = 800, h = 500) {
 export function categoryUrl(publicId: string, w = 400, h = 400) {
   return base(publicId, `w_${w},h_${h},c_fill,q_auto,f_auto`);
 }
+
+export function reviewUrl(publicId: string, w = 300, h = 300) {
+  return base(publicId, `w_${w},h_${h},c_fill,q_auto,f_auto`);
+}
+
+export function contentImageUrl(publicId: string, w = 800) {
+  return base(publicId, `w_${w},c_scale,q_auto,f_auto`);
+}
+
+export function returnUrl(publicId: string, w = 300, h = 300) {
+  return base(publicId, `w_${w},h_${h},c_fill,q_auto,f_auto`);
+}
+
+export function bannerUrl(publicId: string, w = 1600, h = 500) {
+  return base(publicId, `w_${w},h_${h},c_fill,q_auto,f_auto`);
+}

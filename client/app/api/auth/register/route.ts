@@ -4,9 +4,8 @@ import { publicAxios } from '@/lib/axios/serverAxios';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const locale = req.cookies.get('NEXT_LOCALE')?.value ?? 'vi';
   try {
-    await publicAxios.post('/auth/register', body, { headers: { 'Accept-Language': locale } });
+    await publicAxios.post('/auth/register', body);
     return NextResponse.json({ ok: true });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {

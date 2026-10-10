@@ -1,9 +1,11 @@
 package com.fernirx.sneakerapi.product.repository;
 
+import com.fernirx.sneakerapi.category.entity.Category;
 import com.fernirx.sneakerapi.product.entity.ProductCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 

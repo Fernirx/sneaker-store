@@ -9,6 +9,7 @@ import com.fernirx.sneakerapi.category.service.CategoryService;
 import com.fernirx.sneakerapi.common.response.PageResponse;
 import com.fernirx.sneakerapi.common.response.SuccessResponse;
 import com.fernirx.sneakerapi.common.utils.MessageUtil;
+import com.fernirx.sneakerapi.product.service.ProductCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,7 +29,9 @@ public class InternalCategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    // WAREHOUSE cần đọc danh sách danh mục vì tab "Danh mục" ở trang chi tiết Product hiển thị đầy đủ
+    // checklist (kể cả với người chỉ xem) - không thể tách riêng, xem SECURITY_AUTHORIZATION_AUDIT.
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'WAREHOUSE')")
     @Operation(summary = "Danh sách danh mục")
     public ResponseEntity<PageResponse<CategoryInternalResponse>> getInternalCategories(
             @ParameterObject @ModelAttribute CategoryFilterRequest filter,
@@ -37,7 +40,7 @@ public class InternalCategoryController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALE', 'MARKETING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALE')")
     @Operation(summary = "Chi tiết danh mục")
     public ResponseEntity<SuccessResponse<CategoryInternalResponse>> getInternalById(@PathVariable Long id) {
         return ResponseEntity.ok(SuccessResponse.of(categoryService.getInternalById(id)));
@@ -56,7 +59,7 @@ public class InternalCategoryController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MARKETING')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cập nhật danh mục")
     public ResponseEntity<SuccessResponse<CategoryInternalResponse>> updateCategory(
             @PathVariable Long id,
@@ -85,7 +88,7 @@ public class InternalCategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xóa danh mục")
     public ResponseEntity<SuccessResponse<Void>> deleteCategory(@PathVariable Long id) {
-        categoryService.deleteCategory(id);
+        categoryService.delete(id);
         return ResponseEntity.ok(SuccessResponse.of(
                 MessageUtil.getMessage("success.resource.deleted", MessageUtil.getMessage("label.category"))
         ));

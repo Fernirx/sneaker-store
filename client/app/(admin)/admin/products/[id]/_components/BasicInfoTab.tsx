@@ -1,0 +1,210 @@
+'use client';
+
+import { useState } from 'react';
+import clientAxios from '@/lib/axios/clientAxios';
+import { parseApiError } from '@/lib/parseApiError';
+import TiptapEditor from '@/components/admin/TiptapEditor';
+import {
+  type ProductRow,
+  GENDER_OPTIONS, CLOSURE_OPTIONS, SHAFT_OPTIONS,
+  formatDate, formatPrice
+} from '../../_components/types';
+
+export default function BasicInfoTab({
+  product,
+  isAdmin,
+}: {
+  product: ProductRow;
+  isAdmin: boolean;
+}) {
+  const [form, setForm] = useState({
+    name:          product.name,
+    code:          product.code,
+    gender:        product.gender,
+    description:   product.description ?? '',
+    upperMaterial: product.upperMaterial ?? '',
+    soleType:      product.soleType ?? '',
+    closureType:   product.closureType ?? '',
+    shaftStyle:    product.shaftStyle ?? '',
+    newArrival:    product.newArrival ?? false,
+    onSale:        product.onSale    ?? false,
+    active:        product.active    ?? true,
+  });
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  function set(key: string, value: string | boolean) {
+    setForm(f => ({ ...f, [key]: value }));
+    setSuccess('');
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    setFieldErrors({});
+    try {
+      await clientAxios.patch(`/api/admin/products/${product.id}`, {
+        name:          form.name          || null,
+        code:          form.code          || null,
+        gender:        form.gender        || null,
+        description:   form.description   || null,
+        upperMaterial: form.upperMaterial || null,
+        soleType:      form.soleType      || null,
+        closureType:   form.closureType   || null,
+        shaftStyle:    form.shaftStyle    || null,
+
+        newArrival:    form.newArrival,
+        onSale:        form.onSale,
+        active:        form.active,
+      });
+      setSuccess('Đã lưu thành công.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      const parsed = parseApiError(err);
+      setError(parsed.general);
+      setFieldErrors(parsed.fields);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const ro = !isAdmin;
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
+      {error   && <p className="text-danger text-sm">{error}</p>}
+      {success && <p className="text-ok text-sm">{success}</p>}
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+            Slug
+          </label>
+          <input value={product.slug} disabled
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink disabled:bg-paper text-muted" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+            Thương hiệu
+          </label>
+          <input value={product.brand.name} disabled
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink disabled:bg-paper text-muted" />
+        </div>
+      </div>
+
+      {/* Name */}
+      <div>
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+          Tên sản phẩm <span className="text-danger">*</span>
+        </label>
+        <input value={form.name} onChange={e => set('name', e.target.value.replace(/^\s+/, ''))} disabled={ro}
+          className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink disabled:bg-paper" />
+        {fieldErrors.name && <p className="text-danger text-xs mt-1">{fieldErrors.name}</p>}
+      </div>
+
+      {/* Code */}
+      <div>
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+          Mã sản phẩm <span className="text-danger">*</span>
+        </label>
+        <input value={form.code} onChange={e => set('code', e.target.value.replace(/^\s+/, '').toUpperCase())} disabled={ro}
+          className="w-full border border-line rounded-sm px-3 py-2 text-sm font-body focus:outline-none focus:border-ink disabled:bg-paper" />
+        {fieldErrors.code && <p className="text-danger text-xs mt-1">{fieldErrors.code}</p>}
+      </div>
+
+      {/* Gender */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+            Giới tính <span className="text-danger">*</span>
+          </label>
+          <select value={form.gender} onChange={e => set('gender', e.target.value)} disabled={ro}
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink bg-white disabled:bg-paper">
+            {GENDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Mô tả</label>
+        <TiptapEditor value={form.description} onChange={html => set('description', html)} editable={!ro} />
+      </div>
+
+      {/* Upper material + Sole type */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Chất liệu mũi</label>
+          <input value={form.upperMaterial} onChange={e => set('upperMaterial', e.target.value)} disabled={ro}
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink disabled:bg-paper" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Loại đế</label>
+          <input value={form.soleType} onChange={e => set('soleType', e.target.value)} disabled={ro}
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink disabled:bg-paper" />
+        </div>
+      </div>
+
+      {/* Closure + Shaft */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Kiểu khóa</label>
+          <select value={form.closureType} onChange={e => set('closureType', e.target.value)} disabled={ro}
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink bg-white disabled:bg-paper">
+            <option value="">— Không chọn —</option>
+            {CLOSURE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">Kiểu cổ</label>
+          <select value={form.shaftStyle} onChange={e => set('shaftStyle', e.target.value)} disabled={ro}
+            className="w-full border border-line rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-ink bg-white disabled:bg-paper">
+            <option value="">— Không chọn —</option>
+            {SHAFT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+
+      {/* Flags + Active */}
+      <div className="flex gap-6">
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" checked={form.newArrival} onChange={e => set('newArrival', e.target.checked)} disabled={ro} className="accent-accent" />
+          <span className="text-sm">Mới về</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" checked={form.onSale} onChange={e => set('onSale', e.target.checked)} disabled={ro} className="accent-accent" />
+          <span className="text-sm">Đang sale</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" checked={form.active} onChange={e => set('active', e.target.checked)} disabled={ro} className="accent-accent" />
+          <span className="text-sm">Hoạt động</span>
+        </label>
+      </div>
+
+      <div className="flex gap-6 text-xs text-muted border-t border-line pt-4">
+        <span>Đã bán: {product.soldCount}</span>
+        <span>Lượt xem: {product.viewCount}</span>
+        <span>Khoảng giá: {product.minPrice != null ? formatPrice(product.minPrice) : 'Chưa có giá'} {product.maxPrice != null && product.maxPrice !== product.minPrice ? ` - ${formatPrice(product.maxPrice)}` : ''}</span>
+      </div>
+      <div className="flex gap-6 text-xs text-muted">
+        <span>Tạo: {formatDate(product.createdAt)}</span>
+        <span>Cập nhật: {formatDate(product.updatedAt)}</span>
+      </div>
+
+      {isAdmin && (
+        <div className="pt-1">
+          <button type="submit" disabled={saving || !form.name.trim() || !form.code.trim()}
+            className="px-5 py-2 bg-accent text-white text-sm font-bold rounded-sm hover:bg-accent-700 disabled:opacity-60 transition-colors">
+            {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+          </button>
+        </div>
+      )}
+    </form>
+  );
+}
